@@ -82,8 +82,11 @@ export default function LoginView({ users, onLoginSuccess }: LoginViewProps) {
       return;
     }
 
+    const inputUsername = username.trim().toLowerCase();
     const matchedUser = users.find(
-      u => u.username.toLowerCase() === username.trim().toLowerCase()
+      u => u && u.username && u.username.trim().toLowerCase() === inputUsername
+    ) || users.find(
+      u => u && u.id && u.id.trim().toLowerCase() === inputUsername
     );
 
     if (matchedUser) {

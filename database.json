@@ -4,13 +4,15 @@
       "name": "GLADSON LISBOA",
       "id": "usr_1782481995449",
       "username": "g1145",
-      "role": "conferente"
+      "role": "conferente",
+      "password": "123"
     },
     {
       "role": "conferente",
       "username": "g1088",
       "id": "usr_1782482023049",
-      "name": "GILSON ROSA"
+      "name": "GILSON ROSA",
+      "password": "123"
     },
     {
       "username": "G1163",
@@ -30,25 +32,29 @@
       "role": "gestor",
       "username": "g1083",
       "id": "usr_1782482138597",
-      "name": "VICTOR MARINHO"
+      "name": "VICTOR MARINHO",
+      "password": "123"
     },
     {
       "role": "gestor",
       "username": "g1149",
       "id": "usr_1782482170529",
-      "name": "LUIZ EDUARDO"
+      "name": "LUIZ EDUARDO",
+      "password": "123"
     },
     {
       "username": "7224",
       "role": "gestor",
       "name": "ELISSON MINERVINO",
-      "id": "usr_1782482189381"
+      "id": "usr_1782482189381",
+      "password": "123"
     },
     {
       "username": "7171",
       "role": "gestor",
       "name": "MARCOS GUILHERME",
-      "id": "usr_1782482208921"
+      "id": "usr_1782482208921",
+      "password": "123"
     },
     {
       "password": "Ambev10",
@@ -4446,41 +4452,197 @@
       "name": "CHAPATEX"
     }
   ],
-  "audits": [
-    {
-      "id": "concurrency_test_session",
-      "routeMap": "88888",
-      "plate": "CON8888",
-      "driverId": "drv_1",
-      "arrivalKm": 150,
-      "arrivalDate": "2026-07-09",
-      "status": "em_aberto",
-      "items": [],
-      "assets": [],
-      "history": [],
-      "updatedAt": "2026-07-23T00:09:37.117Z",
-      "lastUpdatedBy": "Usuário B"
-    },
-    {
-      "id": "concurrency_test_session",
-      "routeMap": "88888",
-      "plate": "CON8888",
-      "driverId": "drv_1",
-      "arrivalKm": 150,
-      "arrivalDate": "2026-07-09",
-      "status": "em_aberto",
-      "items": [],
-      "assets": [],
-      "history": [],
-      "updatedAt": "2026-07-23T00:09:37.117Z",
-      "lastUpdatedBy": "Usuário B"
-    }
-  ],
+  "audits": [],
   "vales": [],
   "returnForecasts": [],
   "fiscalAlerts": [],
-  "importedRoutes": [],
+  "importedRoutes": [
+    {
+      "id": "imp_1784769207834_csv_1_698",
+      "routeMap": "15671",
+      "plate": "QFG1259",
+      "driverId": "",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.834Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": false
+    },
+    {
+      "id": "imp_1784769207834_csv_2_98",
+      "routeMap": "15672",
+      "plate": "TOZ8B50",
+      "driverId": "G1140",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.834Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": false
+    },
+    {
+      "id": "imp_1784769207834_csv_3_658",
+      "routeMap": "15673",
+      "plate": "RLR8G79",
+      "driverId": "G1034",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.834Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": false
+    },
+    {
+      "id": "imp_1784769207834_csv_4_700",
+      "routeMap": "15674",
+      "plate": "QSK7D92",
+      "driverId": "G1053",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.834Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": false
+    },
+    {
+      "id": "imp_1784769207834_csv_5_398",
+      "routeMap": "15675",
+      "plate": "TOZ8B20",
+      "driverId": "G1019",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.834Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": false
+    },
+    {
+      "id": "imp_1784769207834_csv_6_413",
+      "routeMap": "15676",
+      "plate": "TOU7F39",
+      "driverId": "G1101",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.834Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": false
+    },
+    {
+      "id": "imp_1784769207834_csv_7_822",
+      "routeMap": "15677",
+      "plate": "OXO0552",
+      "driverId": "G1111",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.834Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": false
+    },
+    {
+      "id": "imp_1784769207834_csv_8_233",
+      "routeMap": "15678",
+      "plate": "TPA6C30",
+      "driverId": "",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.834Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": false
+    },
+    {
+      "id": "imp_1784769207834_csv_9_714",
+      "routeMap": "15679",
+      "plate": "OXO0542",
+      "driverId": "",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.834Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": true
+    },
+    {
+      "id": "imp_1784769207835_csv_10_200",
+      "routeMap": "15680",
+      "plate": "RLW0C17",
+      "driverId": "",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.835Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": true
+    },
+    {
+      "id": "imp_1784769207835_csv_11_402",
+      "routeMap": "15681",
+      "plate": "OXO0782",
+      "driverId": "G1076",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.835Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": false
+    },
+    {
+      "id": "imp_1784769207835_csv_12_199",
+      "routeMap": "15682",
+      "plate": "SLB3J76",
+      "driverId": "G1162",
+      "routeDate": "2026-07-23",
+      "status": "pendente",
+      "importedAt": "2026-07-23T01:13:27.835Z",
+      "updatedAt": "2026-07-23T01:13:27.903Z",
+      "itemsCount": 0,
+      "items": [],
+      "isBlitz": false
+    }
+  ],
   "audit_logs": [
+    {
+      "id": "log_1784765806048_8570",
+      "timestamp": "2026-07-23T00:16:46.048Z",
+      "user": "Administrador G1009 (Gestor)",
+      "operation": "CRIAÇÃO",
+      "details": "Adicionou registro(s) em 'importedRoutes': Mapa Rota '15671', Mapa Rota '15672', Mapa Rota '15673', Mapa Rota '15674', Mapa Rota '15675', Mapa Rota '15676', Mapa Rota '15677', Mapa Rota '15678', Mapa Rota '15679', Mapa Rota '15680', Mapa Rota '15681', Mapa Rota '15682'."
+    },
+    {
+      "id": "log_1784765653659_2445",
+      "timestamp": "2026-07-23T00:14:13.659Z",
+      "user": "Sistema/Carga Planilha",
+      "operation": "EXCLUSÃO",
+      "details": "Removeu registro(s) de 'audits': Mapa Rota '88888', Mapa Rota '88888'."
+    },
+    {
+      "id": "log_1784765653659_9659",
+      "timestamp": "2026-07-23T00:14:13.659Z",
+      "user": "Sistema/Carga Planilha",
+      "operation": "EXCLUSÃO",
+      "details": "Removeu registro(s) de 'importedRoutes': Mapa Rota '15671', Mapa Rota '15672', Mapa Rota '15673', Mapa Rota '15674', Mapa Rota '15675', Mapa Rota '15676', Mapa Rota '15677', Mapa Rota '15678', Mapa Rota '15679', Mapa Rota '15680', Mapa Rota '15681', Mapa Rota '15682'."
+    },
+    {
+      "id": "log_1784765548279_1165",
+      "timestamp": "2026-07-23T00:12:28.278Z",
+      "user": "Administrador G1009 (Gestor)",
+      "operation": "CRIAÇÃO",
+      "details": "Adicionou registro(s) em 'importedRoutes': Mapa Rota '15671', Mapa Rota '15672', Mapa Rota '15673', Mapa Rota '15674', Mapa Rota '15675', Mapa Rota '15676', Mapa Rota '15677', Mapa Rota '15678', Mapa Rota '15679', Mapa Rota '15680', Mapa Rota '15681', Mapa Rota '15682'."
+    },
     {
       "id": "log_1784765379791_8179",
       "timestamp": "2026-07-23T00:09:39.790Z",
@@ -5114,69 +5276,17 @@
   ],
   "photos": [
     {
-      "photoUrl": "/api/shared-files/photos/photo_1783980232414_jqbkx.jpg",
+      "photoUrl": "/api/shared-files/photos/photo_1784152871327_yxsua.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1783979042964",
+      "auditId": "aud_1784152801141",
       "conferenteId": "usr_1782481995449",
+      "syncPending": true,
+      "driverId": "G1053",
       "itemCode": "Geral / AG",
       "type": "ativo",
-      "timestamp": "2026-07-13T22:03:52.414Z",
-      "id": "photo_1783980232414_jqbkx",
-      "driverName": "THIAGO JOSE SANTINO DOS SANTOS",
-      "syncPending": true,
-      "driverId": "G1162"
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1162",
-      "timestamp": "2026-07-13T22:04:07.036Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "id": "photo_1783980247036_en82r",
-      "driverName": "THIAGO JOSE SANTINO DOS SANTOS",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1783980247036_en82r.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1783979042964"
-    },
-    {
-      "type": "ativo",
-      "timestamp": "2026-07-13T22:04:11.786Z",
-      "itemCode": "Geral / AG",
-      "id": "photo_1783980251785_ql2tc",
-      "driverName": "THIAGO JOSE SANTINO DOS SANTOS",
-      "syncPending": true,
-      "driverId": "G1162",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1783980251785_ql2tc.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1783979042964"
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1162",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-13T22:04:18.768Z",
-      "type": "ativo",
-      "driverName": "THIAGO JOSE SANTINO DOS SANTOS",
-      "id": "photo_1783980258768_cgeg2",
-      "photoUrl": "/api/shared-files/photos/photo_1783980258768_cgeg2.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1783979042964",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "itemName": "Evidência de Produto Acabado (PA)",
-      "photoUrl": "/api/shared-files/photos/photo_1783980280827_vbxgx.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1783979325158",
-      "syncPending": true,
-      "driverId": "G1122",
-      "type": "produto",
-      "timestamp": "2026-07-13T22:04:40.828Z",
-      "itemCode": "Geral / PA",
-      "id": "photo_1783980280827_vbxgx",
-      "driverName": "JEFFERSON JONES PAULINO COSTA"
+      "timestamp": "2026-07-15T22:01:11.327Z",
+      "driverName": "ADELSON SANTOS DE ARAUJO",
+      "id": "photo_1784152871327_yxsua"
     },
     {
       "type": "ativo",
@@ -5192,1098 +5302,6 @@
       "auditId": "aud_1783979325158"
     },
     {
-      "timestamp": "2026-07-13T22:05:13.031Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "id": "photo_1783980313031_8lzc1",
-      "driverName": "JEFFERSON JONES PAULINO COSTA",
-      "syncPending": true,
-      "driverId": "G1122",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1783980313031_8lzc1.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1783979325158"
-    },
-    {
-      "driverId": "G1122",
-      "syncPending": true,
-      "driverName": "JEFFERSON JONES PAULINO COSTA",
-      "id": "photo_1783980321992_sujo7",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-13T22:05:21.992Z",
-      "auditId": "aud_1783979325158",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1783980321992_sujo7.jpg"
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1122",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-13T22:05:34.869Z",
-      "type": "ativo",
-      "driverName": "JEFFERSON JONES PAULINO COSTA",
-      "id": "photo_1783980334869_w268h",
-      "photoUrl": "/api/shared-files/photos/photo_1783980334869_w268h.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1783979325158",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "auditId": "aud_1783980420937",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1783980453625_rb66h.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "driverId": "G1053",
-      "syncPending": true,
-      "driverName": "ADELSON SANTOS DE ARAUJO",
-      "id": "photo_1783980453625_rb66h",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-13T22:07:33.625Z"
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1053",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-13T22:07:38.866Z",
-      "type": "ativo",
-      "driverName": "ADELSON SANTOS DE ARAUJO",
-      "id": "photo_1783980458866_j66o3",
-      "photoUrl": "/api/shared-files/photos/photo_1783980458866_j66o3.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1783980420937",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1783980420937",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1783980467868_z2wiq.jpg",
-      "driverName": "ADELSON SANTOS DE ARAUJO",
-      "id": "photo_1783980467868_z2wiq",
-      "type": "ativo",
-      "timestamp": "2026-07-13T22:07:47.868Z",
-      "itemCode": "Geral / AG",
-      "driverId": "G1053",
-      "syncPending": true
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1053",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-13T22:08:48.187Z",
-      "driverName": "ADELSON SANTOS DE ARAUJO",
-      "id": "photo_1783980528187_bd6yf",
-      "photoUrl": "/api/shared-files/photos/photo_1783980528187_bd6yf.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1783980420937",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-13T22:09:49.088Z",
-      "id": "photo_1783980589088_znguq",
-      "driverName": "ADELSON SANTOS DE ARAUJO",
-      "syncPending": true,
-      "driverId": "G1053",
-      "photoUrl": "/api/shared-files/photos/photo_1783980589088_znguq.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1783980420937",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
-      "id": "photo_1783981099734_znaj1",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-13T22:18:19.736Z",
-      "type": "ativo",
-      "driverId": "G1143",
-      "syncPending": true,
-      "auditId": "aud_1783981081511",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1783981099734_znaj1.jpg"
-    },
-    {
-      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
-      "id": "photo_1783981113893_sk62c",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-13T22:18:33.894Z",
-      "driverId": "G1143",
-      "syncPending": true,
-      "auditId": "aud_1783981081511",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1783981113893_sk62c.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)"
-    },
-    {
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-13T22:18:43.893Z",
-      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
-      "id": "photo_1783981123893_q54h8",
-      "syncPending": true,
-      "driverId": "G1143",
-      "photoUrl": "/api/shared-files/photos/photo_1783981123893_q54h8.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1783981081511",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "syncPending": true,
-      "driverId": "temporario",
-      "type": "ativo",
-      "timestamp": "2026-07-14T17:13:07.199Z",
-      "itemCode": "Geral / AG",
-      "driverName": "temporario",
-      "id": "photo_1784049187198_39cfd",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784049187198_39cfd.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784049171919"
-    },
-    {
-      "photoUrl": "/api/shared-files/photos/photo_1784049194329_uhdje.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784049171919",
-      "syncPending": true,
-      "driverId": "temporario",
-      "type": "ativo",
-      "timestamp": "2026-07-14T17:13:14.329Z",
-      "itemCode": "Geral / AG",
-      "driverName": "temporario",
-      "id": "photo_1784049194329_uhdje"
-    },
-    {
-      "auditId": "aud_1784049171919",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784049207992_p4szh.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "id": "photo_1784049207992_p4szh",
-      "driverName": "temporario",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-14T17:13:27.993Z",
-      "driverId": "temporario",
-      "syncPending": true
-    },
-    {
-      "driverName": "temporario",
-      "id": "photo_1784049220823_kh2gk",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-14T17:13:40.823Z",
-      "type": "ativo",
-      "driverId": "temporario",
-      "syncPending": true,
-      "auditId": "aud_1784049171919",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784049220823_kh2gk.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)"
-    },
-    {
-      "syncPending": true,
-      "driverId": "temporario",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-14T17:13:49.505Z",
-      "type": "ativo",
-      "driverName": "temporario",
-      "id": "photo_1784049229505_emtkg",
-      "photoUrl": "/api/shared-files/photos/photo_1784049229505_emtkg.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1784049171919",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "syncPending": true,
-      "driverId": "temporario",
-      "type": "ativo",
-      "timestamp": "2026-07-14T17:13:55.416Z",
-      "itemCode": "Geral / AG",
-      "id": "photo_1784049235416_qoffw",
-      "driverName": "temporario",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784049235416_qoffw.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784049171919"
-    },
-    {
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-14T19:03:36.403Z",
-      "id": "photo_1784055816401_vcrvp",
-      "driverName": "EDENILSON DE SOUSA SILVA",
-      "syncPending": true,
-      "driverId": "G1034",
-      "photoUrl": "/api/shared-files/photos/photo_1784055816401_vcrvp.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1784055801222",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784055826945_w9veg.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784055801222",
-      "syncPending": true,
-      "driverId": "G1034",
-      "type": "ativo",
-      "timestamp": "2026-07-14T19:03:46.945Z",
-      "itemCode": "Geral / AG",
-      "driverName": "EDENILSON DE SOUSA SILVA",
-      "id": "photo_1784055826945_w9veg"
-    },
-    {
-      "auditId": "aud_1784055801222",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784055835008_qx7qb.jpg",
-      "driverName": "EDENILSON DE SOUSA SILVA",
-      "id": "photo_1784055835008_qx7qb",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-14T19:03:55.008Z",
-      "type": "ativo",
-      "driverId": "G1034",
-      "syncPending": true
-    },
-    {
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784055801222",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784055848063_pu54s.jpg",
-      "driverId": "G1034",
-      "syncPending": true,
-      "driverName": "EDENILSON DE SOUSA SILVA",
-      "id": "photo_1784055848063_pu54s",
-      "timestamp": "2026-07-14T19:04:08.063Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG"
-    },
-    {
-      "id": "photo_1784055873210_1vq25",
-      "driverName": "EDENILSON DE SOUSA SILVA",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-14T19:04:33.210Z",
-      "driverId": "G1034",
-      "syncPending": true,
-      "auditId": "aud_1784055801222",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784055873210_1vq25.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)"
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1034",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-14T19:08:11.020Z",
-      "driverName": "EDENILSON DE SOUSA SILVA",
-      "id": "photo_1784056091020_ei9pq",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784056091020_ei9pq.jpg",
-      "auditId": "aud_1784055801222",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "id": "photo_1784056098037_s05v2",
-      "driverName": "EDENILSON DE SOUSA SILVA",
-      "type": "ativo",
-      "timestamp": "2026-07-14T19:08:18.037Z",
-      "itemCode": "Geral / AG",
-      "driverId": "G1034",
-      "syncPending": true,
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784055801222",
-      "photoUrl": "/api/shared-files/photos/photo_1784056098037_s05v2.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)"
-    },
-    {
-      "auditId": "aud_1784055801222",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Evidência de Produto Acabado (PA)",
-      "photoUrl": "/api/shared-files/photos/photo_1784056161501_t2kbq.jpg",
-      "id": "photo_1784056161501_t2kbq",
-      "driverName": "EDENILSON DE SOUSA SILVA",
-      "itemCode": "Geral / PA",
-      "type": "produto",
-      "timestamp": "2026-07-14T19:09:21.501Z",
-      "driverId": "G1034",
-      "syncPending": true
-    },
-    {
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784055801222",
-      "itemName": "Evidência de Produto Acabado (PA)",
-      "photoUrl": "/api/shared-files/photos/photo_1784056174634_uff6r.jpg",
-      "driverId": "G1034",
-      "syncPending": true,
-      "id": "photo_1784056174634_uff6r",
-      "driverName": "EDENILSON DE SOUSA SILVA",
-      "type": "produto",
-      "timestamp": "2026-07-14T19:09:34.634Z",
-      "itemCode": "Geral / PA"
-    },
-    {
-      "id": "photo_1784056527701_p329r",
-      "driverName": "temporario",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-14T19:15:27.702Z",
-      "type": "ativo",
-      "driverId": "temporario",
-      "syncPending": true,
-      "auditId": "aud_1784056450778",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784056527701_p329r.jpg"
-    },
-    {
-      "photoUrl": "/api/shared-files/photos/photo_1784056545596_leyoz.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784056450778",
-      "syncPending": true,
-      "driverId": "temporario",
-      "timestamp": "2026-07-14T19:15:45.596Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "driverName": "temporario",
-      "id": "photo_1784056545596_leyoz"
-    },
-    {
-      "syncPending": true,
-      "driverId": "temporario",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-14T19:16:16.763Z",
-      "driverName": "temporario",
-      "id": "photo_1784056576763_zh00m",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784056576763_zh00m.jpg",
-      "auditId": "aud_1784056450778",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784056450778",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784056612111_59d9r.jpg",
-      "driverId": "temporario",
-      "syncPending": true,
-      "driverName": "temporario",
-      "id": "photo_1784056612111_59d9r",
-      "timestamp": "2026-07-14T19:16:52.112Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG"
-    },
-    {
-      "syncPending": true,
-      "driverId": "temporario",
-      "type": "ativo",
-      "timestamp": "2026-07-14T19:17:16.126Z",
-      "itemCode": "Geral / AG",
-      "id": "photo_1784056636125_7i52y",
-      "driverName": "temporario",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784056636125_7i52y.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784056450778"
-    },
-    {
-      "id": "photo_1784056657546_qw79q",
-      "driverName": "temporario",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-14T19:17:37.546Z",
-      "driverId": "temporario",
-      "syncPending": true,
-      "auditId": "aud_1784056450778",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784056657546_qw79q.jpg"
-    },
-    {
-      "id": "photo_1784117639934_vshop",
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "itemCode": "TROCAS_REUNIDAS",
-      "type": "troca_reposicao",
-      "timestamp": "2026-07-15T12:13:59.934Z",
-      "driverId": "G1019",
-      "syncPending": true,
-      "auditId": "aud_1784117603424",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784117639934_vshop.jpg",
-      "itemName": "Foto de TROCA/REPOSIÇÃO: Troca/Reposição"
-    },
-    {
-      "driverId": "G1019",
-      "syncPending": true,
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "id": "photo_1784117663604_cngg2",
-      "itemCode": "Geral / PA",
-      "type": "produto",
-      "timestamp": "2026-07-15T12:14:23.604Z",
-      "auditId": "aud_1784117603424",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784117663604_cngg2.jpg",
-      "itemName": "Evidência de Produto Acabado (PA)"
-    },
-    {
-      "driverId": "G1019",
-      "syncPending": true,
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "id": "photo_1784117671690_d8wrn",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T12:14:31.690Z",
-      "auditId": "aud_1784117603424",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784117671690_d8wrn.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)"
-    },
-    {
-      "auditId": "aud_1784117603424",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784117701746_mnxgp.jpg",
-      "itemName": "sddsf",
-      "id": "photo_1784117701746_mnxgp",
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "itemCode": "Geral / PA",
-      "type": "produto",
-      "timestamp": "2026-07-15T12:15:01.746Z",
-      "driverId": "G1019",
-      "syncPending": true
-    },
-    {
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "id": "photo_1784117722670_ghvsb",
-      "itemCode": "ref_batch_1784117722663_0",
-      "timestamp": "2026-07-15T12:15:22.670Z",
-      "type": "refugo",
-      "driverId": "G1019",
-      "syncPending": true,
-      "auditId": "aud_1784117603424",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Refugo e Avarias (3 itens)",
-      "photoUrl": "/api/shared-files/photos/photo_1784117722670_ghvsb.jpg"
-    },
-    {
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784137365793_obeki.jpg",
-      "auditId": "aud_1784137339885",
-      "conferenteId": "usr_1782481995449",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-15T17:42:45.794Z",
-      "type": "ativo",
-      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
-      "id": "photo_1784137365793_obeki",
-      "syncPending": true,
-      "driverId": "G1143"
-    },
-    {
-      "id": "photo_1784137393325_b5a9d",
-      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
-      "type": "ativo",
-      "timestamp": "2026-07-15T17:43:13.325Z",
-      "itemCode": "Geral / AG",
-      "driverId": "G1143",
-      "syncPending": true,
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784137339885",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784137393325_b5a9d.jpg"
-    },
-    {
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784137408217_8kvcj.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784137339885",
-      "syncPending": true,
-      "driverId": "G1143",
-      "type": "ativo",
-      "timestamp": "2026-07-15T17:43:28.217Z",
-      "itemCode": "Geral / AG",
-      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
-      "id": "photo_1784137408217_8kvcj"
-    },
-    {
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T17:43:48.232Z",
-      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
-      "id": "photo_1784137428232_76rdb",
-      "syncPending": true,
-      "driverId": "G1143",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784137428232_76rdb.jpg",
-      "auditId": "aud_1784137339885",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784137602154",
-      "photoUrl": "/api/shared-files/photos/photo_1784137611661_ltkkt.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "id": "photo_1784137611661_ltkkt",
-      "driverName": "VALDKLEBER DE SOUZA ALEXANDRE",
-      "timestamp": "2026-07-15T17:46:51.661Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "driverId": "G1049",
-      "syncPending": true
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1049",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T17:47:13.911Z",
-      "driverName": "VALDKLEBER DE SOUZA ALEXANDRE",
-      "id": "photo_1784137633910_37kf3",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784137633910_37kf3.jpg",
-      "auditId": "aud_1784137602154",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784137602154",
-      "photoUrl": "/api/shared-files/photos/photo_1784137648567_1plry.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "driverId": "G1049",
-      "syncPending": true,
-      "driverName": "VALDKLEBER DE SOUZA ALEXANDRE",
-      "id": "photo_1784137648567_1plry",
-      "type": "ativo",
-      "timestamp": "2026-07-15T17:47:28.567Z",
-      "itemCode": "Geral / AG"
-    },
-    {
-      "auditId": "aud_1784137602154",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784137668159_6o41p.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "id": "photo_1784137668159_6o41p",
-      "driverName": "VALDKLEBER DE SOUZA ALEXANDRE",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T17:47:48.159Z",
-      "driverId": "G1049",
-      "syncPending": true
-    },
-    {
-      "id": "photo_1784137784875_n97xa",
-      "driverName": "EWERTON RODRIGUES DA SILVA",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-15T17:49:44.875Z",
-      "type": "ativo",
-      "driverId": "G1020",
-      "syncPending": true,
-      "auditId": "aud_1784137774081",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784137784875_n97xa.jpg"
-    },
-    {
-      "id": "photo_1784137792272_qtx2b",
-      "driverName": "EWERTON RODRIGUES DA SILVA",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-15T17:49:52.272Z",
-      "type": "ativo",
-      "driverId": "G1020",
-      "syncPending": true,
-      "auditId": "aud_1784137774081",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784137792272_qtx2b.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)"
-    },
-    {
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784137871842_pfsqm.jpg",
-      "auditId": "aud_1784137774081",
-      "conferenteId": "usr_1782481995449",
-      "syncPending": true,
-      "driverId": "G1020",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-15T17:51:11.843Z",
-      "type": "ativo",
-      "id": "photo_1784137871842_pfsqm",
-      "driverName": "EWERTON RODRIGUES DA SILVA"
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1020",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T17:51:20.153Z",
-      "driverName": "EWERTON RODRIGUES DA SILVA",
-      "id": "photo_1784137880153_zrwnx",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784137880153_zrwnx.jpg",
-      "auditId": "aud_1784137774081",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "driverName": "EWERTON RODRIGUES DA SILVA",
-      "id": "photo_1784137889361_fqljy",
-      "timestamp": "2026-07-15T17:51:29.361Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "driverId": "G1020",
-      "syncPending": true,
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784137774081",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784137889361_fqljy.jpg"
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1101",
-      "type": "ativo",
-      "timestamp": "2026-07-15T17:53:56.509Z",
-      "itemCode": "Geral / AG",
-      "id": "photo_1784138036509_relfi",
-      "driverName": "JOSE HONORIO DA SILVA",
-      "photoUrl": "/api/shared-files/photos/photo_1784138036509_relfi.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784138023962"
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1101",
-      "timestamp": "2026-07-15T17:54:05.338Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "id": "photo_1784138045338_3gl2k",
-      "driverName": "JOSE HONORIO DA SILVA",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784138045338_3gl2k.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784138023962"
-    },
-    {
-      "auditId": "aud_1784138023962",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784138067792_941kd.jpg",
-      "driverId": "G1101",
-      "syncPending": true,
-      "driverName": "JOSE HONORIO DA SILVA",
-      "id": "photo_1784138067792_941kd",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-15T17:54:27.792Z",
-      "type": "ativo"
-    },
-    {
-      "auditId": "aud_1784138023962",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784138073986_umpf3.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "driverName": "JOSE HONORIO DA SILVA",
-      "id": "photo_1784138073986_umpf3",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T17:54:33.986Z",
-      "driverId": "G1101",
-      "syncPending": true
-    },
-    {
-      "id": "photo_1784138081616_uoh7v",
-      "driverName": "JOSE HONORIO DA SILVA",
-      "timestamp": "2026-07-15T17:54:41.616Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "driverId": "G1101",
-      "syncPending": true,
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784138023962",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784138081616_uoh7v.jpg"
-    },
-    {
-      "id": "photo_1784138823666_lt4m4",
-      "driverName": "temporario",
-      "timestamp": "2026-07-15T18:07:03.668Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "driverId": "temporario",
-      "syncPending": true,
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784138783077",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784138823666_lt4m4.jpg"
-    },
-    {
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784138839988_rj1lp.jpg",
-      "auditId": "aud_1784138783077",
-      "conferenteId": "usr_1782481995449",
-      "syncPending": true,
-      "driverId": "temporario",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T18:07:19.988Z",
-      "id": "photo_1784138839988_rj1lp",
-      "driverName": "temporario"
-    },
-    {
-      "id": "photo_1784138858294_9e5bu",
-      "driverName": "temporario",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T18:07:38.294Z",
-      "driverId": "temporario",
-      "syncPending": true,
-      "auditId": "aud_1784138783077",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784138858294_9e5bu.jpg"
-    },
-    {
-      "auditId": "aud_1784138783077",
-      "conferenteId": "usr_1782481995449",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784138864570_o5e1h.jpg",
-      "driverName": "temporario",
-      "id": "photo_1784138864570_o5e1h",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T18:07:44.570Z",
-      "driverId": "temporario",
-      "syncPending": true
-    },
-    {
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784138871305_7q356.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784138783077",
-      "timestamp": "2026-07-15T18:07:51.306Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "driverName": "temporario",
-      "id": "photo_1784138871305_7q356",
-      "syncPending": true,
-      "driverId": "temporario"
-    },
-    {
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784138901862_wy9ap.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784138783077",
-      "syncPending": true,
-      "driverId": "temporario",
-      "type": "ativo",
-      "timestamp": "2026-07-15T18:08:21.862Z",
-      "itemCode": "Geral / AG",
-      "driverName": "temporario",
-      "id": "photo_1784138901862_wy9ap"
-    },
-    {
-      "syncPending": true,
-      "driverId": "temporario",
-      "type": "produto",
-      "timestamp": "2026-07-15T18:09:39.882Z",
-      "itemCode": "Geral / PA",
-      "driverName": "temporario",
-      "id": "photo_1784138979882_8kvd7",
-      "photoUrl": "/api/shared-files/photos/photo_1784138979882_8kvd7.jpg",
-      "itemName": "Evidência de Produto Acabado (PA)",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784138783077"
-    },
-    {
-      "type": "ativo",
-      "timestamp": "2026-07-15T20:19:04.669Z",
-      "itemCode": "Geral / AG",
-      "driverName": "MANOEL ALVES DUTRA NETO",
-      "id": "photo_1784146744667_4pihq",
-      "syncPending": true,
-      "driverId": "G1076",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784146744667_4pihq.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784146727753"
-    },
-    {
-      "auditId": "aud_1784146727753",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784146822439_qen38.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "driverId": "G1076",
-      "syncPending": true,
-      "id": "photo_1784146822439_qen38",
-      "driverName": "MANOEL ALVES DUTRA NETO",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-15T20:20:22.439Z",
-      "type": "ativo"
-    },
-    {
-      "driverId": "G1076",
-      "syncPending": true,
-      "id": "photo_1784146839805_bvdbi",
-      "driverName": "MANOEL ALVES DUTRA NETO",
-      "timestamp": "2026-07-15T20:20:39.806Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784146727753",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784146839805_bvdbi.jpg"
-    },
-    {
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784146727753",
-      "photoUrl": "/api/shared-files/photos/photo_1784146846585_j7ymt.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "driverId": "G1076",
-      "syncPending": true,
-      "driverName": "MANOEL ALVES DUTRA NETO",
-      "id": "photo_1784146846585_j7ymt",
-      "timestamp": "2026-07-15T20:20:46.585Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG"
-    },
-    {
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784146727753",
-      "photoUrl": "/api/shared-files/photos/photo_1784146896975_2wqnz.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "driverId": "G1076",
-      "syncPending": true,
-      "driverName": "MANOEL ALVES DUTRA NETO",
-      "id": "photo_1784146896975_2wqnz",
-      "type": "ativo",
-      "timestamp": "2026-07-15T20:21:36.975Z",
-      "itemCode": "Geral / AG"
-    },
-    {
-      "photoUrl": "/api/shared-files/photos/photo_1784148241916_dv5q0.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1784147135482",
-      "conferenteId": "usr_1782481995449",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T20:44:01.916Z",
-      "driverName": "JOSE MATUZALEM PONTES DE OLIVEIRA",
-      "id": "photo_1784148241916_dv5q0",
-      "syncPending": true,
-      "driverId": "G1140"
-    },
-    {
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784148248341_hi0cz.jpg",
-      "auditId": "aud_1784147135482",
-      "conferenteId": "usr_1782481995449",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-15T20:44:08.341Z",
-      "type": "ativo",
-      "driverName": "JOSE MATUZALEM PONTES DE OLIVEIRA",
-      "id": "photo_1784148248341_hi0cz",
-      "syncPending": true,
-      "driverId": "G1140"
-    },
-    {
-      "driverName": "JOSE MATUZALEM PONTES DE OLIVEIRA",
-      "id": "photo_1784148257481_90lzv",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T20:44:17.484Z",
-      "driverId": "G1140",
-      "syncPending": true,
-      "auditId": "aud_1784147135482",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784148257481_90lzv.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)"
-    },
-    {
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784148272603_anjrj.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784147135482",
-      "syncPending": true,
-      "driverId": "G1140",
-      "timestamp": "2026-07-15T20:44:32.604Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "driverName": "JOSE MATUZALEM PONTES DE OLIVEIRA",
-      "id": "photo_1784148272603_anjrj"
-    },
-    {
-      "photoUrl": "/api/shared-files/photos/photo_1784148283237_3796g.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784147135482",
-      "type": "ativo",
-      "timestamp": "2026-07-15T20:44:43.237Z",
-      "itemCode": "Geral / AG",
-      "driverName": "JOSE MATUZALEM PONTES DE OLIVEIRA",
-      "id": "photo_1784148283237_3796g",
-      "syncPending": true,
-      "driverId": "G1140"
-    },
-    {
-      "photoUrl": "/api/shared-files/photos/photo_1784148288269_dd7wd.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784147135482",
-      "syncPending": true,
-      "driverId": "G1140",
-      "type": "ativo",
-      "timestamp": "2026-07-15T20:44:48.269Z",
-      "itemCode": "Geral / AG",
-      "id": "photo_1784148288269_dd7wd",
-      "driverName": "JOSE MATUZALEM PONTES DE OLIVEIRA"
-    },
-    {
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784149721775",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784149839207_qdjgv.jpg",
-      "id": "photo_1784149839207_qdjgv",
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "timestamp": "2026-07-15T21:10:39.208Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "driverId": "G1019",
-      "syncPending": true
-    },
-    {
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T21:10:46.630Z",
-      "id": "photo_1784149846630_6j43p",
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "syncPending": true,
-      "driverId": "G1019",
-      "photoUrl": "/api/shared-files/photos/photo_1784149846630_6j43p.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1784149721775",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "driverId": "G1019",
-      "syncPending": true,
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "id": "photo_1784149858536_xm6gg",
-      "type": "ativo",
-      "timestamp": "2026-07-15T21:10:58.537Z",
-      "itemCode": "Geral / AG",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784149721775",
-      "photoUrl": "/api/shared-files/photos/photo_1784149858536_xm6gg.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)"
-    },
-    {
-      "photoUrl": "/api/shared-files/photos/photo_1784149864774_wat3y.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784149721775",
-      "syncPending": true,
-      "driverId": "G1019",
-      "timestamp": "2026-07-15T21:11:04.774Z",
-      "type": "ativo",
-      "itemCode": "Geral / AG",
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "id": "photo_1784149864774_wat3y"
-    },
-    {
-      "auditId": "aud_1784149721775",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784149881583_h0pb8.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "driverId": "G1019",
-      "syncPending": true,
-      "id": "photo_1784149881583_h0pb8",
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T21:11:21.583Z"
-    },
-    {
-      "auditId": "aud_1784149721775",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784149898415_xkck1.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "driverId": "G1019",
-      "syncPending": true,
-      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
-      "id": "photo_1784149898415_xkck1",
-      "itemCode": "Geral / AG",
-      "timestamp": "2026-07-15T21:11:38.415Z",
-      "type": "ativo"
-    },
-    {
-      "syncPending": true,
-      "driverId": "G1053",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T22:00:16.685Z",
-      "id": "photo_1784152816684_81wgn",
-      "driverName": "ADELSON SANTOS DE ARAUJO",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784152816684_81wgn.jpg",
-      "auditId": "aud_1784152801141",
-      "conferenteId": "usr_1782481995449"
-    },
-    {
-      "photoUrl": "/api/shared-files/photos/photo_1784152822095_m66c6.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1784152801141",
-      "conferenteId": "usr_1782481995449",
-      "syncPending": true,
-      "driverId": "G1053",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T22:00:22.095Z",
-      "driverName": "ADELSON SANTOS DE ARAUJO",
-      "id": "photo_1784152822095_m66c6"
-    },
-    {
-      "driverName": "ADELSON SANTOS DE ARAUJO",
-      "id": "photo_1784152827368_yxb4f",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T22:00:27.369Z",
-      "driverId": "G1053",
-      "syncPending": true,
-      "auditId": "aud_1784152801141",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784152827368_yxb4f.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)"
-    },
-    {
-      "driverId": "G1053",
-      "syncPending": true,
-      "id": "photo_1784152864248_4qi3m",
-      "driverName": "ADELSON SANTOS DE ARAUJO",
-      "type": "ativo",
-      "timestamp": "2026-07-15T22:01:04.248Z",
-      "itemCode": "Geral / AG",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784152801141",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784152864248_4qi3m.jpg"
-    },
-    {
-      "photoUrl": "/api/shared-files/photos/photo_1784152871327_yxsua.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)",
-      "auditId": "aud_1784152801141",
-      "conferenteId": "usr_1782481995449",
-      "syncPending": true,
-      "driverId": "G1053",
-      "itemCode": "Geral / AG",
-      "type": "ativo",
-      "timestamp": "2026-07-15T22:01:11.327Z",
-      "driverName": "ADELSON SANTOS DE ARAUJO",
-      "id": "photo_1784152871327_yxsua"
-    },
-    {
       "photoUrl": "/api/shared-files/photos/photo_1784319416844_eg3ee.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)",
       "conferenteId": "usr_1782481995449",
@@ -6297,6 +5315,19 @@
       "driverName": "MANOEL ALVES DUTRA NETO"
     },
     {
+      "timestamp": "2026-07-13T22:05:13.031Z",
+      "type": "ativo",
+      "itemCode": "Geral / AG",
+      "id": "photo_1783980313031_8lzc1",
+      "driverName": "JEFFERSON JONES PAULINO COSTA",
+      "syncPending": true,
+      "driverId": "G1122",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1783980313031_8lzc1.jpg",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1783979325158"
+    },
+    {
       "syncPending": true,
       "driverId": "G1076",
       "type": "ativo",
@@ -6308,6 +5339,19 @@
       "photoUrl": "/api/shared-files/photos/photo_1784319435346_ku5lu.jpg",
       "conferenteId": "usr_1782481995449",
       "auditId": "aud_1784319267193"
+    },
+    {
+      "driverId": "G1122",
+      "syncPending": true,
+      "driverName": "JEFFERSON JONES PAULINO COSTA",
+      "id": "photo_1783980321992_sujo7",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-13T22:05:21.992Z",
+      "auditId": "aud_1783979325158",
+      "conferenteId": "usr_1782481995449",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1783980321992_sujo7.jpg"
     },
     {
       "photoUrl": "/api/shared-files/photos/photo_1784319440794_kc47v.jpg",
@@ -6324,6 +5368,19 @@
     },
     {
       "syncPending": true,
+      "driverId": "G1122",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-13T22:05:34.869Z",
+      "type": "ativo",
+      "driverName": "JEFFERSON JONES PAULINO COSTA",
+      "id": "photo_1783980334869_w268h",
+      "photoUrl": "/api/shared-files/photos/photo_1783980334869_w268h.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "auditId": "aud_1783979325158",
+      "conferenteId": "usr_1782481995449"
+    },
+    {
+      "syncPending": true,
       "driverId": "G1076",
       "type": "ativo",
       "timestamp": "2026-07-17T20:17:29.502Z",
@@ -6336,6 +5393,19 @@
       "auditId": "aud_1784319267193"
     },
     {
+      "auditId": "aud_1783980420937",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1783980453625_rb66h.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "driverId": "G1053",
+      "syncPending": true,
+      "driverName": "ADELSON SANTOS DE ARAUJO",
+      "id": "photo_1783980453625_rb66h",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-13T22:07:33.625Z"
+    },
+    {
       "syncPending": true,
       "driverId": "G1076",
       "itemCode": "Geral / PA",
@@ -6346,6 +5416,19 @@
       "itemName": "Evidência de Produto Acabado (PA)",
       "photoUrl": "/api/shared-files/photos/photo_1784319572142_pd702.jpg",
       "auditId": "aud_1784319267193",
+      "conferenteId": "usr_1782481995449"
+    },
+    {
+      "syncPending": true,
+      "driverId": "G1053",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-13T22:07:38.866Z",
+      "type": "ativo",
+      "driverName": "ADELSON SANTOS DE ARAUJO",
+      "id": "photo_1783980458866_j66o3",
+      "photoUrl": "/api/shared-files/photos/photo_1783980458866_j66o3.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "auditId": "aud_1783980420937",
       "conferenteId": "usr_1782481995449"
     },
     {
@@ -6362,6 +5445,19 @@
       "driverName": "MANOEL ALVES DUTRA NETO"
     },
     {
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1783980420937",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1783980467868_z2wiq.jpg",
+      "driverName": "ADELSON SANTOS DE ARAUJO",
+      "id": "photo_1783980467868_z2wiq",
+      "type": "ativo",
+      "timestamp": "2026-07-13T22:07:47.868Z",
+      "itemCode": "Geral / AG",
+      "driverId": "G1053",
+      "syncPending": true
+    },
+    {
       "driverId": "G1076",
       "syncPending": true,
       "id": "photo_1784320086405_r8g65",
@@ -6373,6 +5469,19 @@
       "conferenteId": "usr_1782481995449",
       "photoUrl": "/api/shared-files/photos/photo_1784320086405_r8g65.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
+      "syncPending": true,
+      "driverId": "G1053",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-13T22:08:48.187Z",
+      "driverName": "ADELSON SANTOS DE ARAUJO",
+      "id": "photo_1783980528187_bd6yf",
+      "photoUrl": "/api/shared-files/photos/photo_1783980528187_bd6yf.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "auditId": "aud_1783980420937",
+      "conferenteId": "usr_1782481995449"
     },
     {
       "auditId": "aud_1784325077238",
@@ -6388,6 +5497,19 @@
       "syncPending": true
     },
     {
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-13T22:09:49.088Z",
+      "id": "photo_1783980589088_znguq",
+      "driverName": "ADELSON SANTOS DE ARAUJO",
+      "syncPending": true,
+      "driverId": "G1053",
+      "photoUrl": "/api/shared-files/photos/photo_1783980589088_znguq.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "auditId": "aud_1783980420937",
+      "conferenteId": "usr_1782481995449"
+    },
+    {
       "itemName": "Evidência de Ativo de Giro (AG)",
       "photoUrl": "/api/shared-files/photos/photo_1784325219913_k16um.jpg",
       "auditId": "aud_1784325077238",
@@ -6399,6 +5521,19 @@
       "id": "photo_1784325219913_k16um",
       "syncPending": true,
       "driverId": "temporario"
+    },
+    {
+      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
+      "id": "photo_1783981099734_znaj1",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-13T22:18:19.736Z",
+      "type": "ativo",
+      "driverId": "G1143",
+      "syncPending": true,
+      "auditId": "aud_1783981081511",
+      "conferenteId": "usr_1782481995449",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1783981099734_znaj1.jpg"
     },
     {
       "syncPending": true,
@@ -6414,6 +5549,19 @@
       "auditId": "aud_1784325077238"
     },
     {
+      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
+      "id": "photo_1783981113893_sk62c",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-13T22:18:33.894Z",
+      "driverId": "G1143",
+      "syncPending": true,
+      "auditId": "aud_1783981081511",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1783981113893_sk62c.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
       "syncPending": true,
       "driverId": "temporario",
       "type": "ativo",
@@ -6425,6 +5573,19 @@
       "itemName": "Evidência de Ativo de Giro (AG)",
       "conferenteId": "usr_1782481995449",
       "auditId": "aud_1784325077238"
+    },
+    {
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-13T22:18:43.893Z",
+      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
+      "id": "photo_1783981123893_q54h8",
+      "syncPending": true,
+      "driverId": "G1143",
+      "photoUrl": "/api/shared-files/photos/photo_1783981123893_q54h8.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "auditId": "aud_1783981081511",
+      "conferenteId": "usr_1782481995449"
     },
     {
       "timestamp": "2026-07-17T21:56:46.009Z",
@@ -6440,6 +5601,19 @@
       "auditId": "aud_1784325077238"
     },
     {
+      "syncPending": true,
+      "driverId": "temporario",
+      "type": "ativo",
+      "timestamp": "2026-07-14T17:13:07.199Z",
+      "itemCode": "Geral / AG",
+      "driverName": "temporario",
+      "id": "photo_1784049187198_39cfd",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784049187198_39cfd.jpg",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784049171919"
+    },
+    {
       "id": "photo_1784326422514_0xapl",
       "driverName": "MATUZALEN",
       "timestamp": "2026-07-17T22:13:42.517Z",
@@ -6451,6 +5625,19 @@
       "auditId": "aud_1784326410294",
       "itemName": "Evidência de Ativo de Giro (AG)",
       "photoUrl": "/api/shared-files/photos/photo_1784326422514_0xapl.jpg"
+    },
+    {
+      "photoUrl": "/api/shared-files/photos/photo_1784049194329_uhdje.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784049171919",
+      "syncPending": true,
+      "driverId": "temporario",
+      "type": "ativo",
+      "timestamp": "2026-07-14T17:13:14.329Z",
+      "itemCode": "Geral / AG",
+      "driverName": "temporario",
+      "id": "photo_1784049194329_uhdje"
     },
     {
       "syncPending": true,
@@ -6466,6 +5653,19 @@
       "conferenteId": "usr_1782481995449"
     },
     {
+      "auditId": "aud_1784049171919",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784049207992_p4szh.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "id": "photo_1784049207992_p4szh",
+      "driverName": "temporario",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-14T17:13:27.993Z",
+      "driverId": "temporario",
+      "syncPending": true
+    },
+    {
       "photoUrl": "/api/shared-files/photos/photo_1784326569837_16cwx.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)",
       "auditId": "aud_1784326410294",
@@ -6477,6 +5677,19 @@
       "timestamp": "2026-07-17T22:16:09.837Z",
       "driverName": "MATUZALEN",
       "id": "photo_1784326569837_16cwx"
+    },
+    {
+      "driverName": "temporario",
+      "id": "photo_1784049220823_kh2gk",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-14T17:13:40.823Z",
+      "type": "ativo",
+      "driverId": "temporario",
+      "syncPending": true,
+      "auditId": "aud_1784049171919",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784049220823_kh2gk.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)"
     },
     {
       "itemName": "Evidência de Ativo de Giro (AG)",
@@ -6492,6 +5705,19 @@
       "driverId": "TEMP_M_1784326410291"
     },
     {
+      "syncPending": true,
+      "driverId": "temporario",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-14T17:13:49.505Z",
+      "type": "ativo",
+      "driverName": "temporario",
+      "id": "photo_1784049229505_emtkg",
+      "photoUrl": "/api/shared-files/photos/photo_1784049229505_emtkg.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "auditId": "aud_1784049171919",
+      "conferenteId": "usr_1782481995449"
+    },
+    {
       "auditId": "aud_1784326410294",
       "conferenteId": "usr_1782481995449",
       "photoUrl": "/api/shared-files/photos/photo_1784326592595_eg57t.jpg",
@@ -6503,6 +5729,19 @@
       "type": "ativo",
       "driverId": "TEMP_M_1784326410291",
       "syncPending": true
+    },
+    {
+      "syncPending": true,
+      "driverId": "temporario",
+      "type": "ativo",
+      "timestamp": "2026-07-14T17:13:55.416Z",
+      "itemCode": "Geral / AG",
+      "id": "photo_1784049235416_qoffw",
+      "driverName": "temporario",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784049235416_qoffw.jpg",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784049171919"
     },
     {
       "auditId": "aud_1784326410294",
@@ -6518,6 +5757,19 @@
       "syncPending": true
     },
     {
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-14T19:03:36.403Z",
+      "id": "photo_1784055816401_vcrvp",
+      "driverName": "EDENILSON DE SOUSA SILVA",
+      "syncPending": true,
+      "driverId": "G1034",
+      "photoUrl": "/api/shared-files/photos/photo_1784055816401_vcrvp.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "auditId": "aud_1784055801222",
+      "conferenteId": "usr_1782481995449"
+    },
+    {
       "driverId": "G1053",
       "syncPending": true,
       "driverName": "ADELSON SANTOS DE ARAUJO",
@@ -6529,6 +5781,19 @@
       "conferenteId": "usr_1782481995449",
       "photoUrl": "/api/shared-files/photos/photo_1784327063493_xrdo7.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784055826945_w9veg.jpg",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784055801222",
+      "syncPending": true,
+      "driverId": "G1034",
+      "type": "ativo",
+      "timestamp": "2026-07-14T19:03:46.945Z",
+      "itemCode": "Geral / AG",
+      "driverName": "EDENILSON DE SOUSA SILVA",
+      "id": "photo_1784055826945_w9veg"
     },
     {
       "photoUrl": "/api/shared-files/photos/photo_1784327069717_7sy9i.jpg",
@@ -6544,6 +5809,19 @@
       "driverId": "G1053"
     },
     {
+      "auditId": "aud_1784055801222",
+      "conferenteId": "usr_1782481995449",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784055835008_qx7qb.jpg",
+      "driverName": "EDENILSON DE SOUSA SILVA",
+      "id": "photo_1784055835008_qx7qb",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-14T19:03:55.008Z",
+      "type": "ativo",
+      "driverId": "G1034",
+      "syncPending": true
+    },
+    {
       "timestamp": "2026-07-17T22:24:43.916Z",
       "type": "ativo",
       "itemCode": "Geral / AG",
@@ -6555,6 +5833,19 @@
       "itemName": "Evidência de Ativo de Giro (AG)",
       "conferenteId": "usr_1782481995449",
       "auditId": "aud_1784327043138"
+    },
+    {
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784055801222",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784055848063_pu54s.jpg",
+      "driverId": "G1034",
+      "syncPending": true,
+      "driverName": "EDENILSON DE SOUSA SILVA",
+      "id": "photo_1784055848063_pu54s",
+      "timestamp": "2026-07-14T19:04:08.063Z",
+      "type": "ativo",
+      "itemCode": "Geral / AG"
     },
     {
       "driverId": "G1053",
@@ -6570,6 +5861,19 @@
       "photoUrl": "/api/shared-files/photos/photo_1784327224344_0hd1s.jpg"
     },
     {
+      "id": "photo_1784055873210_1vq25",
+      "driverName": "EDENILSON DE SOUSA SILVA",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-14T19:04:33.210Z",
+      "driverId": "G1034",
+      "syncPending": true,
+      "auditId": "aud_1784055801222",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784055873210_1vq25.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
       "driverName": "ADELSON SANTOS DE ARAUJO",
       "id": "photo_1784327273162_akgdu",
       "type": "ativo",
@@ -6581,6 +5885,19 @@
       "auditId": "aud_1784327043138",
       "photoUrl": "/api/shared-files/photos/photo_1784327273162_akgdu.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
+      "syncPending": true,
+      "driverId": "G1034",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-14T19:08:11.020Z",
+      "driverName": "EDENILSON DE SOUSA SILVA",
+      "id": "photo_1784056091020_ei9pq",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784056091020_ei9pq.jpg",
+      "auditId": "aud_1784055801222",
+      "conferenteId": "usr_1782481995449"
     },
     {
       "photoUrl": "/api/shared-files/photos/photo_1784329599753_opeum.jpg",
@@ -6596,6 +5913,19 @@
       "driverId": "G1162"
     },
     {
+      "id": "photo_1784056098037_s05v2",
+      "driverName": "EDENILSON DE SOUSA SILVA",
+      "type": "ativo",
+      "timestamp": "2026-07-14T19:08:18.037Z",
+      "itemCode": "Geral / AG",
+      "driverId": "G1034",
+      "syncPending": true,
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784055801222",
+      "photoUrl": "/api/shared-files/photos/photo_1784056098037_s05v2.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
       "syncPending": true,
       "driverId": "G1162",
       "type": "ativo",
@@ -6607,6 +5937,19 @@
       "itemName": "Evidência de Ativo de Giro (AG)",
       "conferenteId": "usr_1782481995449",
       "auditId": "aud_1784329588132"
+    },
+    {
+      "auditId": "aud_1784055801222",
+      "conferenteId": "usr_1782481995449",
+      "itemName": "Evidência de Produto Acabado (PA)",
+      "photoUrl": "/api/shared-files/photos/photo_1784056161501_t2kbq.jpg",
+      "id": "photo_1784056161501_t2kbq",
+      "driverName": "EDENILSON DE SOUSA SILVA",
+      "itemCode": "Geral / PA",
+      "type": "produto",
+      "timestamp": "2026-07-14T19:09:21.501Z",
+      "driverId": "G1034",
+      "syncPending": true
     },
     {
       "type": "ativo",
@@ -6622,6 +5965,19 @@
       "auditId": "aud_1784329588132"
     },
     {
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784055801222",
+      "itemName": "Evidência de Produto Acabado (PA)",
+      "photoUrl": "/api/shared-files/photos/photo_1784056174634_uff6r.jpg",
+      "driverId": "G1034",
+      "syncPending": true,
+      "id": "photo_1784056174634_uff6r",
+      "driverName": "EDENILSON DE SOUSA SILVA",
+      "type": "produto",
+      "timestamp": "2026-07-14T19:09:34.634Z",
+      "itemCode": "Geral / PA"
+    },
+    {
       "itemName": "Evidência de Ativo de Giro (AG)",
       "photoUrl": "/api/shared-files/photos/photo_1784329637200_c1cfr.jpg",
       "conferenteId": "usr_1782481995449",
@@ -6633,6 +5989,19 @@
       "driverName": "THIAGO JOSE SANTINO DOS SANTOS",
       "syncPending": true,
       "driverId": "G1162"
+    },
+    {
+      "id": "photo_1784056527701_p329r",
+      "driverName": "temporario",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-14T19:15:27.702Z",
+      "type": "ativo",
+      "driverId": "temporario",
+      "syncPending": true,
+      "auditId": "aud_1784056450778",
+      "conferenteId": "usr_1782481995449",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784056527701_p329r.jpg"
     },
     {
       "conferenteId": "usr_1782481995449",
@@ -6648,6 +6017,19 @@
       "itemCode": "Geral / AG"
     },
     {
+      "photoUrl": "/api/shared-files/photos/photo_1784056545596_leyoz.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784056450778",
+      "syncPending": true,
+      "driverId": "temporario",
+      "timestamp": "2026-07-14T19:15:45.596Z",
+      "type": "ativo",
+      "itemCode": "Geral / AG",
+      "driverName": "temporario",
+      "id": "photo_1784056545596_leyoz"
+    },
+    {
       "driverName": "JEFFERSON JONES PAULINO COSTA",
       "id": "photo_1784332259077_dpu6x",
       "type": "ativo",
@@ -6659,6 +6041,19 @@
       "auditId": "aud_1784332230010",
       "itemName": "Evidência de Ativo de Giro (AG)",
       "photoUrl": "/api/shared-files/photos/photo_1784332259077_dpu6x.jpg"
+    },
+    {
+      "syncPending": true,
+      "driverId": "temporario",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-14T19:16:16.763Z",
+      "driverName": "temporario",
+      "id": "photo_1784056576763_zh00m",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784056576763_zh00m.jpg",
+      "auditId": "aud_1784056450778",
+      "conferenteId": "usr_1782481995449"
     },
     {
       "itemName": "Evidência de Ativo de Giro (AG)",
@@ -6674,6 +6069,19 @@
       "driverName": "JEFFERSON JONES PAULINO COSTA"
     },
     {
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784056450778",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784056612111_59d9r.jpg",
+      "driverId": "temporario",
+      "syncPending": true,
+      "driverName": "temporario",
+      "id": "photo_1784056612111_59d9r",
+      "timestamp": "2026-07-14T19:16:52.112Z",
+      "type": "ativo",
+      "itemCode": "Geral / AG"
+    },
+    {
       "syncPending": true,
       "driverId": "G1122",
       "itemCode": "Geral / AG",
@@ -6685,6 +6093,19 @@
       "photoUrl": "/api/shared-files/photos/photo_1784332271523_0fjum.jpg",
       "auditId": "aud_1784332230010",
       "conferenteId": "usr_1782481995449"
+    },
+    {
+      "syncPending": true,
+      "driverId": "temporario",
+      "type": "ativo",
+      "timestamp": "2026-07-14T19:17:16.126Z",
+      "itemCode": "Geral / AG",
+      "id": "photo_1784056636125_7i52y",
+      "driverName": "temporario",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784056636125_7i52y.jpg",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784056450778"
     },
     {
       "conferenteId": "usr_1782481995449",
@@ -6700,6 +6121,19 @@
       "itemCode": "Geral / AG"
     },
     {
+      "id": "photo_1784056657546_qw79q",
+      "driverName": "temporario",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-14T19:17:37.546Z",
+      "driverId": "temporario",
+      "syncPending": true,
+      "auditId": "aud_1784056450778",
+      "conferenteId": "usr_1782481995449",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784056657546_qw79q.jpg"
+    },
+    {
       "driverName": "EDILSON DE ANDRADE LIMA JUNIOR",
       "id": "photo_1784332650178_6nv6h",
       "itemCode": "Geral / AG",
@@ -6711,6 +6145,19 @@
       "conferenteId": "usr_1782481995449",
       "itemName": "Evidência de Ativo de Giro (AG)",
       "photoUrl": "/api/shared-files/photos/photo_1784332650178_6nv6h.jpg"
+    },
+    {
+      "id": "photo_1784117639934_vshop",
+      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
+      "itemCode": "TROCAS_REUNIDAS",
+      "type": "troca_reposicao",
+      "timestamp": "2026-07-15T12:13:59.934Z",
+      "driverId": "G1019",
+      "syncPending": true,
+      "auditId": "aud_1784117603424",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784117639934_vshop.jpg",
+      "itemName": "Foto de TROCA/REPOSIÇÃO: Troca/Reposição"
     },
     {
       "photoUrl": "/api/shared-files/photos/photo_1784332657325_p87cn.jpg",
@@ -6726,6 +6173,19 @@
       "driverName": "EDILSON DE ANDRADE LIMA JUNIOR"
     },
     {
+      "driverId": "G1019",
+      "syncPending": true,
+      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
+      "id": "photo_1784117663604_cngg2",
+      "itemCode": "Geral / PA",
+      "type": "produto",
+      "timestamp": "2026-07-15T12:14:23.604Z",
+      "auditId": "aud_1784117603424",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784117663604_cngg2.jpg",
+      "itemName": "Evidência de Produto Acabado (PA)"
+    },
+    {
       "type": "ativo",
       "timestamp": "2026-07-17T23:57:45.959Z",
       "itemCode": "Geral / AG",
@@ -6739,6 +6199,19 @@
       "auditId": "aud_1784332624715"
     },
     {
+      "driverId": "G1019",
+      "syncPending": true,
+      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
+      "id": "photo_1784117671690_d8wrn",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-15T12:14:31.690Z",
+      "auditId": "aud_1784117603424",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784117671690_d8wrn.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
       "conferenteId": "usr_1782481995449",
       "auditId": "aud_1784332624715",
       "itemName": "Evidência de Ativo de Giro (AG)",
@@ -6749,6 +6222,19 @@
       "type": "ativo",
       "itemCode": "Geral / AG",
       "driverId": "G1111",
+      "syncPending": true
+    },
+    {
+      "auditId": "aud_1784117603424",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784117701746_mnxgp.jpg",
+      "itemName": "sddsf",
+      "id": "photo_1784117701746_mnxgp",
+      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
+      "itemCode": "Geral / PA",
+      "type": "produto",
+      "timestamp": "2026-07-15T12:15:01.746Z",
+      "driverId": "G1019",
       "syncPending": true
     },
     {
@@ -6765,6 +6251,19 @@
       "auditId": "aud_1784394834768"
     },
     {
+      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
+      "id": "photo_1784117722670_ghvsb",
+      "itemCode": "ref_batch_1784117722663_0",
+      "timestamp": "2026-07-15T12:15:22.670Z",
+      "type": "refugo",
+      "driverId": "G1019",
+      "syncPending": true,
+      "auditId": "aud_1784117603424",
+      "conferenteId": "usr_1782481995449",
+      "itemName": "Refugo e Avarias (3 itens)",
+      "photoUrl": "/api/shared-files/photos/photo_1784117722670_ghvsb.jpg"
+    },
+    {
       "itemName": "Evidência de Ativo de Giro (AG)",
       "photoUrl": "/api/shared-files/photos/photo_1784394867418_75hxn.jpg",
       "auditId": "aud_1784394834768",
@@ -6776,6 +6275,19 @@
       "driverName": "VALDKLEBER DE SOUZA ALEXANDRE",
       "syncPending": true,
       "driverId": "G1049"
+    },
+    {
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784137365793_obeki.jpg",
+      "auditId": "aud_1784137339885",
+      "conferenteId": "usr_1782481995449",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-15T17:42:45.794Z",
+      "type": "ativo",
+      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
+      "id": "photo_1784137365793_obeki",
+      "syncPending": true,
+      "driverId": "G1143"
     },
     {
       "photoUrl": "/api/shared-files/photos/photo_1784394877785_y21d2.jpg",
@@ -6791,6 +6303,19 @@
       "id": "photo_1784394877785_y21d2"
     },
     {
+      "id": "photo_1784137393325_b5a9d",
+      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
+      "type": "ativo",
+      "timestamp": "2026-07-15T17:43:13.325Z",
+      "itemCode": "Geral / AG",
+      "driverId": "G1143",
+      "syncPending": true,
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784137339885",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784137393325_b5a9d.jpg"
+    },
+    {
       "conferenteId": "usr_1782481995449",
       "auditId": "aud_1784394834768",
       "photoUrl": "/api/shared-files/photos/photo_1784394890590_dm7s1.jpg",
@@ -6802,6 +6327,19 @@
       "timestamp": "2026-07-18T17:14:50.590Z",
       "type": "ativo",
       "itemCode": "Geral / AG"
+    },
+    {
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784137408217_8kvcj.jpg",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784137339885",
+      "syncPending": true,
+      "driverId": "G1143",
+      "type": "ativo",
+      "timestamp": "2026-07-15T17:43:28.217Z",
+      "itemCode": "Geral / AG",
+      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
+      "id": "photo_1784137408217_8kvcj"
     },
     {
       "itemName": "Evidência de Produto Acabado (PA)",
@@ -6817,30 +6355,17 @@
       "driverId": "G1049"
     },
     {
-      "driverId": "G1122",
-      "syncPending": true,
-      "id": "photo_1784395211636_nvac0",
-      "driverName": "JEFFERSON JONES PAULINO COSTA",
       "itemCode": "Geral / AG",
-      "timestamp": "2026-07-18T17:20:11.636Z",
       "type": "ativo",
-      "auditId": "aud_1784332230010",
-      "conferenteId": "usr_1782481995449",
-      "photoUrl": "/api/shared-files/photos/photo_1784395211636_nvac0.jpg",
-      "itemName": "Evidência de Ativo de Giro (AG)"
-    },
-    {
+      "timestamp": "2026-07-15T17:43:48.232Z",
+      "driverName": "JOSICLAUDIO DE OLIVEIRA RODRIGUES",
+      "id": "photo_1784137428232_76rdb",
+      "syncPending": true,
+      "driverId": "G1143",
       "itemName": "Evidência de Ativo de Giro (AG)",
-      "photoUrl": "/api/shared-files/photos/photo_1784395218141_4266d.jpg",
-      "conferenteId": "usr_1782481995449",
-      "auditId": "aud_1784332230010",
-      "syncPending": true,
-      "driverId": "G1122",
-      "type": "ativo",
-      "timestamp": "2026-07-18T17:20:18.141Z",
-      "itemCode": "Geral / AG",
-      "id": "photo_1784395218141_4266d",
-      "driverName": "JEFFERSON JONES PAULINO COSTA"
+      "photoUrl": "/api/shared-files/photos/photo_1784137428232_76rdb.jpg",
+      "auditId": "aud_1784137339885",
+      "conferenteId": "usr_1782481995449"
     },
     {
       "auditId": "aud_1784332230010",
@@ -6853,6 +6378,19 @@
       "type": "ativo",
       "timestamp": "2026-07-18T17:20:25.269Z",
       "driverId": "G1122",
+      "syncPending": true
+    },
+    {
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784137602154",
+      "photoUrl": "/api/shared-files/photos/photo_1784137611661_ltkkt.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "id": "photo_1784137611661_ltkkt",
+      "driverName": "VALDKLEBER DE SOUZA ALEXANDRE",
+      "timestamp": "2026-07-15T17:46:51.661Z",
+      "type": "ativo",
+      "itemCode": "Geral / AG",
+      "driverId": "G1049",
       "syncPending": true
     },
     {
@@ -6869,6 +6407,19 @@
       "photoUrl": "/api/shared-files/photos/photo_1784395334807_7cx7k.jpg"
     },
     {
+      "syncPending": true,
+      "driverId": "G1049",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-15T17:47:13.911Z",
+      "driverName": "VALDKLEBER DE SOUZA ALEXANDRE",
+      "id": "photo_1784137633910_37kf3",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784137633910_37kf3.jpg",
+      "auditId": "aud_1784137602154",
+      "conferenteId": "usr_1782481995449"
+    },
+    {
       "driverId": "G1049",
       "syncPending": true,
       "id": "photo_1784395338463_h7inn",
@@ -6880,6 +6431,19 @@
       "auditId": "aud_1784394834768",
       "photoUrl": "/api/shared-files/photos/photo_1784395338463_h7inn.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784137602154",
+      "photoUrl": "/api/shared-files/photos/photo_1784137648567_1plry.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "driverId": "G1049",
+      "syncPending": true,
+      "driverName": "VALDKLEBER DE SOUZA ALEXANDRE",
+      "id": "photo_1784137648567_1plry",
+      "type": "ativo",
+      "timestamp": "2026-07-15T17:47:28.567Z",
+      "itemCode": "Geral / AG"
     },
     {
       "timestamp": "2026-07-18T17:22:24.425Z",
@@ -6895,6 +6459,19 @@
       "auditId": "aud_1784394834768"
     },
     {
+      "auditId": "aud_1784137602154",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784137668159_6o41p.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "id": "photo_1784137668159_6o41p",
+      "driverName": "VALDKLEBER DE SOUZA ALEXANDRE",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-15T17:47:48.159Z",
+      "driverId": "G1049",
+      "syncPending": true
+    },
+    {
       "driverId": "G1049",
       "syncPending": true,
       "id": "photo_1784395355719_05q7a",
@@ -6906,6 +6483,19 @@
       "auditId": "aud_1784394834768",
       "itemName": "Evidência de Ativo de Giro (AG)",
       "photoUrl": "/api/shared-files/photos/photo_1784395355719_05q7a.jpg"
+    },
+    {
+      "id": "photo_1784137784875_n97xa",
+      "driverName": "EWERTON RODRIGUES DA SILVA",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-15T17:49:44.875Z",
+      "type": "ativo",
+      "driverId": "G1020",
+      "syncPending": true,
+      "auditId": "aud_1784137774081",
+      "conferenteId": "usr_1782481995449",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784137784875_n97xa.jpg"
     },
     {
       "conferenteId": "usr_1782481995449",
@@ -6921,6 +6511,19 @@
       "itemCode": "Geral / PA"
     },
     {
+      "id": "photo_1784137792272_qtx2b",
+      "driverName": "EWERTON RODRIGUES DA SILVA",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-15T17:49:52.272Z",
+      "type": "ativo",
+      "driverId": "G1020",
+      "syncPending": true,
+      "auditId": "aud_1784137774081",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784137792272_qtx2b.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
       "itemName": "Evidência de Ativo de Giro (AG)",
       "photoUrl": "/api/shared-files/photos/photo_1784395554232_2t90p.jpg",
       "auditId": "aud_1784395544003",
@@ -6932,6 +6535,19 @@
       "type": "ativo",
       "id": "photo_1784395554232_2t90p",
       "driverName": "temporario"
+    },
+    {
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784137871842_pfsqm.jpg",
+      "auditId": "aud_1784137774081",
+      "conferenteId": "usr_1782481995449",
+      "syncPending": true,
+      "driverId": "G1020",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-15T17:51:11.843Z",
+      "type": "ativo",
+      "id": "photo_1784137871842_pfsqm",
+      "driverName": "EWERTON RODRIGUES DA SILVA"
     },
     {
       "auditId": "aud_1784395544003",
@@ -6947,6 +6563,19 @@
       "syncPending": true
     },
     {
+      "syncPending": true,
+      "driverId": "G1020",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-15T17:51:20.153Z",
+      "driverName": "EWERTON RODRIGUES DA SILVA",
+      "id": "photo_1784137880153_zrwnx",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784137880153_zrwnx.jpg",
+      "auditId": "aud_1784137774081",
+      "conferenteId": "usr_1782481995449"
+    },
+    {
       "itemName": "Evidência de Ativo de Giro (AG)",
       "photoUrl": "/api/shared-files/photos/photo_1784395565172_dizzr.jpg",
       "conferenteId": "usr_1782481995449",
@@ -6958,6 +6587,19 @@
       "itemCode": "Geral / AG",
       "id": "photo_1784395565172_dizzr",
       "driverName": "temporario"
+    },
+    {
+      "driverName": "EWERTON RODRIGUES DA SILVA",
+      "id": "photo_1784137889361_fqljy",
+      "timestamp": "2026-07-15T17:51:29.361Z",
+      "type": "ativo",
+      "itemCode": "Geral / AG",
+      "driverId": "G1020",
+      "syncPending": true,
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784137774081",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784137889361_fqljy.jpg"
     },
     {
       "photoUrl": "/api/shared-files/photos/photo_1784395656203_kbcx1.jpg",
@@ -6973,6 +6615,19 @@
       "driverName": "temporario"
     },
     {
+      "syncPending": true,
+      "driverId": "G1101",
+      "type": "ativo",
+      "timestamp": "2026-07-15T17:53:56.509Z",
+      "itemCode": "Geral / AG",
+      "id": "photo_1784138036509_relfi",
+      "driverName": "JOSE HONORIO DA SILVA",
+      "photoUrl": "/api/shared-files/photos/photo_1784138036509_relfi.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784138023962"
+    },
+    {
       "driverName": "temporario",
       "id": "photo_1784395663257_crkmd",
       "type": "ativo",
@@ -6984,6 +6639,19 @@
       "auditId": "aud_1784395645116",
       "photoUrl": "/api/shared-files/photos/photo_1784395663257_crkmd.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
+      "syncPending": true,
+      "driverId": "G1101",
+      "timestamp": "2026-07-15T17:54:05.338Z",
+      "type": "ativo",
+      "itemCode": "Geral / AG",
+      "id": "photo_1784138045338_3gl2k",
+      "driverName": "JOSE HONORIO DA SILVA",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784138045338_3gl2k.jpg",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784138023962"
     },
     {
       "photoUrl": "/api/shared-files/photos/photo_1784395678033_omyib.jpg",
@@ -6999,6 +6667,19 @@
       "driverId": "temporario"
     },
     {
+      "auditId": "aud_1784138023962",
+      "conferenteId": "usr_1782481995449",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784138067792_941kd.jpg",
+      "driverId": "G1101",
+      "syncPending": true,
+      "driverName": "JOSE HONORIO DA SILVA",
+      "id": "photo_1784138067792_941kd",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-15T17:54:27.792Z",
+      "type": "ativo"
+    },
+    {
       "id": "photo_1784395683571_dn8oc",
       "driverName": "temporario",
       "timestamp": "2026-07-18T17:28:03.571Z",
@@ -7010,6 +6691,19 @@
       "auditId": "aud_1784395645116",
       "photoUrl": "/api/shared-files/photos/photo_1784395683571_dn8oc.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
+      "auditId": "aud_1784138023962",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784138073986_umpf3.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "driverName": "JOSE HONORIO DA SILVA",
+      "id": "photo_1784138073986_umpf3",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-15T17:54:33.986Z",
+      "driverId": "G1101",
+      "syncPending": true
     },
     {
       "driverId": "temporario",
@@ -7025,6 +6719,19 @@
       "photoUrl": "/api/shared-files/photos/photo_1784395812136_9z162.jpg"
     },
     {
+      "id": "photo_1784138081616_uoh7v",
+      "driverName": "JOSE HONORIO DA SILVA",
+      "timestamp": "2026-07-15T17:54:41.616Z",
+      "type": "ativo",
+      "itemCode": "Geral / AG",
+      "driverId": "G1101",
+      "syncPending": true,
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784138023962",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784138081616_uoh7v.jpg"
+    },
+    {
       "id": "photo_1784395819297_9fkwb",
       "driverName": "temporario",
       "itemCode": "Geral / AG",
@@ -7036,6 +6743,19 @@
       "conferenteId": "usr_1782481995449",
       "photoUrl": "/api/shared-files/photos/photo_1784395819297_9fkwb.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
+      "id": "photo_1784138823666_lt4m4",
+      "driverName": "temporario",
+      "timestamp": "2026-07-15T18:07:03.668Z",
+      "type": "ativo",
+      "itemCode": "Geral / AG",
+      "driverId": "temporario",
+      "syncPending": true,
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784138783077",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784138823666_lt4m4.jpg"
     },
     {
       "auditId": "aud_1784395804019",
@@ -7051,6 +6771,19 @@
       "timestamp": "2026-07-18T17:30:24.419Z"
     },
     {
+      "auditId": "aud_1784149721775",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784149898415_xkck1.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "driverId": "G1019",
+      "syncPending": true,
+      "driverName": "DANILLO PEREIRA DOS SANTOS SILVA",
+      "id": "photo_1784149898415_xkck1",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-15T21:11:38.415Z",
+      "type": "ativo"
+    },
+    {
       "photoUrl": "/api/shared-files/photos/photo_1784395831424_rwll8.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)",
       "conferenteId": "usr_1782481995449",
@@ -7062,6 +6795,19 @@
       "itemCode": "Geral / AG",
       "id": "photo_1784395831424_rwll8",
       "driverName": "temporario"
+    },
+    {
+      "syncPending": true,
+      "driverId": "G1053",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-15T22:00:16.685Z",
+      "id": "photo_1784152816684_81wgn",
+      "driverName": "ADELSON SANTOS DE ARAUJO",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784152816684_81wgn.jpg",
+      "auditId": "aud_1784152801141",
+      "conferenteId": "usr_1782481995449"
     },
     {
       "driverName": "temporario",
@@ -7077,6 +6823,19 @@
       "itemName": "Evidência de Ativo de Giro (AG)"
     },
     {
+      "photoUrl": "/api/shared-files/photos/photo_1784152822095_m66c6.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "auditId": "aud_1784152801141",
+      "conferenteId": "usr_1782481995449",
+      "syncPending": true,
+      "driverId": "G1053",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-15T22:00:22.095Z",
+      "driverName": "ADELSON SANTOS DE ARAUJO",
+      "id": "photo_1784152822095_m66c6"
+    },
+    {
       "photoUrl": "/api/shared-files/photos/photo_1784395847360_wfjge.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)",
       "conferenteId": "usr_1782481995449",
@@ -7090,6 +6849,19 @@
       "driverId": "temporario"
     },
     {
+      "driverName": "ADELSON SANTOS DE ARAUJO",
+      "id": "photo_1784152827368_yxb4f",
+      "itemCode": "Geral / AG",
+      "type": "ativo",
+      "timestamp": "2026-07-15T22:00:27.369Z",
+      "driverId": "G1053",
+      "syncPending": true,
+      "auditId": "aud_1784152801141",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784152827368_yxb4f.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
       "photoUrl": "/api/shared-files/photos/photo_1784395852696_jr36k.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)",
       "conferenteId": "usr_1782481995449",
@@ -7101,6 +6873,19 @@
       "driverName": "temporario",
       "syncPending": true,
       "driverId": "temporario"
+    },
+    {
+      "driverId": "G1053",
+      "syncPending": true,
+      "id": "photo_1784152864248_4qi3m",
+      "driverName": "ADELSON SANTOS DE ARAUJO",
+      "type": "ativo",
+      "timestamp": "2026-07-15T22:01:04.248Z",
+      "itemCode": "Geral / AG",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784152801141",
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784152864248_4qi3m.jpg"
     },
     {
       "conferenteId": "usr_1782481995449",
@@ -7662,6 +7447,19 @@
       "photoUrl": "/api/shared-files/photos/photo_1784587440721_51ua7.jpg"
     },
     {
+      "driverId": "G1122",
+      "syncPending": true,
+      "id": "photo_1784395211636_nvac0",
+      "driverName": "JEFFERSON JONES PAULINO COSTA",
+      "itemCode": "Geral / AG",
+      "timestamp": "2026-07-18T17:20:11.636Z",
+      "type": "ativo",
+      "auditId": "aud_1784332230010",
+      "conferenteId": "usr_1782481995449",
+      "photoUrl": "/api/shared-files/photos/photo_1784395211636_nvac0.jpg",
+      "itemName": "Evidência de Ativo de Giro (AG)"
+    },
+    {
       "photoUrl": "/api/shared-files/photos/photo_1784656922565_kvphk.jpg",
       "itemName": "Evidência de Ativo de Giro (AG)",
       "auditId": "aud_1784656888081",
@@ -7673,6 +7471,19 @@
       "type": "ativo",
       "id": "photo_1784656922565_kvphk",
       "driverName": "temporario"
+    },
+    {
+      "itemName": "Evidência de Ativo de Giro (AG)",
+      "photoUrl": "/api/shared-files/photos/photo_1784395218141_4266d.jpg",
+      "conferenteId": "usr_1782481995449",
+      "auditId": "aud_1784332230010",
+      "syncPending": true,
+      "driverId": "G1122",
+      "type": "ativo",
+      "timestamp": "2026-07-18T17:20:18.141Z",
+      "itemCode": "Geral / AG",
+      "id": "photo_1784395218141_4266d",
+      "driverName": "JEFFERSON JONES PAULINO COSTA"
     },
     {
       "photoUrl": "/api/shared-files/photos/photo_1784656927930_0r2kj.jpg",

@@ -3085,6 +3085,16 @@ export const DEFAULT_ACTIVE_ASSETS: ActiveAsset[] = [
 
 export const DEFAULT_USERS: User[] = [
   { id: 'usr_g1009', name: 'Administrador G1009', role: 'gestor', username: 'G1009', password: '123' },
+  { id: 'usr_1782482189381', name: 'ELISSON MINERVINO', role: 'gestor', username: '7224', password: '123' },
+  { id: 'usr_1782482208921', name: 'MARCOS GUILHERME', role: 'gestor', username: '7171', password: '123' },
+  { id: 'usr_1782481995449', name: 'GLADSON LISBOA', role: 'conferente', username: 'g1145', password: '123' },
+  { id: 'usr_1782482023049', name: 'GILSON ROSA', role: 'conferente', username: 'g1088', password: '123' },
+  { id: 'usr_1782482081189', name: 'ALÉCYA FERREIRA', role: 'auxiliar_logistica', username: 'G1163', password: 'Ambev10' },
+  { id: 'usr_1782482101263', name: 'DJEANDERSON SOARES', role: 'gestor', username: 'G1002', password: '!Liz1105' },
+  { id: 'usr_1782482138597', name: 'VICTOR MARINHO', role: 'gestor', username: 'g1083', password: '123' },
+  { id: 'usr_1782482170529', name: 'LUIZ EDUARDO', role: 'gestor', username: 'g1149', password: '123' },
+  { id: 'usr_1782748019419', name: 'Rafael Rodrigues', role: 'monitoramento', username: 'g1078', password: 'Ambev10' },
+  { id: 'usr_1784294627000', name: 'José Marcos', role: 'financeiro', username: 'g1006', password: 'Ambev10' },
   { id: 'usr_1', name: 'Alice Conferente', role: 'conferente', username: 'conferente1', password: '123' },
   { id: 'usr_2', name: 'Bruno Fiscal', role: 'auxiliar_logistica', username: 'auxiliar1', password: '123' },
   { id: 'usr_3', name: 'Elisson Minervino', role: 'gestor', username: 'gestor1', password: '123' },

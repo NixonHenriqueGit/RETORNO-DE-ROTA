@@ -30,7 +30,29 @@ const setStored = <T>(key: string, val: T): void => {
 // Initial state initialization
 export class AppStore {
   static getUsers(): User[] {
-    return getStored<User[]>('logiroute_users', DEFAULT_USERS);
+    const stored = getStored<User[]>('logiroute_users', DEFAULT_USERS);
+    if (!stored || stored.length === 0) return DEFAULT_USERS;
+    
+    // Ensure all DEFAULT_USERS exist in stored list (matched by username or id)
+    const userMap = new Map<string, User>();
+    DEFAULT_USERS.forEach(u => {
+      if (u && (u.username || u.id)) {
+        const key = (u.username || u.id).toString().toLowerCase();
+        userMap.set(key, u);
+      }
+    });
+    stored.forEach(u => {
+      if (u && (u.username || u.id)) {
+        const key = (u.username || u.id).toString().toLowerCase();
+        const existing = userMap.get(key);
+        userMap.set(key, {
+          ...existing,
+          ...u,
+          password: u.password || existing?.password || '123'
+        });
+      }
+    });
+    return Array.from(userMap.values());
   }
 
   static setUsers(users: User[]): void {

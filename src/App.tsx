@@ -375,8 +375,23 @@ export default function App() {
     if (db.users && db.users.length > 0) {
       const userMap = new Map<string, User>();
       const localUsers = AppStore.getUsers() || [];
-      localUsers.forEach(u => { if (u && u.id) userMap.set(u.id, u); });
-      db.users.forEach((u: User) => { if (u && u.id) userMap.set(u.id, { ...userMap.get(u.id), ...u }); });
+      localUsers.forEach(u => {
+        if (u && (u.username || u.id)) {
+          const key = (u.username || u.id).toString().toLowerCase();
+          userMap.set(key, u);
+        }
+      });
+      db.users.forEach((u: User) => {
+        if (u && (u.username || u.id)) {
+          const key = (u.username || u.id).toString().toLowerCase();
+          const existing = userMap.get(key);
+          userMap.set(key, {
+            ...existing,
+            ...u,
+            password: u.password || existing?.password || '123'
+          });
+        }
+      });
       const mergedUsers = Array.from(userMap.values());
       setUsers(mergedUsers);
       AppStore.setUsers(mergedUsers);
