@@ -407,16 +407,7 @@ function selectCircularBlitzRoutes(
     return true;
   });
 
-  // Retrieve already checked plates in this cycle from localStorage
   let checkedPlates: string[] = [];
-  try {
-    const saved = localStorage.getItem("blitz_checked_plates");
-    if (saved) {
-      checkedPlates = JSON.parse(saved);
-    }
-  } catch (e) {
-    console.error("Error reading blitz checked plates:", e);
-  }
 
   // Split candidates into unchecked and checked
   const uncheckedCandidates = candidates.filter(r => !checkedPlates.includes(r.plate.trim().toUpperCase()));
@@ -463,12 +454,6 @@ function selectCircularBlitzRoutes(
   // Reset checked cycle if it's getting too large to allow cycling back
   if (checkedPlates.length > candidates.length * 2) {
     checkedPlates = [];
-  }
-
-  try {
-    localStorage.setItem("blitz_checked_plates", JSON.stringify(checkedPlates));
-  } catch (e) {
-    // ignore
   }
 
   const result = [...keptMaps, ...selectedNewMaps];
@@ -6057,15 +6042,7 @@ export default function FiscalView({
                   ? new Date(associatedAudit.arrivalDate + 'T00:00:00').toLocaleDateString('pt-BR') 
                   : new Date(viewingVale.dataGeracao + 'T00:00:00').toLocaleDateString('pt-BR');
                 const helperName = associatedAudit?.helperId ? getHelperName(associatedAudit.helperId) : 'N/A';
-                const usersList = typeof window !== 'undefined'
-                  ? (() => {
-                      const stored = localStorage.getItem('logiroute_users');
-                      if (stored) {
-                        try { return JSON.parse(stored) as User[]; } catch(e) {}
-                      }
-                      return DEFAULT_USERS;
-                    })()
-                  : DEFAULT_USERS;
+                const usersList = DEFAULT_USERS;
                 const foundUser = usersList.find(u => u.id === associatedAudit?.conferenteId || u.username === associatedAudit?.conferenteId);
                 const conferenteName = foundUser 
                   ? foundUser.name 

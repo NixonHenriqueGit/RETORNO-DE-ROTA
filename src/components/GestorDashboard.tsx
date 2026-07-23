@@ -379,33 +379,16 @@ export default function GestorDashboard({
   const [clearLoading, setClearLoading] = useState(false);
 
   const fetchFirebaseConfig = async () => {
-    // Carregar chave do Gemini salva localmente no navegador
-    let localGemini = localStorage.getItem('logiroute_gemini_api_key') || '';
+    let localGemini = '';
 
     if (isClientFirebaseActive()) {
       try {
         const firestoreGemini = await getGeminiKeyFromFirestore();
         if (firestoreGemini) {
           localGemini = firestoreGemini;
-          localStorage.setItem('logiroute_gemini_api_key', firestoreGemini);
         }
       } catch (err) {
         console.warn('Erro ao carregar chave do Gemini do Firestore:', err);
-      }
-
-      const localCfg = localStorage.getItem('logiroute_firebase_client_config');
-      if (localCfg) {
-        try {
-          const cfg = JSON.parse(localCfg);
-          setFormApiKey(cfg.apiKey || '');
-          setFormAuthDomain(cfg.authDomain || '');
-          setFormProjectId(cfg.projectId || '');
-          setFormStorageBucket(cfg.storageBucket || '');
-          setFormMessagingSenderId(cfg.messagingSenderId || '');
-          setFormAppId(cfg.appId || '');
-          setFormMeasurementId(cfg.measurementId || '');
-          setFormFirestoreDatabaseId(cfg.firestoreDatabaseId || 'default');
-        } catch (e) {}
       }
       setFormGeminiApiKey(localGemini);
       return;
@@ -437,16 +420,14 @@ export default function GestorDashboard({
     setGeminiResult(null);
     try {
       const trimmedKey = formGeminiApiKey.trim();
-      localStorage.setItem('logiroute_gemini_api_key', trimmedKey);
-      
       let extraMessage = "";
-      if (isClientFirebaseActive() && trimmedKey) {
+      if (trimmedKey) {
         const savedToFirestore = await saveGeminiKeyToFirestore(trimmedKey);
         if (savedToFirestore) {
           extraMessage = " e sincronizada de forma global no Firestore!";
         }
       }
-      setGeminiResult({ success: true, message: `Chave API do Gemini salva com sucesso no navegador${extraMessage}` });
+      setGeminiResult({ success: true, message: `Chave API do Gemini salva com sucesso${extraMessage}` });
     } catch (err: any) {
       setGeminiResult({ success: false, message: err?.message || "Erro ao salvar a chave da I.A." });
     } finally {

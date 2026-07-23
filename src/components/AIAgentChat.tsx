@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, X, Sparkles, Bot, User, CornerDownLeft } from 'lucide-react';
-import { AppStore } from '../store';
-import { isClientFirebaseActive, getGeminiKeyFromFirestore } from '../clientFirebase';
+import { isClientFirebaseActive, getGeminiKeyFromFirestore, fetchDirectlyFromFirestore } from '../clientFirebase';
 import { GoogleGenAI } from '@google/genai';
 
 interface ChatMessage {
@@ -63,19 +62,15 @@ export default function AIAgentChat() {
     // Helper to run client-side Gemini call as fallback or primary
     const runClientSideGemini = async () => {
       console.log("[ClientFirebase] Tentando usar o Gemini diretamente no cliente...");
-      let apiKey = localStorage.getItem('logiroute_gemini_api_key') || '';
+      let apiKey = '';
       
-      // If key is empty in localStorage, attempt loading it from Firestore directly for multi-device sync
-      if (!apiKey && isClientFirebaseActive()) {
-        try {
-          const firestoreKey = await getGeminiKeyFromFirestore();
-          if (firestoreKey) {
-            apiKey = firestoreKey;
-            localStorage.setItem('logiroute_gemini_api_key', firestoreKey);
-          }
-        } catch (e) {
-          console.warn("[ClientFirebase] Falha ao ler chave do Gemini do Firestore:", e);
+      try {
+        const firestoreKey = await getGeminiKeyFromFirestore();
+        if (firestoreKey) {
+          apiKey = firestoreKey;
         }
+      } catch (e) {
+        console.warn("[ClientFirebase] Falha ao ler chave do Gemini do Firestore:", e);
       }
 
       if (!apiKey) {
@@ -85,17 +80,18 @@ export default function AIAgentChat() {
       }
 
       if (!apiKey) {
-        throw new Error("Chave API do Gemini não configurada. Salve sua chave no painel de Configurações (Aba Conexão Firebase) como Gestor para utilizar o Assistente de forma global no GitHub Pages ou no Google AI Studio.");
+        throw new Error("Chave API do Gemini não configurada. Salve sua chave no painel de Configurações (Aba Conexão Firebase) como Gestor para utilizar o Assistente de forma global.");
       }
 
       const ai = new GoogleGenAI({ apiKey });
 
       let activeDatabaseContext = "Nenhum dado ativo no momento.";
       try {
-        const routes = AppStore.getImportedRoutes() || [];
-        const audits = AppStore.getAudits() || [];
-        const vales = AppStore.getVales() || [];
-        const drivers = AppStore.getDrivers() || [];
+        const dbData = await fetchDirectlyFromFirestore();
+        const routes = dbData?.importedRoutes || [];
+        const audits = dbData?.audits || [];
+        const vales = dbData?.vales || [];
+        const drivers = dbData?.drivers || [];
 
         const openRoutes = routes.filter((r: any) => r.status !== 'fechado');
         const closedRoutes = routes.filter((r: any) => r.status === 'fechado');

@@ -34,14 +34,6 @@ export default function LoginView({ users, onLoginSuccess }: LoginViewProps) {
     const loadFirebaseConfig = async () => {
       let cfg: any = null;
 
-      // Check localStorage first
-      if (typeof window !== 'undefined') {
-        const local = localStorage.getItem('logiroute_firebase_client_config');
-        if (local) {
-          try { cfg = JSON.parse(local); } catch (e) {}
-        }
-      }
-
       // Try fetching from server endpoint
       if (!cfg || !cfg.apiKey) {
         try {
@@ -121,11 +113,6 @@ export default function LoginView({ users, onLoginSuccess }: LoginViewProps) {
       measurementId: measurementId.trim(),
       firestoreDatabaseId: firestoreDatabaseId.trim() || '(default)',
     };
-
-    // Save locally
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('logiroute_firebase_client_config', JSON.stringify(config));
-    }
 
     try {
       const res = await fetch('/api/firebase/config', {
@@ -226,10 +213,6 @@ export default function LoginView({ users, onLoginSuccess }: LoginViewProps) {
     setAppId('');
     setMeasurementId('');
     setFirestoreDatabaseId('(default)');
-
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('logiroute_firebase_client_config');
-    }
 
     try {
       await fetch('/api/firebase/clear', { method: 'POST' });

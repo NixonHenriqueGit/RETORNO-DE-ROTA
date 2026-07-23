@@ -134,59 +134,15 @@ export default function Header({
     };
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('logiroute_custom_apk_url') || '';
-      setCustomApkUrl(stored);
-    }
-  }, []);
-
-  const convertToDirectDownloadUrl = (url: string): string => {
-    if (!url || url.trim() === '') return '';
-    const trimmed = url.trim();
-
-    // 1. Google Drive Sharing Link Conversion
-    const driveFileIdMatch = trimmed.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (driveFileIdMatch && driveFileIdMatch[1]) {
-      return `https://drive.google.com/uc?export=download&id=${driveFileIdMatch[1]}`;
-    }
-    
-    const driveOpenIdMatch = trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (trimmed.includes('drive.google.com') && driveOpenIdMatch && driveOpenIdMatch[1]) {
-      return `https://drive.google.com/uc?export=download&id=${driveOpenIdMatch[1]}`;
-    }
-
-    // 2. Dropbox Link Conversion
-    if (trimmed.includes('dropbox.com')) {
-      if (trimmed.includes('dl=0')) {
-        return trimmed.replace('dl=0', 'dl=1');
-      } else if (!trimmed.includes('dl=')) {
-        return trimmed + (trimmed.includes('?') ? '&dl=1' : '?dl=1');
-      }
-    }
-
-    // 3. GitHub blob/view links to raw.githubusercontent.com
-    if (trimmed.includes('github.com') && trimmed.includes('/blob/')) {
-      return trimmed
-        .replace('github.com', 'raw.githubusercontent.com')
-        .replace('/blob/', '/');
-    }
-
-    return trimmed;
-  };
-
   const handleSaveCustomApkUrl = () => {
-    if (typeof window !== 'undefined') {
-      const convertedUrl = convertToDirectDownloadUrl(customApkUrl);
-      localStorage.setItem('logiroute_custom_apk_url', convertedUrl);
-      setCustomApkUrl(convertedUrl);
-      
-      let message = "Link do APK salvo com sucesso! O botão de download agora utilizará este endereço.";
-      if (convertedUrl !== customApkUrl) {
-        message = `Seu link foi detectado e convertido automaticamente para Download Direto!\n\nLink Original:\n${customApkUrl}\n\nLink Convertido:\n${convertedUrl}\n\nIsso evita o download de páginas HTML corrompidas e resolve o 'Erro ao analisar o pacote' no Android!`;
-      }
-      alert(message);
+    const convertedUrl = convertToDirectDownloadUrl(customApkUrl);
+    setCustomApkUrl(convertedUrl);
+    
+    let message = "Link do APK configurado para esta sessão!";
+    if (convertedUrl !== customApkUrl) {
+      message = `Seu link foi detectado e convertido automaticamente para Download Direto!\n\nLink Original:\n${customApkUrl}\n\nLink Convertido:\n${convertedUrl}`;
     }
+    alert(message);
   };
 
   useEffect(() => {
@@ -236,11 +192,8 @@ export default function Header({
   };
 
   const getApkUrl = () => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('logiroute_custom_apk_url');
-      if (stored && stored.trim() !== '') {
-        return stored.trim();
-      }
+    if (customApkUrl && customApkUrl.trim() !== '') {
+      return customApkUrl.trim();
     }
 
     if (typeof window === 'undefined') return '/guarabira_acuracidade_v2.1.0.apk';
