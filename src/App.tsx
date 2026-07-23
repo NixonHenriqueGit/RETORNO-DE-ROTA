@@ -428,10 +428,58 @@ export default function App() {
       AppStore.setFiscalAlerts(db.fiscalAlerts);
     }
 
-    if (db.importedRoutes !== undefined && Array.isArray(db.importedRoutes)) {
-      const cleaned = cleanImportedRoutes(db.importedRoutes);
-      setImportedRoutes(cleaned);
-      AppStore.setImportedRoutes(cleaned);
+    // Smart Merge Imported Routes
+    if (db.importedRoutes !== undefined) {
+      const remoteCleaned = cleanImportedRoutes(db.importedRoutes);
+      if (remoteCleaned.length === 0) {
+        setImportedRoutes([]);
+        AppStore.setImportedRoutes([]);
+      } else {
+        const routeMap = new Map<string, ImportedRoute>();
+
+        // 1. Primary: load all canonical remote routes from database
+        remoteCleaned.forEach(remoteR => {
+          if (!remoteR || !remoteR.routeMap) return;
+          const mapKey = normalizeMapCode(remoteR.routeMap).toUpperCase();
+          const fullKey = `${mapKey}_${remoteR.routeDate || ''}`;
+          if (mapKey) {
+            routeMap.set(fullKey, remoteR);
+          }
+        });
+
+        // 2. Secondary: preserve local route edits or newly created unsynced local routes
+        const localRoutes = AppStore.getImportedRoutes() || [];
+        localRoutes.forEach(localR => {
+          if (!localR || !localR.routeMap) return;
+          const mapKey = normalizeMapCode(localR.routeMap).toUpperCase();
+          const fullKey = `${mapKey}_${localR.routeDate || ''}`;
+          if (!mapKey) return;
+
+          const remoteR = routeMap.get(fullKey); // Strictly match by fullKey (routeMap + routeDate), NO FALLBACK to mapKey alone
+          if (!remoteR) {
+            // Keep locally created route if created recently
+            routeMap.set(fullKey, localR);
+          } else {
+            // Merge status/items if local user has progressed the route status
+            const localRank = getRouteStatusRank(localR.status);
+            const remoteRank = getRouteStatusRank(remoteR.status);
+
+            if (localRank > remoteRank) {
+              routeMap.set(fullKey, localR);
+            } else if (localRank === remoteRank) {
+              const localTime = localR.updatedAt ? new Date(localR.updatedAt).getTime() : 0;
+              const remoteTime = remoteR.updatedAt ? new Date(remoteR.updatedAt).getTime() : 0;
+              if (localTime > remoteTime) {
+                routeMap.set(fullKey, localR);
+              }
+            }
+          }
+        });
+
+        const mergedRoutes = Array.from(routeMap.values());
+        setImportedRoutes(mergedRoutes);
+        AppStore.setImportedRoutes(mergedRoutes);
+      }
     }
 
     if (db.audit_logs || db.auditLogs) {
@@ -817,7 +865,12 @@ export default function App() {
   const handleSaveImportedRoutes = (newRoutes: ImportedRoute[]) => {
     const timestamp = new Date().toISOString();
     const updatedRoutes = newRoutes.map(newRoute => {
-      const oldRoute = importedRoutes.find(r => r.routeMap === newRoute.routeMap);
+      const newMapKey = normalizeMapCode(newRoute.routeMap).toUpperCase();
+      const newDate = newRoute.routeDate || '';
+      const oldRoute = importedRoutes.find(r => 
+        normalizeMapCode(r.routeMap).toUpperCase() === newMapKey &&
+        (r.routeDate || '') === newDate
+      );
       const oldFunctional = oldRoute ? { ...oldRoute, updatedAt: undefined } : null;
       const newFunctional = { ...newRoute, updatedAt: undefined };
       if (!oldFunctional || JSON.stringify(oldFunctional) !== JSON.stringify(newFunctional)) {
