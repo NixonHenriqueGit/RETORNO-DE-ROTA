@@ -1502,6 +1502,20 @@ async function startServer() {
         throw new Error("Falha ao persistir alterações no armazenamento definitivo.");
       }
 
+      // Broadcast real-time update to all connected SSE clients
+      if (clients && clients.length > 0) {
+        const dataToSend = { ...dbCache };
+        delete dataToSend.photos;
+        const ssePayload = JSON.stringify({ type: "update", db: dataToSend });
+        clients.forEach(client => {
+          try {
+            client.res.write(`data: ${ssePayload}\n\n`);
+          } catch (err) {
+            // client disconnected
+          }
+        });
+      }
+
       res.json({ success: true });
     } catch (error: any) {
       console.error("Erro ao salvar banco de dados:", error);
@@ -1635,6 +1649,20 @@ async function startServer() {
       }
 
       const firestoreBackupSuccess = (firestoreDb && !firestoreQuotaExceeded) ? true : (firestoreDb ? false : null);
+
+      // Broadcast real-time update to all connected SSE clients
+      if (clients && clients.length > 0) {
+        const dataToSend = { ...dbCache };
+        delete dataToSend.photos;
+        const ssePayload = JSON.stringify({ type: "update", db: dataToSend });
+        clients.forEach(client => {
+          try {
+            client.res.write(`data: ${ssePayload}\n\n`);
+          } catch (err) {
+            // client disconnected
+          }
+        });
+      }
 
       console.log(`[Baixa Saga] Saga de baixa para o mapa ${updatedAuditSession.routeMap} CONCLUÍDA COM TOTAL SUCESSO!`);
       res.json({ 

@@ -739,7 +739,7 @@ export default function App() {
     const interval = setInterval(async () => {
       try {
         // Skip polling if there was a recent write on this client to avoid race conditions
-        if (Date.now() - lastWriteTime.current < 8000) {
+        if (Date.now() - lastWriteTime.current < 1500) {
           return;
         }
         if (isClientFirebaseActive()) {
@@ -791,7 +791,7 @@ export default function App() {
       console.log("[ClientFirebase] Inicializando sincronização em tempo real nativa com Firestore...");
       const unsubscribe = subscribeToFirestore((db) => {
         // Skip applying updates if there was a recent local write on this client to avoid race conditions
-        if (Date.now() - lastWriteTime.current < 8000) {
+        if (Date.now() - lastWriteTime.current < 1500) {
           return;
         }
         applyDirectDb(db);
@@ -820,7 +820,7 @@ export default function App() {
             }
 
             // Skip applying updates if there was a recent local write on this client to avoid race conditions
-            if (Date.now() - lastWriteTime.current < 8000) {
+            if (Date.now() - lastWriteTime.current < 1500) {
               return;
             }
 
