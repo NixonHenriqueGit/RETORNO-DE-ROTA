@@ -1,0 +1,182 @@
+{
+  "entities": {
+    "AppStateUsers": {
+      "title": "AppStateUsers",
+      "description": "Stored list of all registered system users and profiles",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of user records"
+        }
+      },
+      "required": ["data"]
+    },
+    "AppStateDrivers": {
+      "title": "AppStateDrivers",
+      "description": "Stored list of all drivers and helpers",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of driver records"
+        }
+      },
+      "required": ["data"]
+    },
+    "AppStateVehicles": {
+      "title": "AppStateVehicles",
+      "description": "Stored list of all logistics vehicles",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of vehicle records"
+        }
+      },
+      "required": ["data"]
+    },
+    "AppStateProducts": {
+      "title": "AppStateProducts",
+      "description": "Product master data catalog",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of product catalog items"
+        }
+      },
+      "required": ["data"]
+    },
+    "AppStateActiveAssets": {
+      "title": "AppStateActiveAssets",
+      "description": "Active asset catalog (returnable pallets, etc)",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of active assets"
+        }
+      },
+      "required": ["data"]
+    },
+    "AppStateAudits": {
+      "title": "AppStateAudits",
+      "description": "Sessions and audits of returned routes",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of audit sessions"
+        }
+      },
+      "required": ["data"]
+    },
+    "AppStateVales": {
+      "title": "AppStateVales",
+      "description": "Drawn vales for deficits and missing cargo",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of vales"
+        }
+      },
+      "required": ["data"]
+    },
+    "AppStateReturnForecasts": {
+      "title": "AppStateReturnForecasts",
+      "description": "Trip monitor ETAs and pernoite states",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of return forecasts"
+        }
+      },
+      "required": ["data"]
+    },
+    "AppStateFiscalAlerts": {
+      "title": "AppStateFiscalAlerts",
+      "description": "Urgent notifications and operational fiscal alerts",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of fiscal alerts"
+        }
+      },
+      "required": ["data"]
+    },
+    "AppStateImportedRoutes": {
+      "title": "AppStateImportedRoutes",
+      "description": "Planilha/Imported routes pending counting",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of imported routes"
+        }
+      },
+      "required": ["data"]
+    },
+    "AppStatePhotos": {
+      "title": "AppStatePhotos",
+      "description": "Photographic records captured during physical count",
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "description": "List of physical photo items with audit references"
+        }
+      },
+      "required": ["data"]
+    }
+  },
+  "firestore": {
+    "/app_state/users": {
+      "schema": "AppStateUsers",
+      "description": "Document holding all user profiles"
+    },
+    "/app_state/drivers": {
+      "schema": "AppStateDrivers",
+      "description": "Document holding all driver profiles"
+    },
+    "/app_state/vehicles": {
+      "schema": "AppStateVehicles",
+      "description": "Document holding all active vehicle plates"
+    },
+    "/app_state/products": {
+      "schema": "AppStateProducts",
+      "description": "Document holding the product SKU master list"
+    },
+    "/app_state/activeAssets": {
+      "schema": "AppStateActiveAssets",
+      "description": "Document holding the returnable assets catalog"
+    },
+    "/app_state/audits": {
+      "schema": "AppStateAudits",
+      "description": "Document holding all physical and fiscal audit sessions"
+    },
+    "/app_state/vales": {
+      "schema": "AppStateVales",
+      "description": "Document holding the debit/shortage vouchers list"
+    },
+    "/app_state/returnForecasts": {
+      "schema": "AppStateReturnForecasts",
+      "description": "Document holding driver ETAs and pernoite statuses"
+    },
+    "/app_state/fiscalAlerts": {
+      "schema": "AppStateFiscalAlerts",
+      "description": "Document holding operational event system notifications"
+    },
+    "/app_state/importedRoutes": {
+      "schema": "AppStateImportedRoutes",
+      "description": "Document holding the imported route maps data"
+    },
+    "/app_state/photos": {
+      "schema": "AppStatePhotos",
+      "description": "Document holding all recorded base64/URL photos for refugo audits"
+    }
+  }
+}

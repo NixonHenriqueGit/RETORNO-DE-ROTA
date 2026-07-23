@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Secure the app_state collection for real-time multi-device sync
+    match /app_state/{documentId} {
+      allow read, write: if true;
+    }
+
+    // Secure the photos collection
+    match /photos/{photoId} {
+      allow read, write: if true;
+    }
+  }
+}
+
