@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import { promises as fs } from "fs";
 
 import { initializeApp, getApps, getApp, deleteApp } from "firebase/app";
-import { initializeFirestore, doc, getDoc, setDoc, getDocFromServer, setLogLevel, collection, getDocs, deleteDoc } from "firebase/firestore";
+import { initializeFirestore, doc, getDoc, setDoc, getDocFromServer, setLogLevel, collection, getDocs, deleteDoc, writeBatch } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 dotenv.config();
@@ -402,105 +402,97 @@ async function loadDatabaseOnStartup() {
   startupSyncCompleted = true;
 }
 
+const SERVER_COLLECTION_MAP: Record<string, string> = {
+  users: "users",
+  drivers: "drivers",
+  vehicles: "vehicles",
+  products: "products",
+  activeAssets: "activeAssets",
+  audits: "audits",
+  vales: "vales",
+  returnForecasts: "returnForecasts",
+  fiscalAlerts: "fiscalAlerts",
+  importedRoutes: "importedRoutes",
+  audit_logs: "auditLogs",
+  auditLogs: "auditLogs",
+  customManual: "customManual"
+};
+
+function getServerItemDocId(item: any): string {
+  if (!item) return `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  if (item.id !== undefined && item.id !== null && String(item.id).trim() !== "") {
+    return String(item.id).trim();
+  }
+  if (item.code !== undefined && item.code !== null && String(item.code).trim() !== "") {
+    return String(item.code).trim();
+  }
+  if (item.plate !== undefined && item.plate !== null && String(item.plate).trim() !== "") {
+    return String(item.plate).trim();
+  }
+  if (item.username !== undefined && item.username !== null && String(item.username).trim() !== "") {
+    return String(item.username).trim();
+  }
+  if (item.routeMap !== undefined && item.routeMap !== null && String(item.routeMap).trim() !== "") {
+    return String(item.routeMap).trim();
+  }
+  return `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+}
+
 // Perform Firebase connection and sync in the background asynchronously
 async function runFirebaseSyncInBackground() {
   await initFirebase();
   
   if (firestoreDb) {
     try {
-      console.log("Carregando banco de dados a partir do Firebase Firestore...");
+      console.log("Carregando banco de dados a partir das coleções do Firebase Firestore (modo Armazém Fácil)...");
       
       const localDb = dbCache || {};
-
-      // Realiza um fetch de cada documento/controle no Firestore
       const updatedKeys = new Set<string>();
-      const absentKeys = new Set<string>();
-      const readPromises = DB_KEYS.map(async (key) => {
-        const docRef = doc(firestoreDb, "app_state", key);
+
+      const syncPromises = Object.keys(SERVER_COLLECTION_MAP).map(async (key) => {
+        const colName = SERVER_COLLECTION_MAP[key];
         try {
-          // Adiciona um timeout de 10 segundos para cada documento para evitar travamentos indefinidos
-          const snap = await Promise.race([
-            getDoc(docRef),
-            new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Timeout lendo ${key} do Firestore`)), 10000))
-          ]);
-          if (snap.exists()) {
-            const docData = snap.data();
-            let loadedData: any[] = [];
-
-            if (docData && docData.chunkCount !== undefined) {
-              const chunkCount = docData.chunkCount;
-              console.log(`Carregando ${chunkCount} chunks para a chave '${key}'...`);
-              const chunks: any[] = [];
-              const chunkPromises = [];
-              for (let i = 0; i < chunkCount; i++) {
-                const chunkDocRef = doc(firestoreDb, "app_state", `${key}_chunk_${i}`);
-                const chunkPromise = Promise.race([
-                  getDoc(chunkDocRef),
-                  new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Timeout lendo ${key}_chunk_${i} do Firestore`)), 8000))
-                ]).then((chunkSnap) => {
-                  if (chunkSnap.exists()) {
-                    chunks[i] = chunkSnap.data().data || [];
-                  } else {
-                    chunks[i] = [];
-                  }
-                }).catch((chunkErr) => {
-                  console.warn(`Erro ao carregar chunk ${i} para a chave ${key}:`, chunkErr);
-                  chunks[i] = [];
-                });
-                chunkPromises.push(chunkPromise);
-              }
-              await Promise.all(chunkPromises);
-              loadedData = chunks.flat();
-            } else {
-              loadedData = (docData && docData.data) || [];
+          if (colName === "customManual") {
+            const docRef = doc(firestoreDb, "customManual", "main");
+            const snap = await Promise.race([
+              getDoc(docRef),
+              new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout lendo customManual")), 10000))
+            ]);
+            if (snap.exists()) {
+              localDb.customManual = snap.data().html || snap.data().content || "";
+              updatedKeys.add("customManual");
             }
+          } else {
+            const collRef = collection(firestoreDb, colName);
+            const snap = await Promise.race([
+              getDocs(collRef),
+              new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Timeout lendo coleção ${colName}`)), 10000))
+            ]);
+            let items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-            if (key === "audit_logs") {
+            if (key === "audit_logs" || colName === "auditLogs") {
               const cutoffTime = Date.now() - 48 * 60 * 60 * 1000;
-              loadedData = loadedData.filter((log: any) => {
-                if (!log.timestamp) return false;
+              items = items.filter((log: any) => {
+                if (!log || !log.timestamp) return false;
                 return new Date(log.timestamp).getTime() >= cutoffTime;
               });
+              localDb.audit_logs = items;
+              localDb.auditLogs = items;
+              updatedKeys.add("audit_logs");
+            } else {
+              localDb[key] = items;
+              updatedKeys.add(key);
             }
-
-            if (key === "users") {
-              const localUsers = localDb.users || [];
-              const mergedUsersMap = new Map();
-              localUsers.forEach((u: any) => {
-                if (u && (u.username || u.id)) {
-                  mergedUsersMap.set((u.username || u.id).toString().toLowerCase(), u);
-                }
-              });
-              loadedData.forEach((u: any) => {
-                if (u && (u.username || u.id)) {
-                  const uKey = (u.username || u.id).toString().toLowerCase();
-                  const existing = mergedUsersMap.get(uKey);
-                  if (existing) {
-                    mergedUsersMap.set(uKey, { ...existing, ...u });
-                  } else {
-                    mergedUsersMap.set(uKey, u);
-                  }
-                }
-              });
-              loadedData = Array.from(mergedUsersMap.values());
-            }
-            dbCache[key] = loadedData;
-            updatedKeys.add(key);
-          } else {
-            absentKeys.add(key);
           }
-        } catch (readErr: any) {
-          console.warn(`Erro ao ler documento '${key}' no Firestore:`, readErr?.message || readErr);
-          checkQuotaExceeded(readErr);
-          // Non-blocking fallback: keep the localDb data already populated in dbCache[key]
-          console.log(`Usando dados locais de fallback para '${key}' devido à falha de leitura.`);
+        } catch (err: any) {
+          console.warn(`Aviso ao ler coleção '${colName}' do Firestore:`, err?.message || err);
         }
       });
-      await Promise.all(readPromises);
 
-      // Carrega fotos de documentos individuais no Firestore para contornar limite de 1MB por documento do Firestore
+      await Promise.all(syncPromises);
+
+      // Carrega fotos de documentos individuais na coleção 'photos'
       try {
-        console.log("Carregando fotos individuais da coleção 'photos' no Firestore...");
         const photosCol = collection(firestoreDb, "photos");
         const photosSnap = await Promise.race([
           getDocs(photosCol),
@@ -511,70 +503,24 @@ async function runFirebaseSyncInBackground() {
           photosList.push(docSnap.data());
         });
         
-        // Merge client-side or disk photos with firestore photos so we NEVER wipe out photos on empty Firestore collections
         const localPhotos = localDb.photos || [];
         const mergedPhotosMap = new Map();
         localPhotos.forEach((p: any) => { if (p && p.id) mergedPhotosMap.set(p.id, p); });
         photosList.forEach((p: any) => { if (p && p.id) mergedPhotosMap.set(p.id, p); });
-        dbCache.photos = Array.from(mergedPhotosMap.values());
-
-        console.log(`Carregadas ${photosList.length} fotos do Firestore com sucesso. Cache total de fotos: ${dbCache.photos.length}`);
+        localDb.photos = Array.from(mergedPhotosMap.values());
       } catch (photoReadErr: any) {
         console.warn("Erro ao carregar fotos individuais do Firestore:", photoReadErr?.message || photoReadErr);
-        checkQuotaExceeded(photoReadErr);
-        // Non-blocking fallback: keep local photos if Firestore fails
-        dbCache.photos = localDb.photos || [];
       }
 
-      console.log(`Dados carregados do Firestore com sucesso. Documentos encontrados: ${Array.from(updatedKeys).join(", ")}`);
-
-      // Se houver chaves que existem no localDb mas NÃO no Firestore (ex: primeira inicialização),
-      // salvamos o valor padrão no Firestore de forma chunked para evitar erros de tamanho.
-      for (const key of DB_KEYS) {
-        if (absentKeys.has(key) && !firestoreQuotaExceeded) {
-          console.log(`Inicializando documento '${key}' ausente no Firestore com os dados padrão do database.json...`);
-          try {
-            const array = dbCache[key] || [];
-            const chunks = chunkArray(array, 500);
-
-            // Salva cada chunk
-            for (let i = 0; i < chunks.length; i++) {
-              const chunkDocRef = doc(firestoreDb, "app_state", `${key}_chunk_${i}`);
-              await setDoc(chunkDocRef, { data: chunks[i] });
-            }
-
-            // Salva o documento de controle
-            const docRef = doc(firestoreDb, "app_state", key);
-            await setDoc(docRef, { chunkCount: chunks.length });
-          } catch (setErr) {
-            console.warn(`Erro ao gravar carga padrão inicial do '${key}' no Firestore:`, setErr);
-            checkQuotaExceeded(setErr);
-          }
-        }
-      }
-
-      // Salva o estado consolidado no arquivo local database.json para aquecer o cache físico do container
-      const tempPath = `${DB_FILE_PATH}.tmp`;
-      await fs.writeFile(tempPath, JSON.stringify(dbCache, null, 2), "utf-8");
-      await fs.rename(tempPath, DB_FILE_PATH);
-      console.log("Cache físico do container atualizado com os dados do Firestore com sucesso.");
-      
-      firestoreLoadedSuccessfully = true;
-
-      // Se houver clientes conectados, propaga a atualização em tempo real
-      if (clients && clients.length > 0) {
-        const payloadStr = JSON.stringify({ type: "update", db: dbCache });
-        clients.forEach(client => {
-          try {
-            client.res.write(`data: ${payloadStr}\n\n`);
-          } catch (err) {
-            // ignore
-          }
-        });
-      }
-    } catch (err) {
-      console.warn("Falha ao carregar o banco de dados a partir do Firestore. Continuando com o cache local:", err);
+      dbCache = localDb;
+      startupSyncCompleted = true;
+      console.log(`[Firebase] Sincronização inicial em segundo plano concluída para as chaves: ${Array.from(updatedKeys).join(", ")}`);
+    } catch (e: any) {
+      console.warn("Erro ao ler do Firestore no segundo plano:", e?.message || e);
+      startupSyncCompleted = true;
     }
+  } else {
+    startupSyncCompleted = true;
   }
 }
 
@@ -635,64 +581,63 @@ async function writeDatabaseFile(data: any, dirtyKeys?: string[]) {
 
       // 2. Sync to Firestore with strict timeout to guarantee absolute persistence without blocking the server or client
       if (firestoreDb && !firestoreQuotaExceeded) {
-        const keys = dirtyKeys !== undefined ? dirtyKeys : DB_KEYS;
+        const keys = dirtyKeys !== undefined ? dirtyKeys : Object.keys(SERVER_COLLECTION_MAP);
         const syncPromises = keys.map(async (key) => {
-          if (data[key] !== undefined) {
-            const docRef = doc(firestoreDb, "app_state", key);
-            try {
-              const array = data[key] || [];
-              const chunks = chunkArray(array, 500);
+          const colName = SERVER_COLLECTION_MAP[key];
+          if (!colName) return;
 
-              // Get old chunk count first to clean up obsolete chunks and avoid orphaned documents
-              let oldChunkCount = 0;
+          const rawData = data[key];
+          if (rawData === undefined) return;
+
+          try {
+            if (colName === "customManual") {
+              const docRef = doc(firestoreDb, "customManual", "main");
+              const htmlContent = typeof rawData === "string" ? rawData : rawData?.html || rawData?.content || "";
+              await setDoc(docRef, { html: htmlContent, updatedAt: new Date().toISOString() });
+            } else if (Array.isArray(rawData)) {
+              const cleanItems = JSON.parse(JSON.stringify(rawData));
+              const collRef = collection(firestoreDb, colName);
+
+              let existingDocIds: string[] = [];
               try {
-                const controlSnap = await Promise.race([
-                  getDoc(docRef),
-                  new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Timeout lendo controle")), 1500))
-                ]);
-                if (controlSnap.exists()) {
-                  oldChunkCount = controlSnap.data().chunkCount || 0;
-                }
+                const existingSnap = await getDocs(collRef);
+                existingDocIds = existingSnap.docs.map(d => d.id);
               } catch (e) {
-                // Ignore, treat as 0
+                // ignore
               }
 
-              // Write each chunk with a strict 2.5-second timeout per document write in parallel
-              const chunkPromises = chunks.map(async (chunk, i) => {
-                const chunkDocRef = doc(firestoreDb, "app_state", `${key}_chunk_${i}`);
-                await Promise.race([
-                  setDoc(chunkDocRef, { data: chunk }),
-                  new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Timeout sincronizando '${key}_chunk_${i}' com Firestore`)), 2500))
-                ]);
+              const currentItemIds = new Set<string>();
+              cleanItems.forEach((item: any) => {
+                const docId = getServerItemDocId(item);
+                item.id = docId;
+                currentItemIds.add(docId);
               });
-              await Promise.all(chunkPromises);
 
-              // Write the control document
-              await Promise.race([
-                setDoc(docRef, { chunkCount: chunks.length }),
-                new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Timeout sincronizando controle '${key}'`)), 2000))
-              ]);
+              const idsToDelete = existingDocIds.filter(id => !currentItemIds.has(id));
 
-              // Delete obsolete chunks if the new array is smaller
-              if (oldChunkCount > chunks.length) {
-                const deletePromises = [];
-                for (let i = chunks.length; i < oldChunkCount; i++) {
-                  const obsoleteDocRef = doc(firestoreDb, "app_state", `${key}_chunk_${i}`);
-                  deletePromises.push(
-                    Promise.race([
-                      deleteDoc(obsoleteDocRef),
-                      new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Timeout deletando '${key}_chunk_${i}'`)), 2000))
-                    ]).catch((delErr) => {
-                      console.warn(`Erro não crítico ao deletar chunk obsoleto ${key}_chunk_${i}:`, delErr);
-                    })
-                  );
-                }
-                await Promise.all(deletePromises);
+              const batchSize = 400;
+              const allOps = [
+                ...cleanItems.map((item: any) => ({ type: 'set' as const, id: getServerItemDocId(item), data: item })),
+                ...idsToDelete.map((id: string) => ({ type: 'delete' as const, id }))
+              ];
+
+              for (let i = 0; i < allOps.length; i += batchSize) {
+                const chunk = allOps.slice(i, i + batchSize);
+                const batch = writeBatch(firestoreDb);
+                chunk.forEach(op => {
+                  const docRef = doc(firestoreDb, colName, op.id);
+                  if (op.type === 'set') {
+                    batch.set(docRef, op.data, { merge: true });
+                  } else {
+                    batch.delete(docRef);
+                  }
+                });
+                await batch.commit();
               }
-            } catch (setErr: any) {
-              console.warn(`Erro ao sincronizar chave '${key}' no Firestore (não bloqueante):`, setErr?.message || setErr);
-              checkQuotaExceeded(setErr);
             }
+          } catch (setErr: any) {
+            console.warn(`Erro ao sincronizar coleção '${colName}' no Firestore (não bloqueante):`, setErr?.message || setErr);
+            checkQuotaExceeded(setErr);
           }
         });
         await Promise.all(syncPromises);

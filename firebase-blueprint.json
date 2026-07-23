@@ -134,49 +134,61 @@
     }
   },
   "firestore": {
-    "/app_state/users": {
+    "/users/{userId}": {
       "schema": "AppStateUsers",
-      "description": "Document holding all user profiles"
+      "description": "User profiles collection"
     },
-    "/app_state/drivers": {
+    "/drivers/{driverId}": {
       "schema": "AppStateDrivers",
-      "description": "Document holding all driver profiles"
+      "description": "Drivers and helpers collection"
     },
-    "/app_state/vehicles": {
+    "/vehicles/{vehicleId}": {
       "schema": "AppStateVehicles",
-      "description": "Document holding all active vehicle plates"
+      "description": "Vehicles collection"
     },
-    "/app_state/products": {
+    "/products/{productId}": {
       "schema": "AppStateProducts",
-      "description": "Document holding the product SKU master list"
+      "description": "Product catalog collection"
     },
-    "/app_state/activeAssets": {
+    "/activeAssets/{assetId}": {
       "schema": "AppStateActiveAssets",
-      "description": "Document holding the returnable assets catalog"
+      "description": "Active assets collection"
     },
-    "/app_state/audits": {
+    "/audits/{auditId}": {
       "schema": "AppStateAudits",
-      "description": "Document holding all physical and fiscal audit sessions"
+      "description": "Audits collection"
     },
-    "/app_state/vales": {
+    "/vales/{valeId}": {
       "schema": "AppStateVales",
-      "description": "Document holding the debit/shortage vouchers list"
+      "description": "Vales collection"
     },
-    "/app_state/returnForecasts": {
+    "/returnForecasts/{forecastId}": {
       "schema": "AppStateReturnForecasts",
-      "description": "Document holding driver ETAs and pernoite statuses"
+      "description": "Return forecasts collection"
     },
-    "/app_state/fiscalAlerts": {
+    "/fiscalAlerts/{alertId}": {
       "schema": "AppStateFiscalAlerts",
-      "description": "Document holding operational event system notifications"
+      "description": "Fiscal alerts collection"
     },
-    "/app_state/importedRoutes": {
+    "/importedRoutes/{routeId}": {
       "schema": "AppStateImportedRoutes",
-      "description": "Document holding the imported route maps data"
+      "description": "Imported routes collection"
     },
-    "/app_state/photos": {
+    "/auditLogs/{logId}": {
+      "schema": "AppStateAudits",
+      "description": "Audit logs collection"
+    },
+    "/customManual/main": {
+      "schema": "AppStateAudits",
+      "description": "Custom manual document"
+    },
+    "/app_state/{docId}": {
+      "schema": "AppStateAudits",
+      "description": "Legacy app_state"
+    },
+    "/photos/{photoId}": {
       "schema": "AppStatePhotos",
-      "description": "Document holding all recorded base64/URL photos for refugo audits"
+      "description": "Recorded photos for refugo audits"
     }
   }
 }

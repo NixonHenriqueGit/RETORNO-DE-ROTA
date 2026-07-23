@@ -7,15 +7,24 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Secure the app_state collection for real-time multi-device sync
-    match /app_state/{documentId} {
-      allow read, write: if true;
-    }
+    // Secure operational collections for real-time multi-device sync
+    match /users/{docId} { allow read, write: if true; }
+    match /drivers/{docId} { allow read, write: if true; }
+    match /vehicles/{docId} { allow read, write: if true; }
+    match /products/{docId} { allow read, write: if true; }
+    match /activeAssets/{docId} { allow read, write: if true; }
+    match /audits/{docId} { allow read, write: if true; }
+    match /vales/{docId} { allow read, write: if true; }
+    match /returnForecasts/{docId} { allow read, write: if true; }
+    match /fiscalAlerts/{docId} { allow read, write: if true; }
+    match /importedRoutes/{docId} { allow read, write: if true; }
+    match /auditLogs/{docId} { allow read, write: if true; }
+    match /customManual/{docId} { allow read, write: if true; }
 
-    // Secure the photos collection
-    match /photos/{photoId} {
-      allow read, write: if true;
-    }
+    // Legacy app_state and photos
+    match /app_state/{documentId} { allow read, write: if true; }
+    match /photos/{photoId} { allow read, write: if true; }
   }
 }
+
 

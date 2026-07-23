@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, terminate, setLogLevel, writeBatch } from "firebase/firestore";
+import { getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc, collection, onSnapshot, terminate, setLogLevel, writeBatch } from "firebase/firestore";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import firebaseConfig from "../firebase-applet-config.json";
 
@@ -16,6 +16,57 @@ const DB_KEYS = [
   "audits", "vales", "returnForecasts", "fiscalAlerts", 
   "importedRoutes", "audit_logs", "customManual"
 ];
+
+const COLLECTION_MAP: Record<string, string> = {
+  users: "users",
+  drivers: "drivers",
+  vehicles: "vehicles",
+  products: "products",
+  activeAssets: "activeAssets",
+  audits: "audits",
+  vales: "vales",
+  returnForecasts: "returnForecasts",
+  fiscalAlerts: "fiscalAlerts",
+  importedRoutes: "importedRoutes",
+  audit_logs: "auditLogs",
+  auditLogs: "auditLogs",
+  customManual: "customManual"
+};
+
+const TRACKED_COLLECTIONS = [
+  "users",
+  "drivers",
+  "vehicles",
+  "products",
+  "activeAssets",
+  "audits",
+  "vales",
+  "returnForecasts",
+  "fiscalAlerts",
+  "importedRoutes",
+  "auditLogs",
+  "customManual"
+];
+
+export function getItemDocId(item: any): string {
+  if (!item) return `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  if (item.id !== undefined && item.id !== null && String(item.id).trim() !== "") {
+    return String(item.id).trim();
+  }
+  if (item.code !== undefined && item.code !== null && String(item.code).trim() !== "") {
+    return String(item.code).trim();
+  }
+  if (item.plate !== undefined && item.plate !== null && String(item.plate).trim() !== "") {
+    return String(item.plate).trim();
+  }
+  if (item.username !== undefined && item.username !== null && String(item.username).trim() !== "") {
+    return String(item.username).trim();
+  }
+  if (item.routeMap !== undefined && item.routeMap !== null && String(item.routeMap).trim() !== "") {
+    return String(item.routeMap).trim();
+  }
+  return `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+}
 
 let firestoreInstance: any = null;
 let isAuthenticating = false;
@@ -222,99 +273,100 @@ export function isClientFirebaseActive(): boolean {
   return isGitHub;
 }
 
-// Subscribe to real-time updates directly from Firestore collection "app_state"
-// Reconstructs chunked documents automatically to prevent physical 1MB limit issues
+// Subscribe to real-time updates directly from individual Firestore collections (Armazém Fácil pattern)
 export function subscribeToFirestore(onUpdate: (db: any) => void): () => void {
   const db = getClientFirestore();
   if (!db || hasClientPermissionError) return () => {};
 
-  console.log("[ClientFirebase] Inscrevendo para atualizações em tempo real (onSnapshot)...");
+  console.log("[ClientFirebase] Inscrevendo para atualizações em tempo real nas coleções do Firestore (modo Armazém Fácil)...");
 
-  try {
-    const collRef = collection(db, "app_state");
-    const unsubscribe = onSnapshot(collRef, (snapshot) => {
-      try {
-        lastSuccessfulSyncTime = Date.now();
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('firestore_synced', { detail: { time: lastSuccessfulSyncTime } }));
-        }
+  const combinedDb: Record<string, any> = {
+    users: [],
+    drivers: [],
+    vehicles: [],
+    products: [],
+    activeAssets: [],
+    audits: [],
+    vales: [],
+    returnForecasts: [],
+    fiscalAlerts: [],
+    importedRoutes: [],
+    audit_logs: [],
+    auditLogs: [],
+    customManual: ""
+  };
 
-        const docMap: Record<string, any> = {};
-        snapshot.forEach((doc) => {
-          docMap[doc.id] = doc.data();
-        });
+  const unsubscribes: (() => void)[] = [];
 
-        const combinedDb: any = {};
-        for (const key of DB_KEYS) {
-          const docData = docMap[key];
-          if (docData) {
-            if (docData.chunkCount !== undefined) {
-              const chunkCount = docData.chunkCount;
-              const chunks: any[] = [];
-              let isChunkIncomplete = false;
-              for (let i = 0; i < chunkCount; i++) {
-                const chunkDoc = docMap[`${key}_chunk_${i}`];
-                if (!chunkDoc) {
-                  isChunkIncomplete = true;
-                  break;
-                }
-                chunks[i] = chunkDoc.data || [];
-              }
-              if (!isChunkIncomplete) {
-                combinedDb[key] = chunks.flat();
-              } else {
-                console.warn(`[ClientFirebase] Chunks para '${key}' incompletos no snapshot, buscando partes ausentes via getDoc...`);
-                // Asynchronously recover missing chunks so we don't drop real-time route updates
-                (async () => {
-                  try {
-                    const recoveredChunks: any[] = [];
-                    for (let i = 0; i < chunkCount; i++) {
-                      const cDoc = docMap[`${key}_chunk_${i}`];
-                      if (cDoc) {
-                        recoveredChunks[i] = cDoc.data || [];
-                      } else {
-                        const snap = await getDoc(doc(db, "app_state", `${key}_chunk_${i}`));
-                        recoveredChunks[i] = snap.exists() ? (snap.data().data || []) : [];
-                      }
-                    }
-                    const recovered = recoveredChunks.flat();
-                    onUpdate({ [key]: recovered });
-                  } catch (e) {
-                    console.warn(`[ClientFirebase] Falha ao recuperar chunks ausentes para '${key}':`, e);
-                  }
-                })();
-              }
-            } else if (docData.data !== undefined) {
-              combinedDb[key] = docData.data;
-            } else {
-              combinedDb[key] = docData;
-            }
+  TRACKED_COLLECTIONS.forEach((colName) => {
+    try {
+      if (colName === "customManual") {
+        const docRef = doc(db, "customManual", "main");
+        const unsub = onSnapshot(docRef, (docSnap) => {
+          lastSuccessfulSyncTime = Date.now();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent('firestore_synced', { detail: { time: lastSuccessfulSyncTime } }));
           }
-        }
-        
-        onUpdate(combinedDb);
-      } catch (innerErr) {
-        console.warn("[ClientFirebase] Erro ao processar dados de snapshot do Firestore:", innerErr);
-      }
-    }, (error) => {
-      if (isPermissionError(error)) {
-        console.warn("[ClientFirebase] Inscrição client-side interrompida por falta de permissão no Firestore. Alternando para sincronização via servidor Express.");
-        checkPermissionError(error);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            combinedDb.customManual = data.html || data.content || "";
+          } else {
+            combinedDb.customManual = "";
+          }
+          onUpdate({ ...combinedDb });
+        }, (error) => {
+          handleSubscriptionError(error);
+        });
+        unsubscribes.push(unsub);
       } else {
-        console.warn("[ClientFirebase] Aviso na inscrição em tempo real do Firestore:", error?.message || error);
-        checkQuotaError(error);
+        const collRef = collection(db, colName);
+        const unsub = onSnapshot(collRef, (snapshot) => {
+          lastSuccessfulSyncTime = Date.now();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent('firestore_synced', { detail: { time: lastSuccessfulSyncTime } }));
+          }
+
+          const items = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data()
+          }));
+
+          if (colName === "auditLogs") {
+            combinedDb.auditLogs = items;
+            combinedDb.audit_logs = items;
+          } else {
+            combinedDb[colName] = items;
+          }
+
+          onUpdate({ ...combinedDb });
+        }, (error) => {
+          handleSubscriptionError(error);
+        });
+        unsubscribes.push(unsub);
+      }
+    } catch (err) {
+      handleSubscriptionError(err);
+    }
+  });
+
+  return () => {
+    unsubscribes.forEach((unsub) => {
+      try {
+        unsub();
+      } catch (e) {
+        // ignore
       }
     });
+  };
+}
 
-    return unsubscribe;
-  } catch (err) {
-    if (isPermissionError(err)) {
-      checkPermissionError(err);
-    } else {
-      console.warn("[ClientFirebase] Aviso ao registrar onSnapshot no Firestore:", err);
-      checkQuotaError(err);
-    }
-    return () => {};
+function handleSubscriptionError(error: any) {
+  if (isPermissionError(error)) {
+    console.warn("[ClientFirebase] Inscrição client-side interrompida por falta de permissão no Firestore. Alternando para servidor Express.");
+    checkPermissionError(error);
+  } else {
+    console.warn("[ClientFirebase] Aviso na inscrição em tempo real do Firestore:", error?.message || error);
+    checkQuotaError(error);
   }
 }
 
@@ -385,54 +437,54 @@ function chunkArray<T>(array: T[], size: number): T[][] {
   return chunks;
 }
 
-// Fetch all database records directly from Firebase Firestore (client-side SPA fallback)
+// Fetch all database records directly from Firebase Firestore collections
 export async function fetchDirectlyFromFirestore(): Promise<any> {
   const db = getClientFirestore();
   if (!db) return null;
 
-  console.log("[ClientFirebase] Buscando dados diretamente do Firestore...");
-  const combinedDb: any = {};
+  console.log("[ClientFirebase] Buscando dados diretamente das coleções do Firestore...");
+  const combinedDb: Record<string, any> = {
+    users: [],
+    drivers: [],
+    vehicles: [],
+    products: [],
+    activeAssets: [],
+    audits: [],
+    vales: [],
+    returnForecasts: [],
+    fiscalAlerts: [],
+    importedRoutes: [],
+    audit_logs: [],
+    auditLogs: [],
+    customManual: ""
+  };
 
   try {
-    const promises = DB_KEYS.map(async (key) => {
-      const docRef = doc(db, "app_state", key);
+    const promises = TRACKED_COLLECTIONS.map(async (colName) => {
       try {
-        const snap = await getDoc(docRef);
-        if (snap.exists()) {
-          const docData = snap.data();
-          if (docData && docData.chunkCount !== undefined) {
-            const chunkCount = docData.chunkCount;
-            const chunks: any[] = [];
-            const chunkPromises = [];
-            let hasChunkError = false;
-
-            for (let i = 0; i < chunkCount; i++) {
-              const chunkDocRef = doc(db, "app_state", `${key}_chunk_${i}`);
-              const chunkPromise = getDoc(chunkDocRef).then((chunkSnap) => {
-                if (chunkSnap.exists()) {
-                  chunks[i] = chunkSnap.data().data || [];
-                } else {
-                  hasChunkError = true;
-                }
-              }).catch((chunkErr) => {
-                console.warn(`[ClientFirebase] Erro ao carregar chunk ${i} de ${key}:`, chunkErr);
-                hasChunkError = true;
-              });
-              chunkPromises.push(chunkPromise);
-            }
-
-            await Promise.all(chunkPromises);
-            if (!hasChunkError) {
-              combinedDb[key] = chunks.flat();
-            }
-          } else if (docData && docData.data !== undefined) {
-            combinedDb[key] = docData.data;
+        if (colName === "customManual") {
+          const docRef = doc(db, "customManual", "main");
+          const snap = await getDoc(docRef);
+          if (snap.exists()) {
+            const data = snap.data();
+            combinedDb.customManual = data.html || data.content || "";
+          }
+        } else {
+          const collRef = collection(db, colName);
+          const snap = await getDocs(collRef);
+          const items = snap.docs.map((d) => ({
+            id: d.id,
+            ...d.data()
+          }));
+          if (colName === "auditLogs") {
+            combinedDb.auditLogs = items;
+            combinedDb.audit_logs = items;
           } else {
-            combinedDb[key] = docData;
+            combinedDb[colName] = items;
           }
         }
       } catch (err) {
-        console.warn(`[ClientFirebase] Erro ao ler documento '${key}' do Firestore:`, err);
+        console.warn(`[ClientFirebase] Erro ao ler coleção '${colName}' do Firestore:`, err);
         if (isPermissionError(err)) {
           checkPermissionError(err);
         } else {
@@ -458,65 +510,76 @@ export async function fetchDirectlyFromFirestore(): Promise<any> {
   }
 }
 
-// Save database state directly to Firebase Firestore (client-side SPA fallback)
+// Save database state directly to Firebase Firestore collections document-by-document
 export async function saveDirectlyToFirestore(payload: any): Promise<boolean> {
   const db = getClientFirestore();
   if (!db) return false;
 
-  console.log("[ClientFirebase] Sincronizando alterações diretamente com o Firestore...");
+  console.log("[ClientFirebase] Sincronizando alterações documento por documento com o Firestore...");
 
   try {
-    const promises = Object.keys(payload).map(async (key) => {
-      if (!DB_KEYS.includes(key)) return;
+    const keys = Object.keys(payload);
+    
+    for (const key of keys) {
+      const colName = COLLECTION_MAP[key];
+      if (!colName) continue;
 
-      const docRef = doc(db, "app_state", key);
       const rawData = payload[key];
-      // Sanitize data to convert any undefined properties to omitted keys/nulls
-      const cleanData = rawData !== undefined ? JSON.parse(JSON.stringify(rawData)) : [];
+      if (rawData === undefined) continue;
 
-      if (Array.isArray(cleanData)) {
-        const chunks = chunkArray(cleanData, 500);
+      if (colName === "customManual") {
+        const docRef = doc(db, "customManual", "main");
+        const htmlContent = typeof rawData === "string" ? rawData : rawData?.html || rawData?.content || "";
+        await setDoc(docRef, { html: htmlContent, updatedAt: new Date().toISOString() });
+        continue;
+      }
 
-        // Get old chunk count to delete orphaned chunks
-        let oldChunkCount = 0;
+      if (Array.isArray(rawData)) {
+        const cleanItems = JSON.parse(JSON.stringify(rawData));
+        
+        // 1. Fetch existing document IDs in this collection to clean up deleted items
+        const collRef = collection(db, colName);
+        let existingDocIds: string[] = [];
         try {
-          const controlSnap = await getDoc(docRef);
-          if (controlSnap.exists()) {
-            oldChunkCount = controlSnap.data().chunkCount || 0;
-          }
+          const existingSnap = await getDocs(collRef);
+          existingDocIds = existingSnap.docs.map(d => d.id);
         } catch (e) {
-          // Ignore
+          // Ignore read errors for empty collections
         }
 
-        // Use writeBatch for atomic update of chunks, control document, and cleanup
-        const batch = writeBatch(db);
-
-        chunks.forEach((chunk, i) => {
-          const chunkDocRef = doc(db, "app_state", `${key}_chunk_${i}`);
-          batch.set(chunkDocRef, { data: chunk });
+        const currentItemIds = new Set<string>();
+        cleanItems.forEach((item: any) => {
+          const docId = getItemDocId(item);
+          item.id = docId; // ensure id is stored in document
+          currentItemIds.add(docId);
         });
 
-        // Save control document
-        batch.set(docRef, { chunkCount: chunks.length });
+        const idsToDelete = existingDocIds.filter(id => !currentItemIds.has(id));
 
-        // Clean up old chunks atomically
-        if (oldChunkCount > chunks.length) {
-          for (let i = chunks.length; i < oldChunkCount; i++) {
-            const obsoleteDocRef = doc(db, "app_state", `${key}_chunk_${i}`);
-            batch.delete(obsoleteDocRef);
-          }
+        // 2. Perform batched writes/deletes (Firestore limits writeBatch to 500 items)
+        const batchSize = 400;
+        const allOps: Array<{ type: 'set' | 'delete'; id: string; data?: any }> = [
+          ...cleanItems.map((item: any) => ({ type: 'set' as const, id: getItemDocId(item), data: item })),
+          ...idsToDelete.map((id: string) => ({ type: 'delete' as const, id }))
+        ];
+
+        for (let i = 0; i < allOps.length; i += batchSize) {
+          const chunk = allOps.slice(i, i + batchSize);
+          const batch = writeBatch(db);
+          chunk.forEach(op => {
+            const docRef = doc(db, colName, op.id);
+            if (op.type === 'set') {
+              batch.set(docRef, op.data, { merge: true });
+            } else {
+              batch.delete(docRef);
+            }
+          });
+          await batch.commit();
         }
-
-        await batch.commit();
-      } else if (typeof cleanData === 'object' && cleanData !== null) {
-        await setDoc(docRef, cleanData);
-      } else {
-        await setDoc(docRef, { data: cleanData });
       }
-    });
+    }
 
-    await Promise.all(promises);
-    console.log("[ClientFirebase] Alterações persistidas no Firestore com sucesso!");
+    console.log("[ClientFirebase] Alterações documento por documento persistidas no Firestore com sucesso!");
     return true;
   } catch (e) {
     if (isPermissionError(e)) {

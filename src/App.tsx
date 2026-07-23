@@ -372,277 +372,79 @@ export default function App() {
       return;
     }
 
-    if (db.users && db.users.length > 0) {
-      const userMap = new Map<string, User>();
-      const localUsers = AppStore.getUsers() || [];
-      localUsers.forEach(u => {
-        if (u && (u.username || u.id)) {
-          const key = (u.username || u.id).toString().toLowerCase();
-          userMap.set(key, u);
+    if (db.users !== undefined && Array.isArray(db.users)) {
+      if (db.users.length > 0) {
+        setUsers(db.users);
+        AppStore.setUsers(db.users);
+        const savedUserId = localStorage.getItem('logiroute_authenticated_user_id');
+        if (savedUserId) {
+          const matchedUser = db.users.find((u: User) => u.id === savedUserId);
+          if (matchedUser) setCurrentUser(matchedUser);
         }
-      });
-      db.users.forEach((u: User) => {
-        if (u && (u.username || u.id)) {
-          const key = (u.username || u.id).toString().toLowerCase();
-          const existing = userMap.get(key);
-          userMap.set(key, {
-            ...existing,
-            ...u,
-            password: u.password || existing?.password || '123'
-          });
-        }
-      });
-      const mergedUsers = Array.from(userMap.values());
-      setUsers(mergedUsers);
-      AppStore.setUsers(mergedUsers);
-
-      const savedUserId = localStorage.getItem('logiroute_authenticated_user_id');
-      if (savedUserId) {
-        const matchedUser = mergedUsers.find((u: User) => u.id === savedUserId);
-        if (matchedUser) setCurrentUser(matchedUser);
       }
     }
 
-    // Cumulative Smart Merge Drivers
     if (db.drivers !== undefined && Array.isArray(db.drivers)) {
-      const driverMap = new Map<string, Driver>();
-      const localDrivers = AppStore.getDrivers() || [];
-      localDrivers.forEach(d => {
-        if (d && (d.id || d.name)) {
-          const key = (d.id || d.name).toString().trim().toLowerCase();
-          driverMap.set(key, d);
-        }
-      });
-      db.drivers.forEach((d: Driver) => {
-        if (d && (d.id || d.name)) {
-          const key = (d.id || d.name).toString().trim().toLowerCase();
-          const existing = driverMap.get(key);
-          driverMap.set(key, existing ? { ...existing, ...d } : d);
-        }
-      });
-      const mergedDrivers = Array.from(driverMap.values());
-      setDrivers(mergedDrivers);
-      AppStore.setDrivers(mergedDrivers);
+      setDrivers(db.drivers);
+      AppStore.setDrivers(db.drivers);
     }
 
-    // Cumulative Smart Merge Vehicles
     if (db.vehicles !== undefined && Array.isArray(db.vehicles)) {
-      const vehicleMap = new Map<string, Vehicle>();
-      const localVehicles = AppStore.getVehicles() || [];
-      localVehicles.forEach(v => {
-        if (v && v.plate) {
-          const key = v.plate.toString().trim().toUpperCase();
-          vehicleMap.set(key, v);
-        }
-      });
-      db.vehicles.forEach((v: Vehicle) => {
-        if (v && v.plate) {
-          const key = v.plate.toString().trim().toUpperCase();
-          const existing = vehicleMap.get(key);
-          vehicleMap.set(key, existing ? { ...existing, ...v } : v);
-        }
-      });
-      const mergedVehicles = Array.from(vehicleMap.values());
-      setVehicles(mergedVehicles);
-      AppStore.setVehicles(mergedVehicles);
+      setVehicles(db.vehicles);
+      AppStore.setVehicles(db.vehicles);
     }
 
-    // Cumulative Smart Merge Products
     if (db.products !== undefined && Array.isArray(db.products)) {
-      const repairedRemote = repairProductsList(db.products);
-      const productMap = new Map<string, Product>();
-      
-      const localProds = repairProductsList(AppStore.getProducts() || []);
-      localProds.forEach(p => {
-        if (p && p.code) productMap.set(p.code.toString().trim(), p);
-      });
-
-      repairedRemote.forEach(p => {
-        if (p && p.code) {
-          const key = p.code.toString().trim();
-          const localP = productMap.get(key);
-          if (!localP) {
-            productMap.set(key, p);
-          } else {
-            productMap.set(key, {
-              ...localP,
-              ...p,
-              description: (p.description && p.description !== p.code) ? p.description : localP.description
-            });
-          }
-        }
-      });
-
-      const mergedProducts = Array.from(productMap.values());
-      setProducts(mergedProducts);
-      AppStore.setProducts(mergedProducts);
+      const repaired = repairProductsList(db.products);
+      setProducts(repaired);
+      AppStore.setProducts(repaired);
     }
 
-    // Cumulative Smart Merge Active Assets
     if (db.activeAssets !== undefined && Array.isArray(db.activeAssets)) {
-      const assetMap = new Map<string, ActiveAsset>();
-      const localAssets = AppStore.getActiveAssets() || [];
-      localAssets.forEach(a => {
-        if (a && a.id) {
-          const key = a.id.toString().trim().toLowerCase();
-          assetMap.set(key, a);
-        }
-      });
-      db.activeAssets.forEach((a: ActiveAsset) => {
-        if (a && a.id) {
-          const key = a.id.toString().trim().toLowerCase();
-          const existing = assetMap.get(key);
-          assetMap.set(key, existing ? { ...existing, ...a } : a);
-        }
-      });
-      const mergedAssets = Array.from(assetMap.values());
-      setActiveAssets(mergedAssets);
-      AppStore.setActiveAssets(mergedAssets);
+      setActiveAssets(db.activeAssets);
+      AppStore.setActiveAssets(db.activeAssets);
     }
 
-    // Smart Merge Audits
-    if (db.audits !== undefined) {
-      const remoteCleaned = cleanAudits(db.audits);
-      if (remoteCleaned.length === 0) {
-        setAudits([]);
-        AppStore.setAudits([]);
-      } else {
-        const auditMap = new Map<string, AuditSession>();
-
-        // 1. Base: local audits (guarantees local sessions not yet in remote are preserved)
-        const localAudits = AppStore.getAudits() || [];
-        localAudits.forEach(localA => {
-          if (localA && localA.id) auditMap.set(localA.id, localA);
-        });
-
-        // 2. Remote updates overwrite local when remote is newer or higher rank
-        remoteCleaned.forEach(remoteA => {
-          if (!remoteA || !remoteA.id) return;
-          const localA = auditMap.get(remoteA.id);
-          if (!localA) {
-            auditMap.set(remoteA.id, remoteA); // new session from another device
-            return;
-          }
-
-          const localRank = getAuditStatusRank(localA.status);
-          const remoteRank = getAuditStatusRank(remoteA.status);
-
-          if (remoteRank > localRank) {
-            auditMap.set(remoteA.id, remoteA);
-          } else if (remoteRank === localRank) {
-            const remoteTime = remoteA.updatedAt ? new Date(remoteA.updatedAt).getTime() : 0;
-            const localTime = localA.updatedAt ? new Date(localA.updatedAt).getTime() : 0;
-            if (remoteTime > localTime) {
-              auditMap.set(remoteA.id, remoteA);
-            }
-          }
-        });
-
-        const mergedAudits = Array.from(auditMap.values());
-        setAudits(mergedAudits);
-        AppStore.setAudits(mergedAudits);
-      }
+    if (db.audits !== undefined && Array.isArray(db.audits)) {
+      const cleaned = cleanAudits(db.audits);
+      setAudits(cleaned);
+      AppStore.setAudits(cleaned);
     }
 
-    // Smart Merge Vales
-    if (db.vales !== undefined) {
-      const remoteCleaned = cleanVales(db.vales);
-      if (remoteCleaned.length === 0) {
-        setVales([]);
-        AppStore.setVales([]);
-      } else {
-        const localVales = AppStore.getVales() || [];
-        const valeMap = new Map<string, Vale>();
-        localVales.forEach(v => { if (v && v.id) valeMap.set(v.id, v); });
-        remoteCleaned.forEach(rv => {
-          if (rv && rv.id) valeMap.set(rv.id, rv);
-        });
-        const mergedVales = Array.from(valeMap.values());
-        setVales(mergedVales);
-        AppStore.setVales(mergedVales);
-      }
+    if (db.vales !== undefined && Array.isArray(db.vales)) {
+      const cleaned = cleanVales(db.vales);
+      setVales(cleaned);
+      AppStore.setVales(cleaned);
     }
 
-    // Smart Merge Return Forecasts
-    if (db.returnForecasts !== undefined) {
-      const remoteCleaned = cleanReturnForecasts(db.returnForecasts);
-      if (remoteCleaned.length === 0) {
-        setReturnForecasts([]);
-        AppStore.setReturnForecasts([]);
-      } else {
-        const localForecasts = AppStore.getReturnForecasts() || [];
-        const forecastMap = new Map<string, ReturnForecast>();
-        localForecasts.forEach(f => { if (f && f.id) forecastMap.set(f.id, f); });
-        remoteCleaned.forEach(rf => {
-          if (rf && rf.id) forecastMap.set(rf.id, rf);
-        });
-        const mergedForecasts = Array.from(forecastMap.values());
-        setReturnForecasts(mergedForecasts);
-        AppStore.setReturnForecasts(mergedForecasts);
-      }
+    if (db.returnForecasts !== undefined && Array.isArray(db.returnForecasts)) {
+      const cleaned = cleanReturnForecasts(db.returnForecasts);
+      setReturnForecasts(cleaned);
+      AppStore.setReturnForecasts(cleaned);
     }
 
-    if (db.fiscalAlerts !== undefined) {
+    if (db.fiscalAlerts !== undefined && Array.isArray(db.fiscalAlerts)) {
       setFiscalAlerts(db.fiscalAlerts);
       AppStore.setFiscalAlerts(db.fiscalAlerts);
     }
 
-    // Smart Merge Imported Routes
-    if (db.importedRoutes !== undefined) {
-      const remoteCleaned = cleanImportedRoutes(db.importedRoutes);
-      if (remoteCleaned.length === 0) {
-        setImportedRoutes([]);
-        AppStore.setImportedRoutes([]);
-      } else {
-        const routeMap = new Map<string, ImportedRoute>();
-
-        // 1. Primary: load all canonical remote routes from database
-        remoteCleaned.forEach(remoteR => {
-          if (!remoteR || !remoteR.routeMap) return;
-          const mapKey = normalizeMapCode(remoteR.routeMap).toUpperCase();
-          const fullKey = `${mapKey}_${remoteR.routeDate || ''}`;
-          if (mapKey) {
-            routeMap.set(fullKey, remoteR);
-          }
-        });
-
-        // 2. Secondary: preserve local route edits or newly created unsynced local routes
-        const localRoutes = AppStore.getImportedRoutes() || [];
-        localRoutes.forEach(localR => {
-          if (!localR || !localR.routeMap) return;
-          const mapKey = normalizeMapCode(localR.routeMap).toUpperCase();
-          const fullKey = `${mapKey}_${localR.routeDate || ''}`;
-          if (!mapKey) return;
-
-          const remoteR = routeMap.get(fullKey) || routeMap.get(mapKey);
-          if (!remoteR) {
-            // Keep locally created route if created recently
-            routeMap.set(fullKey, localR);
-          } else {
-            // Merge status/items if local user has progressed the route status
-            const localRank = getRouteStatusRank(localR.status);
-            const remoteRank = getRouteStatusRank(remoteR.status);
-
-            if (localRank > remoteRank) {
-              routeMap.set(fullKey, localR);
-            } else if (localRank === remoteRank) {
-              const localTime = localR.updatedAt ? new Date(localR.updatedAt).getTime() : 0;
-              const remoteTime = remoteR.updatedAt ? new Date(remoteR.updatedAt).getTime() : 0;
-              if (localTime > remoteTime) {
-                routeMap.set(fullKey, localR);
-              }
-            }
-          }
-        });
-
-        const mergedRoutes = Array.from(routeMap.values());
-        setImportedRoutes(mergedRoutes);
-        AppStore.setImportedRoutes(mergedRoutes);
-      }
+    if (db.importedRoutes !== undefined && Array.isArray(db.importedRoutes)) {
+      const cleaned = cleanImportedRoutes(db.importedRoutes);
+      setImportedRoutes(cleaned);
+      AppStore.setImportedRoutes(cleaned);
     }
 
-    if (db.audit_logs) { setAuditLogs(db.audit_logs); AppStore.setAuditLogs(db.audit_logs); }
-    if (db.customManual !== undefined) { setCustomManualHTML(db.customManual); AppStore.setCustomManual(db.customManual); }
+    if (db.audit_logs || db.auditLogs) {
+      const logs = db.audit_logs || db.auditLogs;
+      setAuditLogs(logs);
+      AppStore.setAuditLogs(logs);
+    }
+
+    if (db.customManual !== undefined) {
+      const manualContent = typeof db.customManual === 'string' ? db.customManual : db.customManual?.html || '';
+      setCustomManualHTML(manualContent);
+      AppStore.setCustomManual(manualContent);
+    }
   };
 
   // Immediate flush of pending database updates on page reload / unload
