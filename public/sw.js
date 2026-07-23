@@ -1,4 +1,4 @@
-const CACHE_NAME = 'pau-brasil-guarabira-cache-v2.2.0';
+const CACHE_NAME = 'pau-brasil-guarabira-cache-v2.3.0';
 
 const PRECACHE_ASSETS = [
   './',
@@ -11,13 +11,15 @@ const PRECACHE_ASSETS = [
   './pau_brasil_logo.jpg'
 ];
 
-// Install event: cache pre-defined core assets
+// Install event: cache pre-defined core assets safely
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('[Service Worker] Pre-caching Core App Shell');
-        return cache.addAll(PRECACHE_ASSETS);
+        return Promise.allSettled(
+          PRECACHE_ASSETS.map(url => cache.add(url).catch(err => console.warn(`Failed to precache ${url}:`, err)))
+        );
       })
       .then(() => self.skipWaiting())
   );
@@ -77,17 +79,16 @@ self.addEventListener('fetch', (event) => {
           return cachedResponse;
         }
         return fetch(request).then((networkResponse) => {
-          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          if (!networkResponse || networkResponse.status !== 200) {
             return networkResponse;
           }
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(request, responseToCache);
-          });
+          }).catch(() => {});
           return networkResponse;
         }).catch(() => {
-          // Offline fallback
-          return null;
+          return fetch(request);
         });
       })
     );
@@ -96,11 +97,11 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          if (networkResponse && networkResponse.status === 200) {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(request, responseToCache);
-            });
+            }).catch(() => {});
           }
           return networkResponse;
         })
@@ -110,13 +111,10 @@ self.addEventListener('fetch', (event) => {
             if (cachedResponse) {
               return cachedResponse;
             }
-            // If offline and requesting root, return index.html
-            if (url.pathname === '/' || url.pathname.endsWith('/')) {
-              return caches.match('./index.html');
-            }
-            return null;
+            return caches.match('./index.html').then(idx => idx || fetch(request));
           });
         })
     );
   }
 });
+
