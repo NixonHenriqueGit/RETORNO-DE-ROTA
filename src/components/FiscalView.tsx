@@ -1114,7 +1114,7 @@ export default function FiscalView({
       if (isMerge) {
         // Merge mode
         parsedRoutes.forEach(newR => {
-          const existingIdx = mergedRoutes.findIndex(r => r.routeMap.trim().toUpperCase() === newR.routeMap.trim().toUpperCase());
+          const existingIdx = mergedRoutes.findIndex(r => r.routeMap.trim().toUpperCase() === newR.routeMap.trim().toUpperCase() && (r.routeDate || '') === (newR.routeDate || ''));
           if (existingIdx >= 0) {
             const currentRoute = mergedRoutes[existingIdx];
             const isPendente = currentRoute.status === 'pendente';

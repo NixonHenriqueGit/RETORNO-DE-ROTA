@@ -366,8 +366,8 @@ export default function App() {
   const applyDirectDb = (db: any) => {
     if (!db) return;
 
-    // Protection: If a local write was performed in the last 15 seconds, defer remote override to protect local user inputs/imports
-    if (Date.now() - lastWriteTime.current < 15000) {
+    // Protection: If a local write was performed in the last 1.5 seconds, defer remote override to protect local user inputs/imports
+    if (Date.now() - lastWriteTime.current < 1500) {
       console.log("[AppSync] Ignorando atualização remota temporariamente para proteger escrita local recente.");
       return;
     }

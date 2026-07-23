@@ -63,7 +63,8 @@ export function getItemDocId(item: any): string {
     return String(item.username).trim();
   }
   if (item.routeMap !== undefined && item.routeMap !== null && String(item.routeMap).trim() !== "") {
-    return String(item.routeMap).trim();
+    const rDate = item.routeDate ? `_${item.routeDate}` : "";
+    return `${String(item.routeMap).trim()}${rDate}`;
   }
   return `item_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
 }
