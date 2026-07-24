@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, Driver, Vehicle, Product, ActiveAsset, AuditSession, AuditItem, AuditAssetItem, AuditExchangeItem, FiscalAlert, ImportedRoute, RouteObservation, Vale, ReturnForecast, getAssetCode, getAssetCanonicalName } from '../types';
 import { isClientFirebaseActive, saveDirectlyToFirestore } from '../clientFirebase';
-import { ClipboardCheck, ShieldAlert, ArrowRight, ShieldCheck, CheckSquare, AlertTriangle, HelpCircle, Search, RefreshCw, XCircle, DollarSign, Calendar, SlidersHorizontal, FileSpreadsheet, Clock, CheckCircle2, Shield, Trash2, Camera, BarChart3, AlertCircle, Plus, PlusCircle, FileText, Check, Award, Eye, Calculator, Folder, Copy, X, ArrowUpCircle, ArrowDownCircle, Sparkles, FolderOpen, Download } from 'lucide-react';
+import { ClipboardCheck, ShieldAlert, ArrowRight, ShieldCheck, CheckSquare, AlertTriangle, HelpCircle, Search, RefreshCw, XCircle, DollarSign, Calendar, SlidersHorizontal, FileSpreadsheet, Clock, CheckCircle2, Shield, Trash2, Camera, BarChart3, AlertCircle, Plus, PlusCircle, FileText, Check, Award, Eye, Calculator, Folder, Copy, X, ArrowUpCircle, ArrowDownCircle, Sparkles, FolderOpen, Download, FileCheck, PackageCheck } from 'lucide-react';
 import { ImageDB, PhotoRecord } from '../imageDb';
 import { jsPDF } from 'jspdf';
 import { DEFAULT_USERS } from '../data';
@@ -169,7 +169,7 @@ function AuditHistoryDetails({ audit }: { audit: AuditSession }) {
           {audit.items && audit.items.length > 0 && (
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-slate-500 uppercase font-mono block">Produtos Acabados (PA)</span>
-              <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/30">
+              <div className="border border-slate-200 rounded-lg overflow-x-auto bg-slate-50/30">
                 <table className="w-full text-left text-[10px]">
                   <thead className="bg-slate-100 text-slate-500 font-bold border-b border-slate-200">
                     <tr>
@@ -207,7 +207,7 @@ function AuditHistoryDetails({ audit }: { audit: AuditSession }) {
           {audit.assets && audit.assets.length > 0 && (
             <div className="space-y-1">
               <span className="text-[10px] font-bold text-slate-500 uppercase font-mono block">Ativos de Giro (AG)</span>
-              <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-50/30">
+              <div className="border border-slate-200 rounded-lg overflow-x-auto bg-slate-50/30">
                 <table className="w-full text-left text-[10px]">
                   <thead className="bg-slate-100 text-slate-500 font-bold border-b border-slate-200">
                     <tr>
@@ -364,17 +364,56 @@ function matchDriverFromColumnValue(val: string, currentDrivers: Driver[]): stri
   return '';
 }
 
+function isForecastActivePernoite(
+  f: ReturnForecast,
+  audits: AuditSession[] = [],
+  importedRoutes: ImportedRoute[] = []
+): boolean {
+  if (f.tripStatus !== 'pernoitam') return false;
+  if (f.status === 'no_patio') return false;
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // 1. Date rollover: if pernoite was registered on a previous day, it is no longer active today
+  if (f.updatedAt) {
+    const fDate = f.updatedAt.split('T')[0];
+    if (fDate < todayStr) return false;
+  }
+
+  // 2. Audit check: if map is downloaded/finalized
+  const matchingAudit = audits.find(a => 
+    a.routeMap.toUpperCase() === f.routeMap.toUpperCase() ||
+    (a.unifiedMaps && a.unifiedMaps.some(m => m.toUpperCase() === f.routeMap.toUpperCase()))
+  );
+  if (matchingAudit && (
+    matchingAudit.status === 'finalizado_ok' || 
+    matchingAudit.status === 'finalizado_divergente' || 
+    matchingAudit.surplusFlowStatus === 'BAIXADO'
+  )) {
+    return false;
+  }
+
+  // 3. Route check: if closed
+  const matchingRoute = importedRoutes.find(r => r.routeMap.toUpperCase() === f.routeMap.toUpperCase());
+  if (matchingRoute && matchingRoute.status === 'fechado') {
+    return false;
+  }
+
+  return true;
+}
+
 function selectCircularBlitzRoutes(
   importedRoutesForDate: ImportedRoute[], 
   returnForecasts: ReturnForecast[] = [],
-  currentBlitzRoutes: ImportedRoute[] = []
+  currentBlitzRoutes: ImportedRoute[] = [],
+  audits: AuditSession[] = []
 ): string[] {
   if (importedRoutesForDate.length === 0) return [];
 
   // Identify distinct pernoite plates (tripStatus === 'pernoitam')
   const pernoitePlates = new Set(
     returnForecasts
-      .filter(f => f.tripStatus === 'pernoitam')
+      .filter(f => isForecastActivePernoite(f, audits, importedRoutesForDate))
       .map(f => f.plate.trim().toUpperCase())
   );
 
@@ -747,6 +786,67 @@ export default function FiscalView({
   const [filterDate, setFilterDate] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'sobra' | 'falta'>('all');
   const [subTabDivergencias, setSubTabDivergencias] = useState<'all' | 'pa' | 'ag'>('all');
+  const [sobrasViewMode, setSobrasViewMode] = useState<'operacional' | 'master'>('operacional');
+  const [reprovingAuditId, setReprovingAuditId] = useState<string | null>(null);
+  const [reprovalObservation, setReprovalObservation] = useState('');
+  const [dismissedPopupAuditIds, setDismissedPopupAuditIds] = useState<string[]>([]);
+
+  // Calculate pending surpluses aligned by Monitoramento/Gestor awaiting Auxiliar launch/reproval (1 day before delivery date)
+  const pendingSurplusesForAuxiliary = React.useMemo(() => {
+    return audits.filter(audit => {
+      if (audit.status !== 'finalizado_ok' && audit.status !== 'finalizado_divergente') return false;
+      
+      // Must have NB and Delivery Date aligned
+      if (!audit.clientCodeNB || !audit.deliveryDate) return false;
+      
+      // Must NOT be already sent, launched, closed, or reproved
+      if (
+        audit.surplusFlowStatus === 'ENVIADO' || 
+        audit.surplusFlowStatus === 'BAIXADO' || 
+        audit.surplusFlowStatus === 'REPROVADO' ||
+        audit.surplusActionStatus === 'enviado_cliente' ||
+        audit.surplusActionStatus === 'baixado_direto'
+      ) {
+        return false;
+      }
+
+      // Must not be dismissed in current local session
+      if (dismissedPopupAuditIds.includes(audit.id)) return false;
+
+      // Must have surplus items (PA or AG)
+      const hasProductSurplus = audit.items.some(i => {
+        const phys = i.rePhysicalQty !== undefined ? i.rePhysicalQty : i.physicalQty;
+        return phys > (i.fiscalQty ?? 0);
+      });
+      const hasAssetSurplus = audit.assets.some(a => {
+        const idLower = (a.assetId || '').toLowerCase();
+        const nameUpper = (a.assetName || '').toUpperCase();
+        const isChapatex = idLower === 'chapatex' || idLower === '899599' || nameUpper.includes('CHAPATEX');
+        if (isChapatex) return false;
+
+        const phys = a.rePhysicalQty !== undefined ? a.rePhysicalQty : a.physicalQty;
+        return phys > (a.fiscalQty ?? 0);
+      });
+
+      if (!hasProductSurplus && !hasAssetSurplus) return false;
+
+      // Delivery date rule: Pop-up triggers 1 day before delivery date or on/after delivery date
+      try {
+        const [year, month, day] = audit.deliveryDate.split('-').map(Number);
+        const deliveryDateVal = new Date(year, month - 1, day).getTime();
+
+        const now = new Date();
+        const todayVal = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+        const oneDayMs = 24 * 60 * 60 * 1000;
+        const triggerTimeStart = deliveryDateVal - oneDayMs; // 1 day before
+
+        return todayVal >= triggerTimeStart;
+      } catch (err) {
+        return false;
+      }
+    });
+  }, [audits, dismissedPopupAuditIds]);
   
   // Vales State and Form States
   const [viewingVale, setViewingVale] = useState<any | null>(null);
@@ -909,7 +1009,7 @@ export default function FiscalView({
     // Identify distinct pernoite plates (tripStatus === 'pernoitam')
     const pernoitePlates = new Set(
       (returnForecasts || [])
-        .filter(f => f.tripStatus === 'pernoitam')
+        .filter(f => isForecastActivePernoite(f, audits, importedRoutes))
         .map(f => f.plate.trim().toUpperCase())
     );
 
@@ -3291,7 +3391,7 @@ export default function FiscalView({
         <div className="flex items-center space-x-3 shrink-0 relative">
           {/* NOTIFICATION BUBBLE FROM MONITORAMENTO */}
           {(() => {
-            const pernoiteForecasts = returnForecasts.filter(f => f.tripStatus === 'pernoitam' && f.status !== 'no_patio');
+            const pernoiteForecasts = returnForecasts.filter(f => isForecastActivePernoite(f, audits, importedRoutes));
             const emRotaWithEta = returnForecasts.filter(f => f.tripStatus !== 'pernoitam' && f.eta && f.status !== 'no_patio');
             const totalNotifications = pernoiteForecasts.length + emRotaWithEta.length;
 
@@ -4718,6 +4818,40 @@ export default function FiscalView({
                 </div>
               </div>
 
+              {/* SELETOR DE MODALIDADE: PAINEL OPERACIONAL VS VISÃO MASTER */}
+              <div className="flex bg-white rounded-2xl p-2 border border-slate-200 shadow-sm gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSobrasViewMode('operacional')}
+                  className={`flex-1 py-3 px-4 font-sans font-extrabold text-xs tracking-tight rounded-xl transition-all flex items-center justify-center space-x-2 cursor-pointer ${
+                    sobrasViewMode === 'operacional'
+                      ? 'bg-amber-500 text-slate-950 shadow-sm'
+                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Shield className="h-4 w-4" />
+                  <span>Painel Operacional (Sobras e Faltas)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSobrasViewMode('master')}
+                  className={`flex-1 py-3 px-4 font-sans font-extrabold text-xs tracking-tight rounded-xl transition-all flex items-center justify-center space-x-2 cursor-pointer ${
+                    sobrasViewMode === 'master'
+                      ? 'bg-amber-500 text-slate-950 shadow-sm'
+                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <FileCheck className="h-4 w-4 text-slate-950" />
+                  <span className="flex items-center space-x-2">
+                    <span>Sobras & Faltas (Visão Master)</span>
+                    <span className="text-[10px] bg-red-100 text-red-900 px-2 py-0.5 rounded-full font-sans font-extrabold border border-red-200">
+                      Analista Master / Baixa Definitiva
+                    </span>
+                  </span>
+                </button>
+              </div>
+
               {/* DIRETÓRIO LOCAL DE ARQUIVAMENTO - EXIBIÇÃO EM CIMA DO FILTRO DE SOBRAS & FALTAS */}
               <div className="bg-slate-50 rounded-xl border border-slate-200/80 p-5 space-y-3 shadow-sm">
                 <div className="flex items-center space-x-2.5">
@@ -4851,9 +4985,17 @@ export default function FiscalView({
                       vales.some(v => v.auditId === audit.id)
                     );
 
-                    // If it has no unresolved surplus or deficit, then it should disappear
-                    if (!unresolvedSurplus && !unresolvedDeficit) {
-                      return false;
+                    // Filter based on selected view mode (operacional vs master)
+                    if (sobrasViewMode === 'operacional') {
+                      // If it has no unresolved surplus or deficit in operational mode, then it should disappear
+                      if (!unresolvedSurplus && !unresolvedDeficit) {
+                        return false;
+                      }
+                    } else {
+                      // In Visão Master mode, show all audits that have discrepancies (including launched surpluses and closed ones)
+                      if (!hasProductDiff && !hasAssetDiff) {
+                        return false;
+                      }
                     }
                     
                     if (subTabDivergencias === 'pa') return hasProductDiff;
@@ -4928,6 +5070,7 @@ export default function FiscalView({
                     // Get list of surpluses
                     const surpluses = [
                       ...audit.items.filter(i => (i.rePhysicalQty !== undefined ? i.rePhysicalQty : i.physicalQty) > (i.fiscalQty ?? 0)).map(i => ({
+                        code: i.productCode,
                         description: i.productDescription,
                         qty: (i.rePhysicalQty !== undefined ? i.rePhysicalQty : i.physicalQty) - (i.fiscalQty ?? 0),
                         unit: 'cx',
@@ -4945,6 +5088,7 @@ export default function FiscalView({
                         const comodato = a.comodatoQty ?? 0;
                         const recolha = a.recolhaQty ?? 0;
                         return {
+                          code: a.assetId,
                           description: a.assetName,
                           qty: phys - fisc + comodato - recolha,
                           unit: 'un',
@@ -4960,6 +5104,7 @@ export default function FiscalView({
                     // Get list of deficits
                     const deficits = [
                       ...audit.items.filter(i => (i.rePhysicalQty !== undefined ? i.rePhysicalQty : i.physicalQty) < (i.fiscalQty ?? 0)).map(i => ({
+                        code: i.productCode,
                         description: i.productDescription,
                         qty: (i.fiscalQty ?? 0) - (i.rePhysicalQty !== undefined ? i.rePhysicalQty : i.physicalQty),
                         unit: 'cx',
@@ -4977,6 +5122,7 @@ export default function FiscalView({
                         const comodato = a.comodatoQty ?? 0;
                         const recolha = a.recolhaQty ?? 0;
                         return {
+                          code: a.assetId,
                           description: a.assetName,
                           qty: Math.abs(phys - fisc + comodato - recolha),
                           unit: 'un',
@@ -5050,7 +5196,10 @@ export default function FiscalView({
                                   <div key={idx} className="flex justify-between items-center text-xs text-amber-950 font-medium">
                                     <div className="flex items-center space-x-1.5">
                                       <span className="text-[9px] bg-amber-200 text-amber-900 font-black px-1 rounded font-mono">{s.type}</span>
-                                      <span>{s.description}</span>
+                                      <span>
+                                        {s.code && <span className="font-mono text-amber-900 font-bold mr-1">[{s.code}]</span>}
+                                        {s.description}
+                                      </span>
                                     </div>
                                     <span className="font-mono font-bold">+{s.qty} {s.unit}</span>
                                   </div>
@@ -5095,7 +5244,10 @@ export default function FiscalView({
                                   <div key={idx} className="flex justify-between items-center text-xs text-red-950 font-medium">
                                     <div className="flex items-center space-x-1.5">
                                       <span className="text-[9px] bg-red-200 text-red-900 font-black px-1 rounded font-mono">{d.type}</span>
-                                      <span>{d.description}</span>
+                                      <span>
+                                        {d.code && <span className="font-mono text-red-900 font-bold mr-1">[{d.code}]</span>}
+                                        {d.description}
+                                      </span>
                                     </div>
                                     <span className="font-mono font-bold font-bold">-{d.qty} {d.unit}</span>
                                   </div>
@@ -5375,7 +5527,7 @@ export default function FiscalView({
                                       return acc;
                                     }, 0);
 
-                                    const descFalta = deficits.map(d => `${d.qty}x ${d.description}`).join(', ');
+                                    const descFalta = deficits.map(d => `${d.qty}x ${d.code ? `[${d.code}] ` : ''}${d.description}`).join(', ');
                                     const motoristaNome = getDriverName(audit.driverId);
 
                                     const novoVale = {
@@ -5424,8 +5576,8 @@ export default function FiscalView({
 
                             <p className="text-[11px] text-slate-600 leading-relaxed">
                               {deficits.length > 0 
-                                ? `Detectada Falta Física de ${deficits.map(d => `${d.qty} ${d.unit} de ${d.description}`).join(', ')}. Ação sugerida: Gerar e emitir Vale de Desconto para o motorista/ajudante responsável ou coletar justificativa assinada pelo fiscal de expedição.`
-                                : `Detectada Sobra Física de ${surpluses.map(s => `${s.qty} ${s.unit} de ${s.description}`).join(', ')}. Ação sugerida: Identificar e inserir o código NB do cliente, alinhar data estimada de entrega e encaminhar ao gestor para efetivar baixa física.`
+                                ? `Detectada Falta Física de ${deficits.map(d => `${d.qty} ${d.unit} de ${d.code ? `[${d.code}] ` : ''}${d.description}`).join(', ')}. Ação sugerida: Gerar e emitir Vale de Desconto para o motorista/ajudante responsável ou coletar justificativa assinada pelo fiscal de expedição.`
+                                : `Detectada Sobra Física de ${surpluses.map(s => `${s.qty} ${s.unit} de ${s.code ? `[${s.code}] ` : ''}${s.description}`).join(', ')}. Ação sugerida: Identificar e inserir o código NB do cliente, alinhar data estimada de entrega e encaminhar ao gestor para efetivar baixa física.`
                               }
                             </p>
 
@@ -6160,7 +6312,7 @@ export default function FiscalView({
                           <span className="text-slate-900 font-bold text-[10px] uppercase tracking-wider block">Ativos com Divergência de Inventário (Sobras/Faltas de P.A e A.G):</span>
                           
                           {detailedShortages.length > 0 ? (
-                            <div className="border border-slate-250 rounded-lg overflow-hidden text-xxs font-sans shadow-xs">
+                            <div className="border border-slate-250 rounded-lg overflow-x-auto text-xxs font-sans shadow-xs">
                               <table className="w-full text-left border-collapse">
                                 <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[9px] border-b border-slate-250">
                                   <tr>
@@ -7072,7 +7224,7 @@ export default function FiscalView({
                     <p className="text-xs text-slate-500">
                       O conferente registrou os seguintes refugos/avarias. Faça a aferição dos itens por imagem utilizando a foto em tempo real abaixo:
                     </p>
-                    <div className="border border-slate-100 rounded-lg overflow-hidden shadow-xs">
+                    <div className="border border-slate-100 rounded-lg overflow-x-auto shadow-xs">
                       <table className="min-w-full divide-y divide-slate-100 text-left">
                         <thead className="bg-slate-50">
                           <tr>
@@ -7153,7 +7305,7 @@ export default function FiscalView({
                       Itens de troca (avariados que retornaram na rota) registrados pelo conferente:
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="md:col-span-2 border border-slate-100 rounded-lg overflow-hidden shadow-xs bg-white">
+                      <div className="md:col-span-2 border border-slate-100 rounded-lg overflow-x-auto shadow-xs bg-white">
                         <table className="min-w-full divide-y divide-slate-100 text-left">
                           <thead className="bg-slate-50">
                             <tr>
@@ -8024,42 +8176,45 @@ export default function FiscalView({
                       {/* Product discrepancies table */}
                       <div className="space-y-2 break-inside-avoid">
                         <span className="text-[10px] font-bold text-slate-600 uppercase font-mono block font-sans">Detalhamento de Produtos (PAs)</span>
-                        <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
-                          <thead>
-                            <tr className="bg-slate-50 text-slate-500 font-mono text-[9px] uppercase border-b border-slate-200">
-                              <th className="p-2">Código</th>
-                              <th className="p-2">Produto</th>
-                              <th className="p-2 text-right">Físico</th>
-                              <th className="p-2 text-right">Fiscal</th>
-                              <th className="p-2 text-right">Divergência</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {audit.items.map(item => {
-                              const physical = item.rePhysicalQty !== undefined ? item.rePhysicalQty : item.physicalQty;
-                              const fiscal = item.fiscalQty ?? 0;
-                              const diff = physical - fiscal;
-                              
-                              return (
-                                <tr key={item.productCode} className="border-b border-slate-100 last:border-0">
-                                  <td className="p-2 font-mono text-[10px] text-slate-500">{item.productCode}</td>
-                                  <td className="p-2 font-medium text-slate-800">{products.find(p => p.code === item.productCode)?.description || item.productCode}</td>
-                                  <td className="p-2 text-right font-mono">{physical}</td>
-                                  <td className="p-2 text-right font-mono">{fiscal}</td>
-                                  <td className={`p-2 text-right font-mono font-bold ${diff === 0 ? 'text-slate-400' : diff > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                                    {diff === 0 ? '-' : diff > 0 ? `+${diff}` : diff}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                          <table className="w-full text-left text-xs">
+                            <thead>
+                              <tr className="bg-slate-50 text-slate-500 font-mono text-[9px] uppercase border-b border-slate-200">
+                                <th className="p-2">Código</th>
+                                <th className="p-2">Produto</th>
+                                <th className="p-2 text-right">Físico</th>
+                                <th className="p-2 text-right">Fiscal</th>
+                                <th className="p-2 text-right">Divergência</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {audit.items.map(item => {
+                                const physical = item.rePhysicalQty !== undefined ? item.rePhysicalQty : item.physicalQty;
+                                const fiscal = item.fiscalQty ?? 0;
+                                const diff = physical - fiscal;
+                                
+                                return (
+                                  <tr key={item.productCode} className="border-b border-slate-100 last:border-0">
+                                    <td className="p-2 font-mono text-[10px] text-slate-500">{item.productCode}</td>
+                                    <td className="p-2 font-medium text-slate-800">{products.find(p => p.code === item.productCode)?.description || item.productCode}</td>
+                                    <td className="p-2 text-right font-mono">{physical}</td>
+                                    <td className="p-2 text-right font-mono">{fiscal}</td>
+                                    <td className={`p-2 text-right font-mono font-bold ${diff === 0 ? 'text-slate-400' : diff > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                      {diff === 0 ? '-' : diff > 0 ? `+${diff}` : diff}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
 
                       {/* Asset discrepancies table */}
                       <div className="space-y-2 break-inside-avoid">
                         <span className="text-[10px] font-bold text-slate-600 uppercase font-mono block font-sans">Conciliação de Ativos de Giro</span>
-                        <table className="w-full text-left text-xs border border-slate-200 rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+                          <table className="w-full text-left text-xs">
                           <thead>
                             <tr className="bg-slate-50 text-slate-500 font-mono text-[9px] uppercase border-b border-slate-200">
                               <th className="p-2">Ativo</th>
@@ -8103,6 +8258,7 @@ export default function FiscalView({
                             })}
                           </tbody>
                         </table>
+                        </div>
                       </div>
 
                       {/* Blitz and Refugos Block */}
@@ -8661,6 +8817,239 @@ export default function FiscalView({
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* POPUP DE CONFIRMAÇÃO DE SOBRA PARA AUXILIAR DE ARMAZÉM (1 DIA ANTES DA DATA DE ENTREGA) */}
+      {pendingSurplusesForAuxiliary.length > 0 && (
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl border border-amber-300 max-w-2xl w-full overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="bg-slate-900 text-white p-5 border-b border-amber-500/40 flex justify-between items-start">
+              <div className="flex items-center space-x-3">
+                <div className="p-2.5 bg-amber-500/20 text-amber-400 rounded-xl border border-amber-500/30 shrink-0">
+                  <PackageCheck className="h-6 w-6 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="bg-amber-500 text-slate-950 text-[10px] font-black uppercase px-2 py-0.5 rounded font-mono">
+                      Aviso do Armazém
+                    </span>
+                    <span className="text-xs text-amber-300 font-semibold font-mono">
+                      1 dia antes da entrega
+                    </span>
+                  </div>
+                  <h3 className="font-sans font-extrabold text-base text-white uppercase tracking-tight mt-0.5">
+                    Confirmação de Envio de Sobra ({pendingSurplusesForAuxiliary.length})
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-1">
+                    O Monitoramento/Gestão alinhou o código NB e a data de entrega. Confirme o lançamento do envio ou reprove informando o motivo.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDismissedPopupAuditIds(prev => [...prev, ...pendingSurplusesForAuxiliary.map(a => a.id)]);
+                }}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                title="Fechar por enquanto"
+              >
+                <XCircle className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Content / Cards */}
+            <div className="p-6 overflow-y-auto space-y-6 bg-slate-50/50 grow">
+              {pendingSurplusesForAuxiliary.map(audit => {
+                const driverName = drivers.find(d => d.id === audit.driverId)?.name || audit.driverId;
+                const surplusProds = audit.items.filter(i => {
+                  const phys = i.rePhysicalQty !== undefined ? i.rePhysicalQty : i.physicalQty;
+                  return phys > (i.fiscalQty ?? 0);
+                });
+                const surplusAssets = audit.assets.filter(a => {
+                  const idLower = (a.assetId || '').toLowerCase();
+                  const nameUpper = (a.assetName || '').toUpperCase();
+                  const isChapatex = idLower === 'chapatex' || idLower === '899599' || nameUpper.includes('CHAPATEX');
+                  if (isChapatex) return false;
+
+                  const phys = a.rePhysicalQty !== undefined ? a.rePhysicalQty : a.physicalQty;
+                  return phys > (a.fiscalQty ?? 0);
+                });
+
+                const isReprovingThis = reprovingAuditId === audit.id;
+
+                return (
+                  <div key={audit.id} className="bg-white rounded-xl border border-amber-200 p-5 shadow-sm space-y-4">
+                    <div className="flex flex-wrap justify-between items-start gap-2 border-b border-slate-100 pb-3">
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-extrabold text-sm text-slate-900 font-sans">Mapa {audit.routeMap}</span>
+                          <span className="font-mono text-xs text-slate-600 bg-slate-100 px-2 py-0.5 rounded font-bold">{audit.plate}</span>
+                        </div>
+                        <div className="text-xs text-slate-500 mt-1 font-sans">
+                          <strong>Motorista:</strong> {driverName}
+                        </div>
+                      </div>
+
+                      <div className="text-right space-y-0.5">
+                        <div className="text-xs font-mono font-extrabold text-slate-900 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg inline-block">
+                          NB Cliente: {audit.clientCodeNB}
+                        </div>
+                        <div className="text-[11px] text-emerald-800 font-bold font-sans block">
+                          Entrega Prevista: {audit.deliveryDate ? new Date(audit.deliveryDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Surplus items detail */}
+                    <div className="bg-amber-50/40 border border-amber-100/80 rounded-lg p-3 space-y-2">
+                      <div className="text-[10px] font-bold text-amber-900 uppercase tracking-wider font-sans">
+                        Itens em Sobra Alinhados para Envio:
+                      </div>
+                      <div className="space-y-1">
+                        {surplusProds.map(p => {
+                          const diff = (p.rePhysicalQty !== undefined ? p.rePhysicalQty : p.physicalQty) - (p.fiscalQty ?? 0);
+                          return (
+                            <div key={p.productCode} className="flex justify-between text-xs text-slate-800 font-medium">
+                              <span>
+                                {p.productCode && <span className="font-mono text-amber-900 font-bold mr-1">[{p.productCode}]</span>}
+                                {p.productDescription}
+                              </span>
+                              <span className="font-mono font-bold text-emerald-700">+{diff} cx (P.A.)</span>
+                            </div>
+                          );
+                        })}
+                        {surplusAssets.map(a => {
+                          const diff = (a.rePhysicalQty !== undefined ? a.rePhysicalQty : a.physicalQty) - (a.fiscalQty ?? 0);
+                          return (
+                            <div key={a.assetId} className="flex justify-between text-xs text-slate-800 font-medium">
+                              <span>
+                                {a.assetId && <span className="font-mono text-blue-900 font-bold mr-1">[{a.assetId}]</span>}
+                                {a.assetName}
+                              </span>
+                              <span className="font-mono font-bold text-emerald-700">+{diff} un (A.G.)</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Reproval observation area if reproving */}
+                    {isReprovingThis && (
+                      <div className="bg-red-50 p-3 rounded-lg border border-red-200 space-y-2 animate-fade-in">
+                        <label className="block text-xs font-bold text-red-900 font-sans">
+                          Motivo da Reprova do Envio (Obrigatório):
+                        </label>
+                        <textarea
+                          rows={2}
+                          placeholder="Informe a observação detalhando o motivo da reprova..."
+                          value={reprovalObservation}
+                          onChange={e => setReprovalObservation(e.target.value)}
+                          className="w-full text-xs p-2 bg-white border border-red-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 font-sans"
+                        />
+                        <div className="flex justify-end gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReprovingAuditId(null);
+                              setReprovalObservation('');
+                            }}
+                            className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs font-bold rounded-lg transition cursor-pointer font-sans"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!reprovalObservation.trim()) {
+                                alert('É obrigatório preencher a observação em caso de reprova!');
+                                return;
+                              }
+                              const updated = audits.map(a => {
+                                if (a.id === audit.id) {
+                                  return {
+                                    ...a,
+                                    surplusFlowStatus: 'REPROVADO' as const,
+                                    reconciliationNotes: `Reprovado pela Auxiliar de Armazém: ${reprovalObservation.trim()}`,
+                                    history: [
+                                      ...a.history,
+                                      {
+                                        timestamp: new Date().toISOString(),
+                                        action: 'Envio de Sobra Reprovado pela Auxiliar de Armazém',
+                                        user: currentUser.name,
+                                        details: `Motivo da Reprova: ${reprovalObservation.trim()}`
+                                      }
+                                    ]
+                                  };
+                                }
+                                return a;
+                              });
+                              onSaveAudits(updated);
+                              setReprovingAuditId(null);
+                              setReprovalObservation('');
+                              alert('Envio reprovado e observação registrada no histórico com sucesso!');
+                            }}
+                            className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition cursor-pointer font-sans"
+                          >
+                            Confirmar Reprova
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action buttons if not currently open for reproval input */}
+                    {!isReprovingThis && (
+                      <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = audits.map(a => {
+                              if (a.id === audit.id) {
+                                return {
+                                  ...a,
+                                  surplusFlowStatus: 'ENVIADO' as const,
+                                  surplusActionStatus: 'enviado_cliente' as const,
+                                  history: [
+                                    ...a.history,
+                                    {
+                                      timestamp: new Date().toISOString(),
+                                      action: 'Sobra Lançada pela Auxiliar de Armazém',
+                                      user: currentUser.name,
+                                      details: `Sobra confirmada e lançada pela Auxiliar de Armazém. NB: ${audit.clientCodeNB} | Data Entrega: ${audit.deliveryDate}. Removido da tela operacional e disponível na Visão Master.`
+                                    }
+                                  ]
+                                };
+                              }
+                              return a;
+                            });
+                            onSaveAudits(updated);
+                            alert(`Sobra do Mapa ${audit.routeMap} lançada com sucesso!\n\nO item foi removido da tela operacional de Sobras e Faltas e agora está visível apenas na Visão Master.`);
+                          }}
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer font-sans uppercase tracking-tight"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          <span>Lançar Envio (Confirmar)</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReprovingAuditId(audit.id);
+                            setReprovalObservation('');
+                          }}
+                          className="bg-red-100 hover:bg-red-200 text-red-900 font-extrabold text-xs py-2.5 px-4 rounded-xl border border-red-200 transition flex items-center justify-center space-x-2 cursor-pointer font-sans uppercase tracking-tight"
+                        >
+                          <XCircle className="h-4 w-4 text-red-600" />
+                          <span>Reprovar Envio</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

@@ -642,9 +642,11 @@ export default function GestorDashboard({
 
   // Search filter inside tables
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDetailAction, setSelectedDetailAction] = useState<any>(null);
 
   // States for Sobras & Faltas and Map Status Tracking
   const [correctiveNotesMap, setCorrectiveNotesMap] = useState<Record<string, string>>({});
+  const [actionStatusMap, setActionStatusMap] = useState<Record<string, string>>({});
   const [importDateFilter, setImportDateFilter] = useState(() => {
     // default to date of first imported route or today
     return importedRoutes[0]?.routeDate || new Date().toISOString().split('T')[0];
@@ -661,16 +663,24 @@ export default function GestorDashboard({
     const updatedAudits = audits.map(a => {
       if (a.id === auditId) {
         const now = new Date().toISOString();
+        const isSent = fields.surplusActionStatus === 'enviado_cliente' || a.surplusActionStatus === 'enviado_cliente';
+        const isBaixadoDeficit = fields.deficitActionStatus === 'baixado';
+        
         return {
           ...a,
           ...fields,
+          ...(isSent ? { surplusFlowStatus: 'ENVIADO' as const } : {}),
           history: [
             ...a.history,
             {
               timestamp: now,
-              action: 'Ação Corretiva Atualizada',
+              action: isSent 
+                ? 'Enviado ao Cliente' 
+                : isBaixadoDeficit 
+                ? 'Baixa de Falta Realizada' 
+                : 'Ação Corretiva Atualizada',
               user: currentUser.name,
-              details: `Campos alterados: ${Object.keys(fields).join(', ')}. Notas: ${fields.correctiveActionNotes || a.correctiveActionNotes || ''}`
+              details: `Status de Ação: ${fields.surplusActionStatus || fields.deficitActionStatus || 'Atualizado'}. Observação Corretiva: ${fields.correctiveActionNotes || a.correctiveActionNotes || ''}`
             }
           ]
         };
@@ -984,22 +994,23 @@ export default function GestorDashboard({
         return phys < (asset.fiscalQty ?? 0);
       });
 
-      const isSobrasOrFaltas = hasProductSurplus || hasAssetSurplus || hasProductDeficit || hasAssetDeficit;
+      const isSobrasOrFaltas = hasProductSurplus || hasAssetSurplus || hasProductDeficit || hasAssetDeficit || audit.gestorAcknowledgedSurplus;
       if (!isSobrasOrFaltas) return;
 
       // Harvest history entries
       audit.history.forEach((h, index) => {
         const actionLower = h.action.toLowerCase();
         
-        // Let's check if the action is aligned
+        // Let's check if the action is aligned or ciente
         const isValeAction = actionLower.includes('vale') || actionLower.includes('gerado vale');
         const isEnvioAction = actionLower.includes('alinhad') || actionLower.includes('enviado');
         const isBaixaDiretaAction = actionLower.includes('baixa direta') || actionLower.includes('baixado');
         const isCommentAction = actionLower.includes('observação da ação') || actionLower.includes('comentário');
         const isSobraAction = actionLower.includes('sobra') || actionLower.includes('cadastro') || actionLower.includes('manual');
+        const isCienteAction = actionLower.includes('ciente');
 
-        // Only include aligned actions
-        if (!isValeAction && !isEnvioAction && !isBaixaDiretaAction && !isCommentAction && !isSobraAction) {
+        // Include relevant actions
+        if (!isValeAction && !isEnvioAction && !isBaixaDiretaAction && !isCommentAction && !isSobraAction && !isCienteAction) {
           return;
         }
 
@@ -1017,9 +1028,27 @@ export default function GestorDashboard({
       });
     });
 
+    // Also harvest vales
+    vales.forEach(vale => {
+      const alreadyInList = list.some(item => item.routeMap === vale.routeMap && item.action.toLowerCase().includes('vale') && item.details?.includes(`R$ ${vale.valor.toFixed(2)}`));
+      if (!alreadyInList) {
+        list.push({
+          id: `vale_${vale.id}`,
+          routeMap: vale.routeMap || 'AVULSO',
+          plate: 'N/A',
+          arrivalDate: vale.dataGeracao,
+          timestamp: vale.dataGeracao + 'T12:00:00.000Z',
+          user: vale.colaboradorRole || 'Sistema',
+          action: `Vale Financeiro: R$ ${vale.valor.toFixed(2)} (${vale.colaboradorName})`,
+          details: `Prestador: ${vale.colaboradorName} (${vale.colaboradorRole}). Motivo: ${vale.descricao}. Status: ${vale.status}${vale.acknowledgedByGestor ? ' - Ciente do Gestor' : ''}`,
+          auditStatus: 'finalizado_divergente'
+        });
+      }
+    });
+
     // Sort by timestamp descending (newest first)
     return list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [audits]);
+  }, [audits, vales]);
 
   // Calculate discrepancies by driver/helper (prestador de contas)
   interface DriverStats {
@@ -5233,8 +5262,9 @@ export default function GestorDashboard({
                     </p>
 
                     {(() => {
-                      // Get all audits that have been sent or have history actions by 'auxiliar_logistica'
+                      // Get all audits that have been sent or have history actions by 'auxiliar_logistica' that are NOT yet acknowledged by gestor
                       const auxiliarActions = audits.filter(audit => {
+                        if (audit.gestorAcknowledgedSurplus) return false;
                         const hasAuxiliarHistory = audit.history.some(h => h.user.includes('Auxiliar') || h.user.toLowerCase().includes('auxiliar'));
                         const isSent = audit.surplusFlowStatus === 'ENVIADO';
                         return hasAuxiliarHistory || isSent;
@@ -5243,7 +5273,7 @@ export default function GestorDashboard({
                       if (auxiliarActions.length === 0) {
                         return (
                           <div className="text-center py-12 text-slate-400 text-xs italic bg-slate-50 rounded-lg">
-                            Nenhuma ação realizada pelo auxiliar registrada até o momento.
+                            Nenhuma ação pendente de ciência do auxiliar registrada até o momento.
                           </div>
                         );
                       }
@@ -5283,6 +5313,38 @@ export default function GestorDashboard({
                                     </div>
                                   )}
                                 </div>
+
+                                <div className="flex justify-end pt-1 border-t border-slate-100">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updatedAudits = audits.map(a => {
+                                        if (a.id === audit.id) {
+                                          return {
+                                            ...a,
+                                            gestorAcknowledgedSurplus: true,
+                                            history: [
+                                              ...a.history,
+                                              {
+                                                timestamp: new Date().toISOString(),
+                                                action: 'Ciente do Gestor (Envio/Sobra)',
+                                                user: currentUser.name,
+                                                details: `Gestor registrou Ciente na ação do auxiliar para o Mapa ${audit.routeMap}.`
+                                              }
+                                            ]
+                                          };
+                                        }
+                                        return a;
+                                      });
+                                      onSaveAudits(updatedAudits);
+                                    }}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[10px] py-1 px-3 rounded-md transition cursor-pointer flex items-center space-x-1 shadow-xs"
+                                    title="Marcar Ciente e mover card para o Histórico de Ações Realizadas"
+                                  >
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    <span>Ciente</span>
+                                  </button>
+                                </div>
                               </div>
                             );
                           })}
@@ -5299,136 +5361,156 @@ export default function GestorDashboard({
                         <h4 className="font-sans font-bold text-sm text-slate-900 uppercase">Vales de Desconto Gerados</h4>
                       </div>
                       <span className="text-xxs bg-red-100 text-red-800 px-2 py-0.5 rounded font-black font-mono">
-                        Pendente: R$ {vales.filter(v => v.status === 'PENDENTE_ASSINATURA').reduce((s, v) => s + v.valor, 0).toFixed(2)}
+                        Pendente: R$ {vales.filter(v => v.status === 'PENDENTE_ASSINATURA' && !v.acknowledgedByGestor).reduce((s, v) => s + v.valor, 0).toFixed(2)}
                       </span>
                     </div>
                     <p className="text-xxs text-slate-500">
                       Vales financeiros vinculados a prestadores de contas decorrentes de faltas operacionais em auditoria física.
                     </p>
 
-                    {vales.length === 0 ? (
-                      <div className="text-center py-12 text-slate-400 text-xs italic bg-slate-50 rounded-lg">
-                        Nenhum vale emitido até o momento.
-                      </div>
-                    ) : (
-                      <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
-                        {/* Hidden File Input for uploading signed PDF or image */}
-                        <input
-                          type="file"
-                          ref={fileInputRef}
-                          accept="application/pdf,image/*"
-                          className="hidden"
-                          id="gestor_vale_file_input"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file || !selectedValeIdForUpload) return;
+                    {(() => {
+                      const activeVales = vales.filter(v => !v.acknowledgedByGestor);
 
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              const dataUrl = reader.result as string;
-                              const updated = vales.map(v => 
-                                v.id === selectedValeIdForUpload 
-                                  ? { ...v, status: 'ASSINADO' as const, signedPdfUrl: dataUrl, signedPdfName: file.name } 
-                                  : v
-                              );
-                              onSaveVales(updated);
-                              setSelectedValeIdForUpload(null);
-                              alert(`Vale assinado com sucesso! O arquivo "${file.name}" foi anexado.`);
-                            };
-                            reader.readAsDataURL(file);
-                          }}
-                        />
+                      if (activeVales.length === 0) {
+                        return (
+                          <div className="text-center py-12 text-slate-400 text-xs italic bg-slate-50 rounded-lg">
+                            Nenhum vale pendente de ciência até o momento.
+                          </div>
+                        );
+                      }
 
-                        {vales.map((vale) => (
-                          <div key={vale.id} className="bg-slate-50 p-3 rounded-lg border border-slate-150 space-y-2 hover:border-slate-300 transition">
-                            <div className="flex justify-between items-start text-xs">
-                              <div>
-                                <span className="font-bold text-slate-900 block">{vale.colaboradorName}</span>
-                                <span className="text-[9px] text-slate-400 font-mono uppercase block">{vale.colaboradorRole}</span>
+                      return (
+                        <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
+                          {/* Hidden File Input for uploading signed PDF or image */}
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            accept="application/pdf,image/*"
+                            className="hidden"
+                            id="gestor_vale_file_input"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (!file || !selectedValeIdForUpload) return;
+
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                const dataUrl = reader.result as string;
+                                const updated = vales.map(v => 
+                                  v.id === selectedValeIdForUpload 
+                                    ? { ...v, status: 'ASSINADO' as const, signedPdfUrl: dataUrl, signedPdfName: file.name } 
+                                    : v
+                                );
+                                onSaveVales(updated);
+                                setSelectedValeIdForUpload(null);
+                                alert(`Vale assinado com sucesso! O arquivo "${file.name}" foi anexado.`);
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+
+                          {activeVales.map((vale) => (
+                            <div key={vale.id} className="bg-slate-50 p-3 rounded-lg border border-slate-150 space-y-2 hover:border-slate-300 transition">
+                              <div className="flex justify-between items-start text-xs">
+                                <div>
+                                  <span className="font-bold text-slate-900 block">{vale.colaboradorName}</span>
+                                  <span className="text-[9px] text-slate-400 font-mono uppercase block">{vale.colaboradorRole}</span>
+                                </div>
+                                <span className="font-mono font-bold text-red-600 bg-white border border-slate-200 px-2 py-0.5 rounded text-xxs">
+                                  R$ {vale.valor.toFixed(2)}
+                                </span>
                               </div>
-                              <span className="font-mono font-bold text-red-600 bg-white border border-slate-200 px-2 py-0.5 rounded text-xxs">
-                                R$ {vale.valor.toFixed(2)}
-                              </span>
-                            </div>
 
-                            <p className="text-[10px] text-slate-600 leading-tight font-sans">
-                              <strong>Motivo:</strong> {vale.descricao}
-                            </p>
+                              <p className="text-[10px] text-slate-600 leading-tight font-sans">
+                                <strong>Motivo:</strong> {vale.descricao}
+                              </p>
 
-                            <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-xxs">
-                              <span className={`inline-block px-2 py-0.5 text-[8px] font-black uppercase rounded-full ${
-                                vale.status === 'COMPENSADO'
-                                  ? 'bg-emerald-100 text-emerald-800'
-                                  : vale.status === 'ASSINADO'
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'bg-amber-100 text-amber-800 animate-pulse'
-                              }`}>
-                                {vale.status === 'PENDENTE_ASSINATURA' ? 'Pendente Assinatura' : vale.status === 'ASSINADO' ? 'Termo Assinado' : 'Compensado'}
-                              </span>
+                              <div className="flex justify-between items-center pt-2 border-t border-slate-100 text-xxs">
+                                <span className={`inline-block px-2 py-0.5 text-[8px] font-black uppercase rounded-full ${
+                                  vale.status === 'COMPENSADO'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : vale.status === 'ASSINADO'
+                                      ? 'bg-blue-100 text-blue-800'
+                                      : 'bg-amber-100 text-amber-800 animate-pulse'
+                                }`}>
+                                  {vale.status === 'PENDENTE_ASSINATURA' ? 'Pendente Assinatura' : vale.status === 'ASSINADO' ? 'Termo Assinado' : 'Compensado'}
+                                </span>
 
-                              <div className="flex items-center gap-1.5">
-                                {vale.status === 'PENDENTE_ASSINATURA' && (
+                                <div className="flex items-center gap-1.5">
+                                  {vale.status === 'PENDENTE_ASSINATURA' && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedValeIdForUpload(vale.id);
+                                        setTimeout(() => {
+                                          fileInputRef.current?.click();
+                                        }, 50);
+                                      }}
+                                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2 py-0.5 rounded text-[9px] transition cursor-pointer"
+                                      title="Selecionar e enviar termo assinado (PDF ou Imagem)"
+                                    >
+                                      Assinar Termo
+                                    </button>
+                                  )}
+
+                                  {/* O gestor pode faturar e compensar qualquer vale ativo (pendente ou assinado) */}
+                                  {(vale.status === 'ASSINADO' || vale.status === 'PENDENTE_ASSINATURA') && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        requestConfirm(
+                                          'Confirmar Compensação',
+                                          `Tem certeza de que deseja faturar e marcar este vale no valor de R$ ${vale.valor.toFixed(2)} para ${vale.colaboradorName} como COMPENSADO?`,
+                                          () => {
+                                            const updated = vales.map(v => v.id === vale.id ? { ...v, status: 'COMPENSADO' as const } : v);
+                                            onSaveVales(updated);
+                                          }
+                                        );
+                                      }}
+                                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded text-[9px] transition cursor-pointer"
+                                      title="Faturar e marcar como compensado no faturamento mensal"
+                                    >
+                                      Compensar
+                                    </button>
+                                  )}
+
+                                  {/* Download do termo anexado */}
+                                  {(vale.status === 'ASSINADO' || vale.status === 'COMPENSADO') && vale.signedPdfUrl && (
+                                    <a
+                                      href={vale.signedPdfUrl}
+                                      download={vale.signedPdfName || `vale_assinado_${vale.id}.pdf`}
+                                      className="p-1 text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded cursor-pointer transition flex items-center justify-center"
+                                      title={`Baixar anexo: ${vale.signedPdfName || 'PDF'}`}
+                                    >
+                                      <FileText className="h-3.5 w-3.5" />
+                                    </a>
+                                  )}
+
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      setSelectedValeIdForUpload(vale.id);
-                                      setTimeout(() => {
-                                        fileInputRef.current?.click();
-                                      }, 50);
+                                      const updated = vales.map(v => v.id === vale.id ? { ...v, acknowledgedByGestor: true } : v);
+                                      onSaveVales(updated);
                                     }}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2 py-0.5 rounded text-[9px] transition cursor-pointer"
-                                    title="Selecionar e enviar termo assinado (PDF ou Imagem)"
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-[9px] px-2 py-0.5 rounded transition cursor-pointer flex items-center space-x-0.5 shadow-xs"
+                                    title="Marcar Ciente e mover para o Histórico de Ações Realizadas"
                                   >
-                                    Assinar Termo
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    <span>Ciente</span>
                                   </button>
-                                )}
 
-                                {/* O gestor pode faturar e compensar qualquer vale ativo (pendente ou assinado) */}
-                                {(vale.status === 'ASSINADO' || vale.status === 'PENDENTE_ASSINATURA') && (
                                   <button
                                     type="button"
                                     onClick={() => {
                                       requestConfirm(
-                                        'Confirmar Compensação',
-                                        `Tem certeza de que deseja faturar e marcar este vale no valor de R$ ${vale.valor.toFixed(2)} para ${vale.colaboradorName} como COMPENSADO?`,
+                                        'Excluir Vale',
+                                        'Deseja realmente excluir este vale de desconto do sistema?',
                                         () => {
-                                          const updated = vales.map(v => v.id === vale.id ? { ...v, status: 'COMPENSADO' as const } : v);
+                                          const updated = vales.filter(v => v.id !== vale.id);
                                           onSaveVales(updated);
                                         }
                                       );
                                     }}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2 py-0.5 rounded text-[9px] transition cursor-pointer"
-                                    title="Faturar e marcar como compensado no faturamento mensal"
-                                  >
-                                    Compensar
-                                  </button>
-                                )}
-
-                                {/* Download do termo anexado */}
-                                {(vale.status === 'ASSINADO' || vale.status === 'COMPENSADO') && vale.signedPdfUrl && (
-                                  <a
-                                    href={vale.signedPdfUrl}
-                                    download={vale.signedPdfName || `vale_assinado_${vale.id}.pdf`}
-                                    className="p-1 text-emerald-600 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 rounded cursor-pointer transition flex items-center justify-center"
-                                    title={`Baixar anexo: ${vale.signedPdfName || 'PDF'}`}
-                                  >
-                                    <FileText className="h-3.5 w-3.5" />
-                                  </a>
-                                )}
-
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    requestConfirm(
-                                      'Excluir Vale',
-                                      'Deseja realmente excluir este vale de desconto do sistema?',
-                                      () => {
-                                        const updated = vales.filter(v => v.id !== vale.id);
-                                        onSaveVales(updated);
-                                      }
-                                    );
-                                  }}
-                                  className="text-red-500 hover:text-red-700 font-bold px-1 py-0.5 hover:bg-red-50 rounded text-[9px] cursor-pointer"
+                                    className="text-red-500 hover:text-red-700 font-bold px-1 py-0.5 hover:bg-red-50 rounded text-[9px] cursor-pointer"
                                 >
                                   Excluir
                                 </button>
@@ -5437,9 +5519,10 @@ export default function GestorDashboard({
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
+                    );
+                  })()}
                 </div>
+              </div>
 
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                   
@@ -5655,20 +5738,19 @@ export default function GestorDashboard({
                     )}
 
                     {(() => {
-                      // Filter audits with surplus (at least one item physical > fiscal) and within the last 30 days (or anytime if not yet sent)
+                      // Filter audits with surplus (at least one item physical > fiscal) that are still pending resolution in operational panel
                       const surplusAudits = audits.filter(audit => {
                         if (audit.status !== 'finalizado_ok' && audit.status !== 'finalizado_divergente') return false;
                         
-                        // Exclude direct write-offs
+                        // Exclude direct write-offs, sent items, or reproved items from active operational panel
                         const isBaixado = audit.surplusFlowStatus === 'BAIXADO' || audit.surplusActionStatus === 'baixado_direto';
                         if (isBaixado) return false;
 
-                        const arrivalDateObj = new Date(audit.arrivalDate + 'T00:00:00');
-                        const daysElapsed = Math.floor((new Date().getTime() - arrivalDateObj.getTime()) / (1000 * 60 * 60 * 24));
                         const isSent = audit.surplusFlowStatus === 'ENVIADO' || audit.surplusActionStatus === 'enviado_cliente';
-                        
-                        // If it is already sent and older than 30 days, we can hide it to avoid clutter
-                        if (isSent && daysElapsed > 30) return false;
+                        if (isSent) return false;
+
+                        const isReproved = audit.surplusFlowStatus === 'REPROVADO';
+                        if (isReproved) return false;
 
                         const hasProductSurplus = audit.items.some(item => {
                           const phys = item.rePhysicalQty !== undefined ? item.rePhysicalQty : item.physicalQty;
@@ -5782,7 +5864,10 @@ export default function GestorDashboard({
                                       const diff = (i.rePhysicalQty !== undefined ? i.rePhysicalQty : i.physicalQty) - (i.fiscalQty ?? 0);
                                       return (
                                         <div key={i.productCode} className="flex justify-between text-xs text-amber-950 font-medium">
-                                          <span>{i.productDescription}</span>
+                                          <span>
+                                            {i.productCode && <span className="font-mono text-amber-900 font-bold mr-1">[{i.productCode}]</span>}
+                                            {i.productDescription}
+                                          </span>
                                           <span className="font-bold font-mono">+{diff} cx (Sobra)</span>
                                         </div>
                                       );
@@ -5791,7 +5876,10 @@ export default function GestorDashboard({
                                       const diff = (a.rePhysicalQty !== undefined ? a.rePhysicalQty : a.physicalQty) - (a.fiscalQty ?? 0);
                                       return (
                                         <div key={a.assetId} className="flex justify-between text-xs text-blue-900 font-medium">
-                                          <span>{a.assetName}</span>
+                                          <span>
+                                            {a.assetId && <span className="font-mono text-blue-900 font-bold mr-1">[{a.assetId}]</span>}
+                                            {a.assetName}
+                                          </span>
                                           <span className="font-bold font-mono">+{diff} un (Ativo)</span>
                                         </div>
                                       );
@@ -5921,9 +6009,12 @@ export default function GestorDashboard({
                                   <div>
                                     <label className="block text-[9px] font-bold text-slate-400 uppercase mb-1">Status de Ação</label>
                                     <select
-                                      value={calculatedStatus}
-                                      onChange={e => handleUpdateAuditDiscrepancyAction(audit.id, { surplusActionStatus: e.target.value as any })}
-                                      className="w-full text-xs p-1.5 bg-white border border-slate-200 rounded focus:outline-none"
+                                      value={actionStatusMap[audit.id] || calculatedStatus}
+                                      onChange={e => {
+                                        const val = e.target.value as any;
+                                        setActionStatusMap(prev => ({ ...prev, [audit.id]: val }));
+                                      }}
+                                      className="w-full text-xs p-1.5 bg-white border border-slate-200 rounded focus:outline-none font-sans font-semibold text-slate-700"
                                     >
                                       <option value="prazo_envio_ok">Prazo Envio OK</option>
                                       <option value="fora_do_prazo">Fora do Prazo</option>
@@ -5938,6 +6029,10 @@ export default function GestorDashboard({
                                         type="text"
                                         placeholder="Ex: Reenviado na rota 302..."
                                         defaultValue={audit.correctiveActionNotes || ''}
+                                        onChange={e => {
+                                          const val = e.target.value;
+                                          setCorrectiveNotesMap(prev => ({ ...prev, [audit.id]: val }));
+                                        }}
                                         onBlur={e => {
                                           const val = e.target.value;
                                           setCorrectiveNotesMap(prev => ({ ...prev, [audit.id]: val }));
@@ -5947,10 +6042,14 @@ export default function GestorDashboard({
                                       <button
                                         type="button"
                                         onClick={() => {
+                                          const selectedStatus = actionStatusMap[audit.id] || calculatedStatus;
                                           const notes = correctiveNotesMap[audit.id] || audit.correctiveActionNotes || '';
-                                          handleUpdateAuditDiscrepancyAction(audit.id, { correctiveActionNotes: notes });
+                                          handleUpdateAuditDiscrepancyAction(audit.id, { 
+                                            surplusActionStatus: selectedStatus as any, 
+                                            correctiveActionNotes: notes 
+                                          });
                                         }}
-                                        className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] px-2.5 rounded font-sans font-bold cursor-pointer"
+                                        className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] px-2.5 rounded font-sans font-bold cursor-pointer transition"
                                       >
                                         Salvar
                                       </button>
@@ -6083,7 +6182,10 @@ export default function GestorDashboard({
                                       const diff = (i.fiscalQty ?? 0) - (i.rePhysicalQty !== undefined ? i.rePhysicalQty : i.physicalQty);
                                       return (
                                         <div key={i.productCode} className="flex justify-between text-xs text-red-950 font-semibold">
-                                          <span>{i.productDescription}</span>
+                                          <span>
+                                            {i.productCode && <span className="font-mono text-red-900 font-bold mr-1">[{i.productCode}]</span>}
+                                            {i.productDescription}
+                                          </span>
                                           <span className="font-bold font-mono">-{diff} cx (Falta)</span>
                                         </div>
                                       );
@@ -6092,7 +6194,10 @@ export default function GestorDashboard({
                                       const diff = (a.fiscalQty ?? 0) - (a.rePhysicalQty !== undefined ? a.rePhysicalQty : a.physicalQty);
                                       return (
                                         <div key={a.assetId} className="flex justify-between text-xs text-red-900 font-semibold">
-                                          <span>{a.assetName}</span>
+                                          <span>
+                                            {a.assetId && <span className="font-mono text-red-900 font-bold mr-1">[{a.assetId}]</span>}
+                                            {a.assetName}
+                                          </span>
                                           <span className="font-bold font-mono">-{diff} un (Ativo)</span>
                                         </div>
                                       );
@@ -7378,7 +7483,8 @@ export default function GestorDashboard({
                         <th className="p-4">Mapa / Placa</th>
                         <th className="p-4">Operador</th>
                         <th className="p-4">Tipo de Ação</th>
-                        <th className="p-4 pr-6">Detalhamento da Ação (Auditável)</th>
+                        <th className="p-4">Detalhamento da Ação (Auditável)</th>
+                        <th className="p-4 pr-6 text-right">Ver Detalhes</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -7420,7 +7526,7 @@ export default function GestorDashboard({
                         if (filteredActions.length === 0) {
                           return (
                             <tr>
-                              <td colSpan={5} className="text-center py-16 text-slate-400 italic">
+                              <td colSpan={6} className="text-center py-16 text-slate-400 italic">
                                 Nenhuma ação de sobra, falta ou baixa direta registrada.
                               </td>
                             </tr>
@@ -7454,8 +7560,29 @@ export default function GestorDashboard({
                                   {act.action}
                                 </span>
                               </td>
-                              <td className="p-4 pr-6 text-slate-600 text-xxs leading-relaxed italic max-w-md break-words">
+                              <td className="p-4 text-slate-600 text-xxs leading-relaxed italic max-w-md break-words">
                                 {act.details || "Nenhum detalhe adicional registrado."}
+                              </td>
+                              <td className="p-4 pr-6 text-right whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const matchingAudit = audits.find(a => 
+                                      a.routeMap.toUpperCase() === act.routeMap.toUpperCase() ||
+                                      (a.unifiedMaps && a.unifiedMaps.some(m => m.toUpperCase() === act.routeMap.toUpperCase()))
+                                    );
+                                    if (matchingAudit) {
+                                      setSelectedHistoryAudit(matchingAudit);
+                                    } else {
+                                      setSelectedDetailAction(act);
+                                    }
+                                  }}
+                                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xxs px-3 py-1.5 rounded-lg transition cursor-pointer inline-flex items-center space-x-1.5 shadow-2xs"
+                                  title="Ver detalhes completos e histórico registrado"
+                                >
+                                  <Eye className="h-3.5 w-3.5" />
+                                  <span>Ver Detalhes</span>
+                                </button>
                               </td>
                             </tr>
                           );
@@ -7675,6 +7802,75 @@ export default function GestorDashboard({
                   <button 
                     onClick={() => setSelectedHistoryAudit(null)}
                     className="bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs py-2 px-5 rounded-lg transition"
+                  >
+                    Fechar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Action Detail Dialog for standalone actions / vales without audit object */}
+          {selectedDetailAction && (
+            <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+              <div className="bg-white rounded-2xl max-w-2xl w-full border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+                {/* Header */}
+                <div className="bg-slate-900 text-white p-5 flex justify-between items-center">
+                  <div className="flex items-center space-x-2.5">
+                    <div className="bg-indigo-500 text-white p-2 rounded-xl">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-sans font-extrabold text-sm sm:text-base leading-tight">
+                        Detalhamento da Ação - Mapa {selectedDetailAction.routeMap}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-mono">
+                        Placa: {selectedDetailAction.plate} • Chegada: {selectedDetailAction.arrivalDate ? new Date(selectedDetailAction.arrivalDate + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setSelectedDetailAction(null)}
+                    className="bg-slate-800 hover:bg-slate-700 text-white p-1 px-3 rounded-lg transition text-xs font-bold font-mono border border-slate-700 cursor-pointer"
+                  >
+                    Fechar
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 overflow-y-auto space-y-5">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase block font-mono">Tipo de Ação Registrada</span>
+                      <span className="font-extrabold text-indigo-700 text-xs block mt-0.5">{selectedDetailAction.action}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase block font-mono">Operador Responsável</span>
+                      <span className="font-bold text-slate-800 text-xs block mt-0.5">{selectedDetailAction.user}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase block font-mono">Data e Hora do Registro</span>
+                      <span className="font-mono text-slate-600 text-xs block mt-0.5">{new Date(selectedDetailAction.timestamp).toLocaleString('pt-BR')}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase block font-mono">Status da Rota</span>
+                      <span className="font-bold text-slate-700 uppercase text-xs block mt-0.5">{selectedDetailAction.auditStatus}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50/70 p-4 rounded-xl border border-amber-200 space-y-1.5">
+                    <span className="text-[10px] text-amber-800 font-extrabold uppercase block font-mono">Detalhamento e Justificativa Auditável</span>
+                    <p className="text-xs text-slate-800 leading-relaxed font-sans italic">
+                      "{selectedDetailAction.details || "Nenhum detalhe adicional informado."}"
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-4 border-t border-slate-100 flex justify-end">
+                  <button 
+                    type="button"
+                    onClick={() => setSelectedDetailAction(null)}
+                    className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-2 px-5 rounded-lg transition cursor-pointer"
                   >
                     Fechar
                   </button>

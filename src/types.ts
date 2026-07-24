@@ -129,7 +129,8 @@ export interface AuditSession {
   clientCodeNB?: string;                // Código do Cliente (NB)
   deliveryDate?: string;                // Data de Entrega
   gestorAlignedDeliveryDate?: boolean;  // Se o Gestor alinhou a data de entrega do produto que sobrou
-  surplusFlowStatus?: 'PENDENTE' | 'ENCAMINHADO' | 'ENVIADO' | 'BAIXADO'; // Status do fluxo de sobras
+  surplusFlowStatus?: 'PENDENTE' | 'ENCAMINHADO' | 'ENVIADO' | 'BAIXADO' | 'REPROVADO'; // Status do fluxo de sobras
+  gestorAcknowledgedSurplus?: boolean;  // Se o gestor marcou ciente no card de ação do auxiliar de sobras
 
   // Suspension & time tracking fields
   isSuspended?: boolean;
@@ -277,6 +278,7 @@ export interface Vale {
   observacao?: string;
   signedPdfUrl?: string; // base64 do PDF ou imagem do vale assinado
   signedPdfName?: string; // nome do arquivo PDF
+  acknowledgedByGestor?: boolean; // Se o gestor marcou ciente no card do vale
 }
 
 export interface AuditLogEntry {

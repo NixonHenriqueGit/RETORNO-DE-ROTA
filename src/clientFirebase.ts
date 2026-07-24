@@ -195,15 +195,15 @@ export function getFirebaseConnectionState(): 'connected' | 'connecting' | 'disc
   if (typeof window === "undefined" || (typeof navigator !== "undefined" && !navigator.onLine)) {
     return 'disconnected';
   }
-  const db = getClientFirestore();
-  if (!db) return 'disconnected';
-  if (clientAuthError && !clientAuthError.includes("admin-restricted-operation") && !isAuthenticated) {
+  if (isFirestoreQuotaExceeded || hasClientPermissionError) {
     return 'disconnected';
   }
-  if (isAuthenticated || (clientAuthError && clientAuthError.includes("admin-restricted-operation"))) {
+  const db = getClientFirestore();
+  if (!db) return 'disconnected';
+  if (lastSuccessfulSyncTime > 0 || isAuthenticated) {
     return 'connected';
   }
-  return 'connecting';
+  return 'connected';
 }
 
 function triggerAnonymousAuth() {

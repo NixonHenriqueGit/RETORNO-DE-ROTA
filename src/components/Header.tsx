@@ -39,6 +39,20 @@ export default function Header({
   theme = 'light',
   onToggleTheme
 }: HeaderProps) {
+  function convertToDirectDownloadUrl(url: string): string {
+    if (!url) return '';
+    const trimmed = url.trim();
+    if (trimmed.includes('drive.google.com') && trimmed.includes('/d/')) {
+      const match = trimmed.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+      }
+    }
+    if (trimmed.includes('dropbox.com')) {
+      return trimmed.replace('dl=0', 'dl=1');
+    }
+    return trimmed;
+  }
   const [showNotifications, setShowNotifications] = useState(false);
   const bellContainerRef = useRef<HTMLDivElement>(null);
 
@@ -310,25 +324,25 @@ export default function Header({
             {/* Logo */}
             <div 
               onClick={handleLogoClick}
-              className="flex items-center space-x-3 cursor-pointer hover:opacity-90 transition-all shrink-0"
+              className="flex items-center space-x-2 sm:space-x-3 cursor-pointer hover:opacity-90 transition-all shrink-0"
               id="header_logo_btn"
             >
-              <div className="bg-amber-500/10 p-2 rounded-lg flex items-center justify-center border border-amber-500/20 w-10 h-10 shadow-inner">
-                <Truck className="h-5 w-5 text-amber-500" />
+              <div className="bg-amber-500/10 p-2 rounded-lg flex items-center justify-center border border-amber-500/20 w-9 h-9 sm:w-10 sm:h-10 shadow-inner shrink-0">
+                <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 shrink-0" />
               </div>
-              <div>
-                <span className="font-sans font-black text-sm sm:text-base tracking-tight block text-white uppercase whitespace-nowrap">Pau Brasil Guarabira</span>
-                <span className="font-mono text-[9px] sm:text-xxs tracking-widest text-amber-500 uppercase block leading-none whitespace-nowrap">Retorno de Rota</span>
+              <div className="min-w-0">
+                <span className="font-sans font-black text-xs sm:text-base tracking-tight block text-white uppercase whitespace-nowrap truncate">Pau Brasil Guarabira</span>
+                <span className="font-mono text-[8px] sm:text-xxs tracking-widest text-amber-500 uppercase block leading-none whitespace-nowrap truncate">Retorno de Rota</span>
               </div>
             </div>
 
             {/* User Profile & Actions */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center gap-1 sm:gap-2.5 shrink-0">
               {/* Firebase Connection Status Badge */}
               <button
                 type="button"
                 onClick={() => setShowConnectionModal(true)}
-                className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border transition-all duration-300 shadow-xs cursor-pointer hover:scale-105 active:scale-95 ${
+                className={`flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border transition-all duration-300 shadow-xs cursor-pointer hover:scale-105 active:scale-95 shrink-0 ${
                 isQuotaExceeded
                   ? 'bg-amber-500/15 text-amber-500 border-amber-500/30 animate-pulse'
                   : firebaseStatus === 'connected' 
@@ -357,35 +371,38 @@ export default function Header({
                           : 'bg-rose-500'
                   }`}></span>
                 </span>
-                <span className="uppercase tracking-wider text-[9px]">
+                <span className="uppercase tracking-wider text-[9px] hidden sm:inline whitespace-nowrap">
                   {isQuotaExceeded ? 'Cota Excedida / Servidor Local' : 'Firebase (Ativo)'}
+                </span>
+                <span className="uppercase tracking-wider text-[9px] inline sm:hidden whitespace-nowrap">
+                  {isQuotaExceeded ? 'Local' : 'Firebase'}
                 </span>
               </button>
 
               {/* Active User Badge / Context */}
-              <div className="hidden sm:flex items-center space-x-2 bg-slate-800/60 border border-slate-700/60 px-3.5 py-1.5 rounded-full text-xxs font-medium text-slate-300">
+              <div className="hidden sm:flex items-center space-x-2 bg-slate-800/60 border border-slate-700/60 px-3 py-1.5 rounded-full text-xxs font-medium text-slate-300 shrink-0">
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                 <span className="font-mono uppercase text-[9px] text-amber-500 font-bold">
                   [{currentUser.role === 'auxiliar_logistica' ? 'AUX LOGÍSTICA' : currentUser.role.toUpperCase()}]
                 </span>
-                <span className="font-sans font-bold text-slate-200 max-w-[120px] truncate" title={currentUser.name}>
+                <span className="font-sans font-bold text-slate-200 max-w-[100px] sm:max-w-[120px] truncate" title={currentUser.name}>
                   {currentUser.name}
                 </span>
               </div>
 
               {/* Notification Bell with Dropdown Popover */}
-              <div className="relative" id="notification_bell_container" ref={bellContainerRef}>
+              <div className="relative shrink-0" id="notification_bell_container" ref={bellContainerRef}>
                 <button
                   id="notification_bell_btn"
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className={`p-2 rounded-lg border transition-all flex items-center justify-center cursor-pointer relative shadow-sm ${
+                  className={`p-2 rounded-lg border transition-all flex items-center justify-center cursor-pointer relative shadow-sm shrink-0 ${
                     showNotifications 
                       ? 'bg-amber-500 text-slate-950 border-amber-600' 
                       : 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white'
                   }`}
                   title="Notificações e Atualizações"
                 >
-                  <Bell className="h-4 w-4" />
+                  <Bell className="h-4 w-4 shrink-0" />
                   {(() => {
                     const relevantAlerts = (fiscalAlerts || []).filter(alert => {
                       if (!alert.targetRole || alert.targetRole === 'todos') return true;
@@ -432,7 +449,7 @@ export default function Header({
                   return (
                     <div 
                       id="notifications_popover"
-                      className="absolute right-0 mt-2 w-80 bg-slate-950 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden"
+                      className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-80 bg-slate-950 border border-slate-800 rounded-xl shadow-2xl z-50 overflow-hidden"
                     >
                       <div className="p-3 border-b border-slate-800 flex items-center justify-between bg-slate-900">
                         <span className="font-sans font-bold text-xs text-white uppercase tracking-wider">Notificações</span>
@@ -811,11 +828,12 @@ export default function Header({
           {currentUser.role === 'conferente' && (
             <button
               onClick={() => setActiveTab('conferencias')}
-              className={`px-3 py-1 text-xs font-medium rounded-full ${
-                activeTab === 'conferencias' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+              className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                activeTab === 'conferencias' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
               }`}
             >
-              Conferências
+              <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+              <span>Conferências</span>
             </button>
           )}
 
@@ -823,51 +841,57 @@ export default function Header({
             <>
               <button
                 onClick={() => setActiveTab('reconciliacao')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'reconciliacao' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'reconciliacao' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Conciliação Fiscal
+                <Shield className="h-3.5 w-3.5 shrink-0" />
+                <span>Conciliação Fiscal</span>
               </button>
               <button
                 onClick={() => setActiveTab('sincronizador')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'sincronizador' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'sincronizador' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Sincronizador & Importador
+                <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" />
+                <span>Sincronizador & Importador</span>
               </button>
               <button
                 onClick={() => setActiveTab('monitoramento_view')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'monitoramento_view' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'monitoramento_view' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Monitoramento
+                <Truck className="h-3.5 w-3.5 shrink-0" />
+                <span>Monitoramento</span>
               </button>
               <button
                 onClick={() => setActiveTab('historico')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'historico' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'historico' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Histórico
+                <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>Histórico</span>
               </button>
               <button
                 onClick={() => setActiveTab('divergencias')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'divergencias' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'divergencias' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Divergências
+                <Shield className="h-3.5 w-3.5 shrink-0" />
+                <span>Divergências</span>
               </button>
               <button
                 onClick={() => setActiveTab('cadastros')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'cadastros' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'cadastros' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Cadastros
+                <Settings className="h-3.5 w-3.5 shrink-0" />
+                <span>Cadastros</span>
               </button>
             </>
           )}
@@ -876,27 +900,30 @@ export default function Header({
             <>
               <button
                 onClick={() => setActiveTab('monitoramento_view')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'monitoramento_view' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'monitoramento_view' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Monitoramento
+                <Truck className="h-3.5 w-3.5 shrink-0" />
+                <span>Monitoramento</span>
               </button>
               <button
                 onClick={() => setActiveTab('historico')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'historico' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'historico' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Histórico
+                <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>Histórico</span>
               </button>
               <button
                 onClick={() => setActiveTab('divergencias')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'divergencias' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'divergencias' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Divergências
+                <Shield className="h-3.5 w-3.5 shrink-0" />
+                <span>Divergências</span>
               </button>
             </>
           )}
@@ -905,75 +932,84 @@ export default function Header({
             <>
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'dashboard' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'dashboard' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Painel Gerencial
+                <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+                <span>Painel Gerencial</span>
               </button>
               <button
                 onClick={() => setActiveTab('conferencias')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'conferencias' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'conferencias' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Contagem Física
+                <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>Contagem Física</span>
               </button>
               <button
                 onClick={() => setActiveTab('reconciliacao')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'reconciliacao' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'reconciliacao' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Conciliação
+                <Shield className="h-3.5 w-3.5 shrink-0" />
+                <span>Conciliação</span>
               </button>
               <button
                 onClick={() => setActiveTab('monitoramento_view')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'monitoramento_view' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'monitoramento_view' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Monitoramento
+                <Truck className="h-3.5 w-3.5 shrink-0" />
+                <span>Monitoramento</span>
               </button>
               <button
                 onClick={() => setActiveTab('sincronizador')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'sincronizador' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'sincronizador' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Sincronizador
+                <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" />
+                <span>Sincronizador</span>
               </button>
               <button
                 onClick={() => setActiveTab('divergencias')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'divergencias' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'divergencias' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Sobras & Faltas
+                <Shield className="h-3.5 w-3.5 shrink-0" />
+                <span>Sobras & Faltas</span>
               </button>
               <button
                 onClick={() => setActiveTab('vales_view')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'vales_view' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'vales_view' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Vales
+                <FileText className="h-3.5 w-3.5 shrink-0" />
+                <span>Vales</span>
               </button>
               <button
                 onClick={() => setActiveTab('historico')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'historico' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'historico' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Histórico
+                <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>Histórico</span>
               </button>
               <button
                 onClick={() => setActiveTab('cadastros')}
-                className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  activeTab === 'cadastros' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'
+                className={`px-3 py-1.5 text-xs font-bold rounded-full inline-flex items-center gap-1.5 shrink-0 transition-all ${
+                  activeTab === 'cadastros' ? 'bg-amber-500 text-slate-950 shadow-sm' : 'text-slate-300 bg-slate-800/80 hover:bg-slate-700'
                 }`}
               >
-                Cadastros
+                <Settings className="h-3.5 w-3.5 shrink-0" />
+                <span>Cadastros</span>
               </button>
             </>
           )}

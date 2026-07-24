@@ -845,11 +845,31 @@ export default function MonitoramentoView({
 
             {(() => {
               const activeForecastsList = returnForecasts.filter(fc => {
+                const todayStr = new Date().toISOString().split('T')[0];
+
+                // Check if route is closed/audit finished
                 const matchingRoute = importedRoutes.find(r => r.routeMap.toUpperCase() === fc.routeMap.toUpperCase());
                 if (matchingRoute && matchingRoute.status === 'fechado') {
                   return false;
                 }
-                return fc.status !== 'no_patio' || fc.tripStatus === 'pernoitam';
+
+                const isAuditClosed = isRouteClosedInAudits(fc.routeMap);
+                if (isAuditClosed) {
+                  return false;
+                }
+
+                if (fc.status === 'no_patio') {
+                  return false;
+                }
+
+                // If pernoite, check date rollover
+                if (fc.tripStatus === 'pernoitam') {
+                  if (fc.updatedAt && fc.updatedAt.split('T')[0] < todayStr) {
+                    return false;
+                  }
+                }
+
+                return true;
               });
 
               if (activeForecastsList.length === 0) {

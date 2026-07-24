@@ -226,7 +226,7 @@ export default function LoginView({ users, onLoginSuccess }: LoginViewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4 py-8 relative overflow-y-auto font-sans" id="login_container">
+    <div className="min-h-screen bg-slate-900 flex flex-col justify-center items-center p-4 py-8 relative overflow-y-auto overflow-x-hidden max-w-full w-full font-sans" id="login_container">
       {/* Background brand accents */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-amber-500/10 blur-[120px] pointer-events-none" />

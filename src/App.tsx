@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Driver, Vehicle, Product, ActiveAsset, AuditSession, ReturnForecast, FiscalAlert, ImportedRoute, Vale } from './types';
-import { AppStore } from './store';
 import { DEFAULT_PRODUCTS } from './data';
 import { ImageDB } from './imageDb';
 import { isClientFirebaseActive, fetchDirectlyFromFirestore, saveDirectlyToFirestore, subscribeToFirestore, getClientAuthError, getIsFirestoreQuotaExceeded, setFirestoreQuotaExceeded } from './clientFirebase';
@@ -112,13 +111,6 @@ export default function App() {
     setFiscalAlerts([]);
     setVales([]);
 
-    // Clear local storage
-    AppStore.setImportedRoutes([]);
-    AppStore.setAudits([]);
-    AppStore.setReturnForecasts([]);
-    AppStore.setFiscalAlerts([]);
-    AppStore.setVales([]);
-
     // Clear IndexedDB photos
     try {
       await ImageDB.clearAllPhotos();
@@ -172,7 +164,6 @@ export default function App() {
 
   const handleSaveCustomManual = (html: string) => {
     setCustomManualHTML(html);
-    AppStore.setCustomManual(html);
     pushDatabaseToServer({ customManual: html });
   };
 
@@ -375,7 +366,6 @@ export default function App() {
     if (db.users !== undefined && Array.isArray(db.users)) {
       if (db.users.length > 0) {
         setUsers(db.users);
-        AppStore.setUsers(db.users);
         const savedUserId = localStorage.getItem('logiroute_authenticated_user_id');
         if (savedUserId) {
           const matchedUser = db.users.find((u: User) => u.id === savedUserId);
@@ -386,112 +376,54 @@ export default function App() {
 
     if (db.drivers !== undefined && Array.isArray(db.drivers)) {
       setDrivers(db.drivers);
-      AppStore.setDrivers(db.drivers);
     }
 
     if (db.vehicles !== undefined && Array.isArray(db.vehicles)) {
       setVehicles(db.vehicles);
-      AppStore.setVehicles(db.vehicles);
     }
 
     if (db.products !== undefined && Array.isArray(db.products)) {
       const repaired = repairProductsList(db.products);
       setProducts(repaired);
-      AppStore.setProducts(repaired);
     }
 
     if (db.activeAssets !== undefined && Array.isArray(db.activeAssets)) {
       setActiveAssets(db.activeAssets);
-      AppStore.setActiveAssets(db.activeAssets);
     }
 
     if (db.audits !== undefined && Array.isArray(db.audits)) {
       const cleaned = cleanAudits(db.audits);
       setAudits(cleaned);
-      AppStore.setAudits(cleaned);
     }
 
     if (db.vales !== undefined && Array.isArray(db.vales)) {
       const cleaned = cleanVales(db.vales);
       setVales(cleaned);
-      AppStore.setVales(cleaned);
     }
 
     if (db.returnForecasts !== undefined && Array.isArray(db.returnForecasts)) {
       const cleaned = cleanReturnForecasts(db.returnForecasts);
       setReturnForecasts(cleaned);
-      AppStore.setReturnForecasts(cleaned);
     }
 
     if (db.fiscalAlerts !== undefined && Array.isArray(db.fiscalAlerts)) {
       setFiscalAlerts(db.fiscalAlerts);
-      AppStore.setFiscalAlerts(db.fiscalAlerts);
     }
 
     // Smart Merge Imported Routes
     if (db.importedRoutes !== undefined) {
       const remoteCleaned = cleanImportedRoutes(db.importedRoutes);
-      if (remoteCleaned.length === 0) {
-        setImportedRoutes([]);
-        AppStore.setImportedRoutes([]);
-      } else {
-        const routeMap = new Map<string, ImportedRoute>();
-
-        // 1. Primary: load all canonical remote routes from database
-        remoteCleaned.forEach(remoteR => {
-          if (!remoteR || !remoteR.routeMap) return;
-          const mapKey = normalizeMapCode(remoteR.routeMap).toUpperCase();
-          const fullKey = `${mapKey}_${remoteR.routeDate || ''}`;
-          if (mapKey) {
-            routeMap.set(fullKey, remoteR);
-          }
-        });
-
-        // 2. Secondary: preserve local route edits or newly created unsynced local routes
-        const localRoutes = AppStore.getImportedRoutes() || [];
-        localRoutes.forEach(localR => {
-          if (!localR || !localR.routeMap) return;
-          const mapKey = normalizeMapCode(localR.routeMap).toUpperCase();
-          const fullKey = `${mapKey}_${localR.routeDate || ''}`;
-          if (!mapKey) return;
-
-          const remoteR = routeMap.get(fullKey); // Strictly match by fullKey (routeMap + routeDate), NO FALLBACK to mapKey alone
-          if (!remoteR) {
-            // Keep locally created route if created recently
-            routeMap.set(fullKey, localR);
-          } else {
-            // Merge status/items if local user has progressed the route status
-            const localRank = getRouteStatusRank(localR.status);
-            const remoteRank = getRouteStatusRank(remoteR.status);
-
-            if (localRank > remoteRank) {
-              routeMap.set(fullKey, localR);
-            } else if (localRank === remoteRank) {
-              const localTime = localR.updatedAt ? new Date(localR.updatedAt).getTime() : 0;
-              const remoteTime = remoteR.updatedAt ? new Date(remoteR.updatedAt).getTime() : 0;
-              if (localTime > remoteTime) {
-                routeMap.set(fullKey, localR);
-              }
-            }
-          }
-        });
-
-        const mergedRoutes = Array.from(routeMap.values());
-        setImportedRoutes(mergedRoutes);
-        AppStore.setImportedRoutes(mergedRoutes);
-      }
+      setImportedRoutes(remoteCleaned);
     }
 
     if (db.audit_logs || db.auditLogs) {
       const logs = db.audit_logs || db.auditLogs;
       setAuditLogs(logs);
-      AppStore.setAuditLogs(logs);
     }
 
     if (db.customManual !== undefined) {
       const manualContent = typeof db.customManual === 'string' ? db.customManual : db.customManual?.html || '';
       setCustomManualHTML(manualContent);
-      AppStore.setCustomManual(manualContent);
     }
   };
 
@@ -528,27 +460,14 @@ export default function App() {
     };
   }, []);
 
-  // Load all databases from store on mount and establish server sync
+  // Establish direct Firestore / server synchronization on mount
   useEffect(() => {
-    // 1. Initial quick load from LocalStorage
-    const loadedUsers = AppStore.getUsers();
-    setUsers(loadedUsers);
-    setDrivers(AppStore.getDrivers());
-    setVehicles(AppStore.getVehicles());
-    setProducts(repairProductsList(AppStore.getProducts()));
-    setActiveAssets(AppStore.getActiveAssets());
-    setAudits(cleanAudits(AppStore.getAudits()));
-    setVales(cleanVales(AppStore.getVales()));
-    setReturnForecasts(cleanReturnForecasts(AppStore.getReturnForecasts()));
-    setFiscalAlerts(AppStore.getFiscalAlerts());
-    setImportedRoutes(cleanImportedRoutes(AppStore.getImportedRoutes()));
-    setAuditLogs(AppStore.getAuditLogs());
-    setCustomManualHTML(AppStore.getCustomManual());
-
-    // Check persistent user ID if authenticated
+    // 1. Check persistent user ID if authenticated
     const savedUserId = localStorage.getItem('logiroute_authenticated_user_id');
-    const defaultUser = loadedUsers.find(u => u.id === savedUserId) || loadedUsers.find(u => u.id === 'usr_1') || loadedUsers[0];
-    setCurrentUser(defaultUser || null);
+    const defaultUser = users.find(u => u.id === savedUserId) || users.find(u => u.id === 'usr_1') || users[0];
+    if (defaultUser) {
+      setCurrentUser(defaultUser);
+    }
 
     // 2. Fetch latest online database from server
     const fetchLatestServerData = async () => {
@@ -710,38 +629,31 @@ export default function App() {
       ? new BroadcastChannel('logiroute_realtime_sync')
       : null;
 
-    const reloadStoreState = () => {
-      setUsers(AppStore.getUsers());
-      setDrivers(AppStore.getDrivers());
-      setVehicles(AppStore.getVehicles());
-      setProducts(AppStore.getProducts());
-      setActiveAssets(AppStore.getActiveAssets());
-      setAudits(AppStore.getAudits());
-      setVales(AppStore.getVales());
-      setReturnForecasts(AppStore.getReturnForecasts());
-      setFiscalAlerts(AppStore.getFiscalAlerts());
-      setImportedRoutes(AppStore.getImportedRoutes());
+    const reloadServerState = async () => {
+      if (isClientFirebaseActive()) {
+        const directDb = await fetchDirectlyFromFirestore();
+        if (directDb) applyDirectDb(directDb);
+      } else {
+        try {
+          const res = await fetch('/api/db');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.db) applyDirectDb(data.db);
+          }
+        } catch (e) {}
+      }
     };
 
     if (channel) {
       channel.onmessage = (event) => {
         if (event.data && (event.data.type === 'SYNC_KEY' || event.data.type === 'RESET_PLATFORM')) {
-          reloadStoreState();
+          reloadServerState();
         }
       };
     }
 
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key && e.key.startsWith('logiroute_')) {
-        reloadStoreState();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
     return () => {
       if (channel) channel.close();
-      window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
@@ -805,25 +717,21 @@ export default function App() {
   // Sync state changes back to AppStore (localStorage) and Server
   const handleSaveUsers = (newUsers: User[]) => {
     setUsers(newUsers);
-    AppStore.setUsers(newUsers);
     pushDatabaseToServer({ users: newUsers });
   };
 
   const handleSaveDrivers = (newDrivers: Driver[]) => {
     setDrivers(newDrivers);
-    AppStore.setDrivers(newDrivers);
     pushDatabaseToServer({ drivers: newDrivers });
   };
 
   const handleSaveVehicles = (newVehicles: Vehicle[]) => {
     setVehicles(newVehicles);
-    AppStore.setVehicles(newVehicles);
     pushDatabaseToServer({ vehicles: newVehicles });
   };
 
   const handleSaveProducts = (newProducts: Product[]) => {
     setProducts(newProducts);
-    AppStore.setProducts(newProducts);
     pushDatabaseToServer({ products: newProducts });
   };
 
@@ -845,20 +753,17 @@ export default function App() {
 
     const cleaned = cleanAudits(updatedAudits);
     setAudits(cleaned);
-    AppStore.setAudits(cleaned);
     pushDatabaseToServer({ audits: cleaned });
   };
 
   const handleSaveForecasts = (newForecasts: ReturnForecast[]) => {
     const cleaned = cleanReturnForecasts(newForecasts);
     setReturnForecasts(cleaned);
-    AppStore.setReturnForecasts(cleaned);
     pushDatabaseToServer({ returnForecasts: cleaned });
   };
 
   const handleSaveAlerts = (newAlerts: FiscalAlert[]) => {
     setFiscalAlerts(newAlerts);
-    AppStore.setFiscalAlerts(newAlerts);
     pushDatabaseToServer({ fiscalAlerts: newAlerts });
   };
 
@@ -884,14 +789,12 @@ export default function App() {
 
     const cleaned = cleanImportedRoutes(updatedRoutes);
     setImportedRoutes(cleaned);
-    AppStore.setImportedRoutes(cleaned);
     pushDatabaseToServer({ importedRoutes: cleaned });
   };
 
   const handleSaveVales = (newVales: Vale[]) => {
     const cleaned = cleanVales(newVales);
     setVales(cleaned);
-    AppStore.setVales(cleaned);
     pushDatabaseToServer({ vales: cleaned });
   };
 
