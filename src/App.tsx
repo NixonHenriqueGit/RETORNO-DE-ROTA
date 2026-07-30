@@ -469,17 +469,11 @@ export default function App() {
       setCurrentUser(defaultUser);
     }
 
-    // 2. Fetch latest online database from server
+    // 2. Fetch latest online database from server (fallback when Firestore is not active)
     const fetchLatestServerData = async () => {
       if (isClientFirebaseActive()) {
-        try {
-          const directDb = await fetchDirectlyFromFirestore();
-          if (directDb) {
-            applyDirectDb(directDb);
-          }
-        } catch (err) {
-          console.warn('[ClientFirebase] Erro ao buscar dados direto do Firestore:', err);
-        }
+        // Quando o Firestore está ativo, o listener em tempo real (subscribeToFirestore)
+        // já entrega o primeiro snapshot como carga inicial, evitando leituras duplicadas.
         return;
       }
       try {
@@ -503,55 +497,6 @@ export default function App() {
     };
 
     fetchLatestServerData();
-
-    // 3. Setup periodic backup polling & heartbeat every 15 seconds to guarantee multi-device connection
-    const interval = setInterval(async () => {
-      try {
-        // Skip polling if there was a recent write on this client to avoid race conditions
-        if (Date.now() - lastWriteTime.current < 1500) {
-          return;
-        }
-        if (isClientFirebaseActive()) {
-          const directDb = await fetchDirectlyFromFirestore();
-          if (directDb) {
-            applyDirectDb(directDb);
-          }
-          return;
-        }
-        const res = await fetch('/api/db');
-        if (res.ok) {
-          const contentType = res.headers.get("content-type");
-          if (!contentType || !contentType.includes("application/json")) {
-            return;
-          }
-          const data = await res.json();
-          if (data.success && data.db) {
-            applyDirectDb(data.db);
-          }
-        }
-      } catch (err) {
-        console.warn('Polling database sync warning:', err);
-      }
-    }, 15000);
-
-    // 4. Immediate re-sync when tab regains focus or comes back online (mobile/desktop device wake)
-    const handleReSyncOnWake = async () => {
-      if (document.visibilityState === 'visible' || navigator.onLine) {
-        console.log("[AppSync] Dispositivo re-ativado ou online. Re-sincronizando dados em tempo real...");
-        fetchLatestServerData();
-      }
-    };
-
-    window.addEventListener('visibilitychange', handleReSyncOnWake);
-    window.addEventListener('focus', handleReSyncOnWake);
-    window.addEventListener('online', handleReSyncOnWake);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('visibilitychange', handleReSyncOnWake);
-      window.removeEventListener('focus', handleReSyncOnWake);
-      window.removeEventListener('online', handleReSyncOnWake);
-    };
   }, []);
 
   // 4. Setup real-time database updates via Server-Sent Events (SSE) or Firestore Live Sync
@@ -646,7 +591,7 @@ export default function App() {
 
     if (channel) {
       channel.onmessage = (event) => {
-        if (event.data && (event.data.type === 'SYNC_KEY' || event.data.type === 'RESET_PLATFORM')) {
+        if (event.data && event.data.type === 'RESET_PLATFORM') {
           reloadServerState();
         }
       };
@@ -657,62 +602,12 @@ export default function App() {
     };
   }, []);
 
-  // Monitor for routes open for more than 2 days and auto-generate delay alerts
+  // Disabled auto-generation of delay alerts to keep database alerts pristine
+  /*
   useEffect(() => {
-    if (!importedRoutes || importedRoutes.length === 0) return;
-
-    const today = new Date();
-    const todayNoTime = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-
-    const overdueRoutes = importedRoutes.filter(route => {
-      if (route.status === 'fechado') return false;
-      if (!route.routeDate) return false;
-
-      const rDateObj = new Date(route.routeDate + 'T00:00:00');
-      if (isNaN(rDateObj.getTime())) return false;
-
-      const diffTime = todayNoTime.getTime() - rDateObj.getTime();
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays >= 2;
-    });
-
-    if (overdueRoutes.length === 0) return;
-
-    let updated = false;
-    const currentAlerts = [...fiscalAlerts];
-
-    overdueRoutes.forEach(route => {
-      const alreadyHasAlert = currentAlerts.some(alert => 
-        alert.routeMap.toUpperCase() === route.routeMap.toUpperCase() &&
-        alert.status === 'outros' &&
-        (alert.title?.includes('ATRASADO') || alert.message?.includes('aberto há'))
-      );
-
-      if (!alreadyHasAlert) {
-        const rDateObj = new Date(route.routeDate + 'T00:00:00');
-        const diffTime = todayNoTime.getTime() - rDateObj.getTime();
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        const delayAlert: FiscalAlert = {
-          id: `delay-${route.id}-${Date.now()}`,
-          routeMap: route.routeMap,
-          plate: route.plate,
-          status: 'outros',
-          timestamp: new Date().toISOString(),
-          read: false,
-          title: `⚠️ MAPA ATRASADO (>= 2 DIAS)`,
-          message: `O mapa ${route.routeMap} (Veículo ${route.plate}) está aberto há ${diffDays} dias (Data da Rota: ${route.routeDate}) sem conclusão.`,
-          targetRole: 'todos'
-        };
-        currentAlerts.push(delayAlert);
-        updated = true;
-      }
-    });
-
-    if (updated) {
-      handleSaveAlerts(currentAlerts);
-    }
+    ...
   }, [importedRoutes, fiscalAlerts]);
+  */
 
   // Sync state changes back to AppStore (localStorage) and Server
   const handleSaveUsers = (newUsers: User[]) => {
@@ -1148,7 +1043,14 @@ export default function App() {
       </footer>
 
       {/* Agente de I.A flutuante para tirar dúvidas dos usuários */}
-      {isAuthenticated && currentUser && <AIAgentChat />}
+      {isAuthenticated && currentUser && (
+        <AIAgentChat 
+          importedRoutes={importedRoutes}
+          audits={audits}
+          vales={vales}
+          drivers={drivers}
+        />
+      )}
 
       {/* MODAL 1: Sobra Deadline Warning for Gestor / Auxiliar Logística */}
       {showDeadlineModal && (

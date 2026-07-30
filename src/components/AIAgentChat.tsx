@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, X, Sparkles, Bot, User, CornerDownLeft } from 'lucide-react';
-import { isClientFirebaseActive, getGeminiKeyFromFirestore, fetchDirectlyFromFirestore } from '../clientFirebase';
+import { isClientFirebaseActive, getGeminiKeyFromFirestore } from '../clientFirebase';
 import { GoogleGenAI } from '@google/genai';
+import { ImportedRoute, AuditSession, Vale, Driver } from '../types';
 
 interface ChatMessage {
   id: string;
@@ -9,7 +10,19 @@ interface ChatMessage {
   text: string;
 }
 
-export default function AIAgentChat() {
+interface AIAgentChatProps {
+  importedRoutes?: ImportedRoute[];
+  audits?: AuditSession[];
+  vales?: Vale[];
+  drivers?: Driver[];
+}
+
+export default function AIAgentChat({
+  importedRoutes = [],
+  audits = [],
+  vales = [],
+  drivers = []
+}: AIAgentChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -87,36 +100,35 @@ export default function AIAgentChat() {
 
       let activeDatabaseContext = "Nenhum dado ativo no momento.";
       try {
-        const dbData = await fetchDirectlyFromFirestore();
-        const routes = dbData?.importedRoutes || [];
-        const audits = dbData?.audits || [];
-        const vales = dbData?.vales || [];
-        const drivers = dbData?.drivers || [];
+        const routes = importedRoutes || [];
+        const auditList = audits || [];
+        const valeList = vales || [];
+        const driverList = drivers || [];
 
         const openRoutes = routes.filter((r: any) => r.status !== 'fechado');
         const closedRoutes = routes.filter((r: any) => r.status === 'fechado');
 
-        const valesPendentes = vales.filter((v: any) => v.status === 'PENDENTE_ASSINATURA');
-        const valesAssinados = vales.filter((v: any) => v.status === 'ASSINADO');
-        const valesCompensados = vales.filter((v: any) => v.status === 'COMPENSADO');
+        const valesPendentes = valeList.filter((v: any) => v.status === 'PENDENTE_ASSINATURA');
+        const valesAssinados = valeList.filter((v: any) => v.status === 'ASSINADO');
+        const valesCompensados = valeList.filter((v: any) => v.status === 'COMPENSADO');
 
         activeDatabaseContext = `
 DADOS ATIVOS EM TEMPO REAL DA UNIDADE:
 - Rotas Importadas Totais: ${routes.length} (Abertas: ${openRoutes.length}, Fechadas: ${closedRoutes.length})
 - Rotas em Aberto no momento: ${openRoutes.map((r: any) => `Mapa ${r.routeMap} (Placa ${r.plate}, Status ${r.status})`).join(', ') || 'Nenhuma'}
-- Auditorias com Divergência Registradas: ${audits.filter((a: any) => a.status === 'finalizado_divergente').length}
-- Vales de Colaboradores: Total de ${vales.length} vales.
+- Auditorias com Divergência Registradas: ${auditList.filter((a: any) => a.status === 'finalizado_divergente').length}
+- Vales de Colaboradores: Total de ${valeList.length} vales.
   * Pendentes de assinatura: ${valesPendentes.length} vales (Total R$ ${valesPendentes.reduce((acc: number, curr: any) => acc + (curr.valor || 0), 0).toFixed(2)})
   * Assinados: ${valesAssinados.length} vales (Total R$ ${valesAssinados.reduce((acc: number, curr: any) => acc + (curr.valor || 0), 0).toFixed(2)})
   * Compensados/Descontados: ${valesCompensados.length} vales
 
 Detalhes de Auditorias Ativas com Divergências de Sobras/Faltas de PA (Produto Acabado) e AG (Ativo de Giro):
-${audits.map((a: any) => {
-  const driverName = drivers.find((d: any) => d.id === a.driverId)?.name || 'Desconhecido';
-  const surplusPA = a.items.filter((i: any) => (i.rePhysicalQty ?? i.physicalQty) > (i.fiscalQty ?? 0));
-  const deficitPA = a.items.filter((i: any) => (i.rePhysicalQty ?? i.physicalQty) < (i.fiscalQty ?? 0));
-  const surplusAG = a.assets.filter((as: any) => (as.rePhysicalQty ?? as.physicalQty) > (as.fiscalQty ?? 0));
-  const deficitAG = a.assets.filter((as: any) => (as.rePhysicalQty ?? as.physicalQty) < (as.fiscalQty ?? 0));
+${auditList.map((a: any) => {
+  const driverName = driverList.find((d: any) => d.id === a.driverId)?.name || 'Desconhecido';
+  const surplusPA = (a.items || []).filter((i: any) => (i.rePhysicalQty ?? i.physicalQty) > (i.fiscalQty ?? 0));
+  const deficitPA = (a.items || []).filter((i: any) => (i.rePhysicalQty ?? i.physicalQty) < (i.fiscalQty ?? 0));
+  const surplusAG = (a.assets || []).filter((as: any) => (as.rePhysicalQty ?? as.physicalQty) > (as.fiscalQty ?? 0));
+  const deficitAG = (a.assets || []).filter((as: any) => (as.rePhysicalQty ?? as.physicalQty) < (as.fiscalQty ?? 0));
 
   let info = `* Mapa ${a.routeMap} (Placa: ${a.plate}, Motorista: ${driverName}, Status Geral: ${a.status}):\n`;
   if (surplusPA.length > 0) {
@@ -138,7 +150,7 @@ ${audits.map((a: any) => {
 }).join('\n') || 'Nenhuma auditoria com divergência registrada no momento.'}
 
 Lista de Vales de Faltas Gerados na Unidade por Colaborador:
-${vales.map((v: any) => `- Vale ID: ${v.id} | Colaborador: ${v.colaboradorName} (${v.colaboradorRole}) | Valor: R$ ${v.valor.toFixed(2)} | Motivo: ${v.descricao} | Status: ${v.status} | Obs: ${v.observacao || 'Sem observação'}`).join('\n') || 'Nenhum vale gerado.'}
+${valeList.map((v: any) => `- Vale ID: ${v.id} | Colaborador: ${v.colaboradorName} (${v.colaboradorRole}) | Valor: R$ ${v.valor.toFixed(2)} | Motivo: ${v.descricao} | Status: ${v.status} | Obs: ${v.observacao || 'Sem observação'}`).join('\n') || 'Nenhum vale gerado.'}
 `;
       } catch (dbError) {
         console.error("Erro ao obter dados dinâmicos para chat:", dbError);
