@@ -244,6 +244,50 @@ export function isClientFirebaseActive(): boolean {
   return false;
 }
 
+export function getActiveFirebaseConfig(): any {
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("active_firebase_config") || localStorage.getItem("logiroute_firebase_client_config");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.projectId) return parsed;
+      }
+    } catch (e) {}
+  }
+  return firebaseConfig;
+}
+
+export async function switchActiveFirebaseConfig(newConfig: any): Promise<boolean> {
+  try {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("active_firebase_config", JSON.stringify(newConfig));
+      localStorage.setItem("logiroute_firebase_client_config", JSON.stringify(newConfig));
+    }
+    try {
+      await fetch('/api/firebase/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newConfig),
+      });
+    } catch (e) {}
+
+    if (firestoreInstance) {
+      try {
+        await terminate(firestoreInstance);
+      } catch (e) {}
+      firestoreInstance = null;
+    }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("firebase_config_changed", { detail: newConfig }));
+    }
+    return true;
+  } catch (err) {
+    console.error("[ClientFirebase] Erro ao alternar banco de dados:", err);
+    return false;
+  }
+}
+
 export function getClientFirestore() {
   if (isFirestoreQuotaExceeded || hasClientPermissionError) return null;
   if (firestoreInstance) {
@@ -254,7 +298,7 @@ export function getClientFirestore() {
   }
 
   try {
-    const config = firebaseConfig;
+    const config = getActiveFirebaseConfig();
     if (
       !config ||
       !config.projectId ||

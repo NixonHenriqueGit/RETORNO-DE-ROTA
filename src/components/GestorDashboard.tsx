@@ -5,6 +5,7 @@ import { ImageDB, PhotoRecord } from '../imageDb';
 import { DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_DRIVERS, DEFAULT_VEHICLES } from '../data';
 import { DEFAULT_MANUAL_HTML } from './DefaultManualContent';
 import { isClientFirebaseActive, getGeminiKeyFromFirestore, saveGeminiKeyToFirestore } from '../clientFirebase';
+import { DatabaseSwitcher } from './DatabaseSwitcher';
 // @ts-ignore
 import mammoth from 'mammoth';
 
@@ -4567,7 +4568,7 @@ export default function GestorDashboard({
                 <div className="border-b border-slate-100 pb-4 flex justify-between items-center">
                   <div>
                     <h3 className="font-sans font-bold text-base text-slate-900">Conexão Firebase Store</h3>
-                    <p className="text-xxs text-slate-400 mt-0.5">Visão geral do canal de sincronização em tempo real e persistência em nuvem.</p>
+                    <p className="text-xxs text-slate-400 mt-0.5">Visão geral do canal de sincronização em tempo real e alternador de bancos de dados.</p>
                   </div>
                   <button
                     onClick={fetchFirebaseStatus}
@@ -4578,6 +4579,9 @@ export default function GestorDashboard({
                     <span>Atualizar Conexão</span>
                   </button>
                 </div>
+
+                {/* 1-Click Database Switcher */}
+                <DatabaseSwitcher compact={false} onSwitchComplete={fetchFirebaseStatus} />
 
                 {/* Configuration Form Card matching the requested style */}
                 <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-sm">

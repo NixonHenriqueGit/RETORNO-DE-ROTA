@@ -10,9 +10,10 @@ import {
   getFirebaseConnectionState, 
   getIsFirestoreQuotaExceeded,
   fetchDirectlyFromFirestore,
-  getLastSuccessfulSyncTime
+  getLastSuccessfulSyncTime,
+  getActiveFirebaseConfig
 } from '../clientFirebase';
-import firebaseConfig from '../../firebase-applet-config.json';
+import { DatabaseSwitcher } from './DatabaseSwitcher';
 
 interface HeaderProps {
   currentUser: User;
@@ -1283,11 +1284,11 @@ export default function Header({
               <div className="grid grid-cols-2 gap-2 font-mono text-[11px] bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <div>
                   <span className="block text-[9px] font-sans uppercase tracking-wider text-slate-400 font-bold">Projeto Firebase</span>
-                  <span className="font-semibold text-slate-700 truncate block">{firebaseConfig.projectId || 'armazem-facil--oficial'}</span>
+                  <span className="font-semibold text-slate-700 truncate block">{(getActiveFirebaseConfig()?.projectId) || 'armazemfacil-b2292'}</span>
                 </div>
                 <div>
                   <span className="block text-[9px] font-sans uppercase tracking-wider text-slate-400 font-bold">Banco Firestore ID</span>
-                  <span className="font-semibold text-slate-700 truncate block">{firebaseConfig.firestoreDatabaseId || '(default)'}</span>
+                  <span className="font-semibold text-slate-700 truncate block">{(getActiveFirebaseConfig()?.firestoreDatabaseId) || '(default)'}</span>
                 </div>
                 <div>
                   <span className="block text-[9px] font-sans uppercase tracking-wider text-slate-400 font-bold">Canal de Escuta</span>
@@ -1299,6 +1300,11 @@ export default function Header({
                     {lastSyncTimestamp ? new Date(lastSyncTimestamp).toLocaleTimeString('pt-BR') : 'Agora'}
                   </span>
                 </div>
+              </div>
+
+              {/* Instant Database Switcher Widget */}
+              <div className="pt-1">
+                <DatabaseSwitcher compact={true} onSwitchComplete={() => setShowConnectionModal(false)} />
               </div>
 
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
