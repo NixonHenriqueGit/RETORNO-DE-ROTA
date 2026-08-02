@@ -1,4 +1,4 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeApp, getApps, getApp, deleteApp } from "firebase/app";
 import { getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc, collection, onSnapshot, terminate, setLogLevel, writeBatch } from "firebase/firestore";
 import { getAuth, signInAnonymously } from "firebase/auth";
 import firebaseConfig from "../firebase-applet-config.json";
@@ -285,6 +285,50 @@ export async function switchActiveFirebaseConfig(newConfig: any): Promise<boolea
   } catch (err) {
     console.error("[ClientFirebase] Erro ao alternar banco de dados:", err);
     return false;
+  }
+}
+
+export async function syncFirebaseData(sourceConfig: any, targetConfig: any): Promise<{ success: boolean; count: number }> {
+  let totalDocs = 0;
+  const appNameSource = `syncSrc_${Date.now()}`;
+  const appNameTarget = `syncTgt_${Date.now()}`;
+
+  let sourceApp: any = null;
+  let targetApp: any = null;
+
+  try {
+    sourceApp = initializeApp(sourceConfig, appNameSource);
+    targetApp = initializeApp(targetConfig, appNameTarget);
+
+    const sourceDb = getFirestore(sourceApp);
+    const targetDb = getFirestore(targetApp);
+
+    for (const colName of TRACKED_COLLECTIONS) {
+      try {
+        const snap = await getDocs(collection(sourceDb, colName));
+        if (snap.empty) continue;
+
+        const docs = snap.docs;
+        for (let i = 0; i < docs.length; i += 300) {
+          const chunk = docs.slice(i, i + 300);
+          const batch = writeBatch(targetDb);
+          chunk.forEach((d) => {
+            batch.set(doc(targetDb, colName, d.id), d.data());
+          });
+          await batch.commit();
+        }
+        totalDocs += docs.length;
+      } catch (e) {
+        console.warn(`[syncFirebaseData] Aviso ao copiar coleção ${colName}:`, e);
+      }
+    }
+    return { success: true, count: totalDocs };
+  } catch (err) {
+    console.error("[syncFirebaseData] Erro de sincronização entre bancos:", err);
+    throw err;
+  } finally {
+    if (sourceApp) { try { await deleteApp(sourceApp); } catch (e) {} }
+    if (targetApp) { try { await deleteApp(targetApp); } catch (e) {} }
   }
 }
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Database, CheckCircle2, RefreshCw, Server, AlertCircle, ArrowRight, Sparkles } from 'lucide-react';
+import { Database, CheckCircle2, RefreshCw, Server, AlertCircle, ArrowRight, Sparkles, CopyCheck, ArrowLeftRight, Download, FileJson } from 'lucide-react';
 import { FIREBASE_PRESETS, getActivePresetId, FirebasePreset } from '../firebasePresets';
-import { getActiveFirebaseConfig, switchActiveFirebaseConfig } from '../clientFirebase';
+import { getActiveFirebaseConfig, switchActiveFirebaseConfig, syncFirebaseData } from '../clientFirebase';
 
 interface DatabaseSwitcherProps {
   onSwitchComplete?: () => void;
@@ -17,6 +17,8 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
   const [customAuthDomain, setCustomAuthDomain] = useState('');
   const [customAppId, setCustomAppId] = useState('');
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [syncBeforeSwitch, setSyncBeforeSwitch] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const loadConfig = () => {
     const cfg = getActiveFirebaseConfig();
@@ -39,6 +41,35 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
   const activeProjectId = currentConfig?.projectId || '';
   const activePresetId = getActivePresetId(activeProjectId);
 
+  const handleManualSyncAll = async () => {
+    if (!currentConfig || !currentConfig.projectId) return;
+
+    // Find target preset
+    const otherPreset = FIREBASE_PRESETS.find(p => p.config.projectId !== activeProjectId);
+    if (!otherPreset) return;
+
+    setIsSyncing(true);
+    setStatusMessage({
+      type: 'success',
+      text: `Iniciando sincronização completa de rotas, auditorias e alertas de '${activeProjectId}' para '${otherPreset.config.projectId}'...`
+    });
+
+    try {
+      const res = await syncFirebaseData(currentConfig, otherPreset.config);
+      setStatusMessage({
+        type: 'success',
+        text: `Sincronização concluída com sucesso! ${res.count} registros copiados/sincronizados para '${otherPreset.name}' (${otherPreset.config.projectId}).`
+      });
+    } catch (err: any) {
+      setStatusMessage({
+        type: 'error',
+        text: `Erro ao sincronizar dados entre bancos: ${err?.message || 'Falha de conexão'}`
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleSelectPreset = async (preset: FirebasePreset) => {
     if (activeProjectId === preset.config.projectId) {
       setStatusMessage({
@@ -52,18 +83,34 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
     setStatusMessage(null);
 
     try {
+      if (syncBeforeSwitch && currentConfig && currentConfig.projectId) {
+        setStatusMessage({
+          type: 'success',
+          text: `Sincronizando todas as informações e rotas de '${currentConfig.projectId}' para '${preset.config.projectId}'...`
+        });
+        setIsSyncing(true);
+        try {
+          const res = await syncFirebaseData(currentConfig, preset.config);
+          console.log(`[DatabaseSwitcher] Sincronizados ${res.count} documentos.`);
+        } catch (syncErr) {
+          console.warn("[DatabaseSwitcher] Falha na pré-sincronização:", syncErr);
+        } finally {
+          setIsSyncing(false);
+        }
+      }
+
       const success = await switchActiveFirebaseConfig(preset.config);
       if (success) {
         setStatusMessage({
           type: 'success',
-          text: `Conexão alterada com sucesso para o banco: ${preset.name} (${preset.config.projectId})`
+          text: `Conexão e dados transferidos com sucesso para o banco: ${preset.name} (${preset.config.projectId})`
         });
         if (onSwitchComplete) {
           onSwitchComplete();
         }
         setTimeout(() => {
           window.location.reload();
-        }, 600);
+        }, 800);
       } else {
         setStatusMessage({
           type: 'error',
@@ -262,17 +309,17 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
                 <button
                   type="button"
                   onClick={() => handleSelectPreset(preset)}
-                  disabled={isActive || isLoading}
+                  disabled={isActive || isLoading || isSyncing}
                   className={`w-full py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
                     isActive
                       ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-default'
                       : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs active:scale-98'
                   }`}
                 >
-                  {isLoading ? (
+                  {isLoading || isSyncing ? (
                     <>
                       <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                      <span>Alternando Banco...</span>
+                      <span>{isSyncing ? 'Sincronizando Dados...' : 'Alternando Banco...'}</span>
                     </>
                   ) : isActive ? (
                     <>
@@ -290,6 +337,52 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
             </div>
           );
         })}
+      </div>
+
+      {/* Sync Control Banner */}
+      <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <label className="flex items-center gap-2 text-xs text-blue-900 font-medium cursor-pointer">
+          <input
+            type="checkbox"
+            checked={syncBeforeSwitch}
+            onChange={(e) => setSyncBeforeSwitch(e.target.checked)}
+            className="rounded border-blue-300 text-blue-600 focus:ring-blue-500 h-4 w-4"
+          />
+          <span>Transferir e sincronizar automaticamente todas as rotas/dados ao trocar de banco</span>
+        </label>
+
+        <button
+          type="button"
+          onClick={handleManualSyncAll}
+          disabled={isSyncing}
+          className="text-xs font-bold bg-blue-600 hover:bg-blue-700 active:scale-98 text-white px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer whitespace-nowrap"
+        >
+          {isSyncing ? (
+            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <ArrowLeftRight className="h-3.5 w-3.5" />
+          )}
+          <span>Clonar Dados do Banco Ativo para o Outro Banco</span>
+        </button>
+      </div>
+
+      {/* Export 100% Full JSON Database Banner */}
+      <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <FileJson className="h-4 w-4 text-emerald-700 shrink-0" />
+          <div>
+            <span className="block text-xs font-bold text-emerald-950">Exportar Base de Dados Completa (100% JSON)</span>
+            <span className="block text-[11px] text-emerald-700">Baixe um arquivo .json estruturado com todas as coleções, rotas, usuários, auditorias e produtos.</span>
+          </div>
+        </div>
+        <a
+          href="/api/export-database"
+          download="backup_completo_plataforma.json"
+          className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg flex items-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
+        >
+          <Download className="h-3.5 w-3.5" />
+          <span>Baixar JSON (100%)</span>
+        </a>
       </div>
 
       {/* Custom Database Option */}

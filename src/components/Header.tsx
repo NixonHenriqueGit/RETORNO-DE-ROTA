@@ -373,10 +373,10 @@ export default function Header({
                   }`}></span>
                 </span>
                 <span className="uppercase tracking-wider text-[9px] hidden sm:inline whitespace-nowrap">
-                  {isQuotaExceeded ? 'Cota Excedida / Servidor Local' : 'Firebase (Ativo)'}
+                  {isQuotaExceeded ? 'Cota Excedida / Servidor Local' : `DB: ${getActiveFirebaseConfig()?.projectId || 'armazemfacil-b2292'}`}
                 </span>
                 <span className="uppercase tracking-wider text-[9px] inline sm:hidden whitespace-nowrap">
-                  {isQuotaExceeded ? 'Local' : 'Firebase'}
+                  {isQuotaExceeded ? 'Local' : (getActiveFirebaseConfig()?.projectId?.split('-')[0] || 'Firebase')}
                 </span>
               </button>
 
