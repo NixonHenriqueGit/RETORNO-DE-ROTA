@@ -320,19 +320,19 @@ export default function Header({
     <header className="bg-slate-900 text-white shadow-md border-b border-slate-800" id="main_header">
       {/* Top tier bar: Logo and actions */}
       <div className="border-b border-slate-800/60 bg-slate-950/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
+        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16 items-center gap-1">
             {/* Logo */}
             <div 
               onClick={handleLogoClick}
-              className="flex items-center space-x-2 sm:space-x-3 cursor-pointer hover:opacity-90 transition-all shrink-0"
+              className="flex items-center space-x-1.5 sm:space-x-3 cursor-pointer hover:opacity-90 transition-all shrink min-w-0"
               id="header_logo_btn"
             >
-              <div className="bg-amber-500/10 p-2 rounded-lg flex items-center justify-center border border-amber-500/20 w-9 h-9 sm:w-10 sm:h-10 shadow-inner shrink-0">
+              <div className="bg-amber-500/10 p-1.5 sm:p-2 rounded-lg flex items-center justify-center border border-amber-500/20 w-8 h-8 sm:w-10 sm:h-10 shadow-inner shrink-0">
                 <Truck className="h-4 w-4 sm:h-5 sm:w-5 text-amber-500 shrink-0" />
               </div>
-              <div className="min-w-0">
-                <span className="font-sans font-black text-xs sm:text-base tracking-tight block text-white uppercase whitespace-nowrap truncate">Pau Brasil Guarabira</span>
+              <div className="min-w-0 max-w-[105px] min-[380px]:max-w-[140px] sm:max-w-none">
+                <span className="font-sans font-black text-xs sm:text-base tracking-tight block text-white uppercase whitespace-nowrap truncate">Pau Brasil</span>
                 <span className="font-mono text-[8px] sm:text-xxs tracking-widest text-amber-500 uppercase block leading-none whitespace-nowrap truncate">Retorno de Rota</span>
               </div>
             </div>
@@ -343,7 +343,7 @@ export default function Header({
               <button
                 type="button"
                 onClick={() => setShowConnectionModal(true)}
-                className={`flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border transition-all duration-300 shadow-xs cursor-pointer hover:scale-105 active:scale-95 shrink-0 ${
+                className={`flex items-center space-x-1 sm:space-x-1.5 px-1.5 sm:px-2.5 py-1 rounded-full text-[10px] font-mono font-bold border transition-all duration-300 shadow-xs cursor-pointer hover:scale-105 active:scale-95 shrink-0 ${
                 isQuotaExceeded
                   ? 'bg-amber-500/15 text-amber-500 border-amber-500/30 animate-pulse'
                   : firebaseStatus === 'connected' 
@@ -380,7 +380,7 @@ export default function Header({
                 </span>
               </button>
 
-              {/* Active User Badge / Context */}
+              {/* Active User Badge / Context (Desktop) */}
               <div className="hidden sm:flex items-center space-x-2 bg-slate-800/60 border border-slate-700/60 px-3 py-1.5 rounded-full text-xxs font-medium text-slate-300 shrink-0">
                 <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                 <span className="font-mono uppercase text-[9px] text-amber-500 font-bold">
@@ -391,12 +391,23 @@ export default function Header({
                 </span>
               </div>
 
+              {/* Active User Badge / Context (Mobile) */}
+              <div className="hidden min-[360px]:flex sm:hidden items-center space-x-1 bg-slate-800/80 border border-slate-700/80 px-1.5 py-1 rounded-full text-[10px] text-slate-300 shrink-0" title={currentUser.name}>
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="font-mono uppercase text-[8px] text-amber-400 font-bold">
+                  [{currentUser.role === 'auxiliar_logistica' ? 'AUX' : currentUser.role === 'conferente' ? 'CONF' : currentUser.role === 'gestor' ? 'GEST' : 'MONIT'}]
+                </span>
+                <span className="font-bold text-slate-100 max-w-[55px] truncate">
+                  {currentUser.name.split(' ')[0]}
+                </span>
+              </div>
+
               {/* Notification Bell with Dropdown Popover */}
               <div className="relative shrink-0" id="notification_bell_container" ref={bellContainerRef}>
                 <button
                   id="notification_bell_btn"
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className={`p-2 rounded-lg border transition-all flex items-center justify-center cursor-pointer relative shadow-sm shrink-0 ${
+                  className={`p-1.5 sm:p-2 rounded-lg border transition-all flex items-center justify-center cursor-pointer relative shadow-sm shrink-0 ${
                     showNotifications 
                       ? 'bg-amber-500 text-slate-950 border-amber-600' 
                       : 'bg-slate-800 border-slate-700 hover:border-slate-600 text-slate-300 hover:text-white'
@@ -526,7 +537,7 @@ export default function Header({
               <button
                 id="download_apk_btn"
                 onClick={handleHeaderApkClick}
-                className="bg-emerald-655 hover:bg-emerald-700 border border-emerald-550 text-white p-2 px-3 rounded-lg transition-all flex items-center space-x-1.5 cursor-pointer shadow-sm mr-1.5 text-xs font-bold"
+                className="hidden min-[480px]:flex bg-emerald-655 hover:bg-emerald-700 border border-emerald-550 text-white p-1.5 sm:p-2 px-2 sm:px-3 rounded-lg transition-all items-center space-x-1.5 cursor-pointer shadow-sm text-xs font-bold shrink-0"
                 title="Baixar Aplicativo Mobile (APK)"
               >
                 <Smartphone className="h-4 w-4 shrink-0" />
@@ -537,7 +548,7 @@ export default function Header({
               <button
                 id="theme_toggle_btn"
                 onClick={onToggleTheme}
-                className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer shadow-sm mr-1"
+                className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 hover:text-white p-1.5 sm:p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer shadow-sm shrink-0"
                 title={theme === 'dark' ? "Ativar Modo Claro" : "Ativar Modo Escuro"}
               >
                 {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-300" />}
@@ -546,7 +557,7 @@ export default function Header({
               <button
                 id="logout_btn"
                 onClick={onLogout}
-                className="bg-slate-800 hover:bg-red-900 border border-slate-700 hover:border-red-800 text-slate-300 hover:text-white p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer shadow-sm"
+                className="bg-slate-800 hover:bg-red-900 border border-slate-700 hover:border-red-800 text-slate-300 hover:text-white p-1.5 sm:p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer shadow-sm shrink-0"
                 title="Sair do Sistema"
               >
                 <LogOut className="h-4 w-4" />

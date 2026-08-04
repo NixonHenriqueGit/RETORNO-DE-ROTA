@@ -6689,7 +6689,7 @@ export default function GestorDashboard({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             
             {/* ÁRVORE DE MOTIVOS */}
             <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 space-y-5">

@@ -2147,7 +2147,7 @@ export default function ConferenteView({
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8 animate-fade-in" id="conferente_view">
+    <div className="w-full max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 pt-3 pb-28 sm:pb-12 animate-fade-in overflow-x-hidden" id="conferente_view">
       
       {/* Banner / Instructions with Pau Brasil distribution look */}
       <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 rounded-2xl p-6 mb-8 text-white shadow-xl border border-blue-900 relative overflow-hidden">
@@ -2244,10 +2244,10 @@ export default function ConferenteView({
       })()}
 
       {!activeSession ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 w-full min-w-0">
           
           {/* LEFT & CENTER: Status of the Day + Pending Audits */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-7 xl:col-span-8 space-y-6 min-w-0">
             
             {/* STATUS DO DIA (Dashboard Widget) */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -2256,7 +2256,7 @@ export default function ConferenteView({
                 <span className="text-xxs font-semibold text-slate-400">Tempo real</span>
               </h3>
               
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
                 <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 text-center">
                   <span className="text-xxs font-medium text-slate-400 block uppercase">Registros</span>
                   <span className="text-xl font-bold text-slate-900 block">{mapsToday}</span>
@@ -2273,7 +2273,7 @@ export default function ConferenteView({
                   <span className="text-xxs font-medium text-emerald-700 block uppercase">Baixa OK</span>
                   <span className="text-xl font-bold text-emerald-800 block">{mapsCompletedOk}</span>
                 </div>
-                <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 text-center">
+                <div className="bg-purple-50 p-3 rounded-lg border border-purple-100 text-center col-span-2 sm:col-span-1">
                   <span className="text-xxs font-medium text-purple-700 block uppercase">Baixa Div.</span>
                   <span className="text-xl font-bold text-purple-800 block">{mapsCompletedDivergent}</span>
                 </div>
@@ -2528,7 +2528,7 @@ export default function ConferenteView({
           </div>
           
           {/* RIGHT: REGISTER RETURN FROM ROUTE PANEL */}
-          <div className="space-y-6">
+          <div className="lg:col-span-5 xl:col-span-4 space-y-6 min-w-0">
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="font-sans font-bold text-lg text-slate-900 flex items-center space-x-2">

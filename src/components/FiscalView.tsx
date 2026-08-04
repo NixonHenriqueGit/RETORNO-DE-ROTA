@@ -5741,9 +5741,9 @@ export default function FiscalView({
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 w-full min-w-0">
                 {/* Form to Issue Vale (Left) */}
-                <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-xs h-fit">
+                <div className="lg:col-span-5 xl:col-span-4 bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-xs h-fit min-w-0">
                   <h3 className="font-sans font-bold text-sm text-slate-900 border-b border-slate-100 pb-2 flex items-center space-x-1.5 font-bold">
                     <Plus className="h-4 w-4 text-amber-500" />
                     <span>Emitir Novo Vale de Desconto</span>
@@ -5966,7 +5966,7 @@ export default function FiscalView({
                 </div>
 
                 {/* List of generated vales (Right) */}
-                <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-xs">
+                <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-xl border border-slate-200 p-6 space-y-4 shadow-xs min-w-0">
                   <h3 className="font-sans font-bold text-sm text-slate-900 border-b border-slate-100 pb-2 flex items-center justify-between font-bold">
                     <span className="flex items-center space-x-1.5">
                       <FileText className="h-4 w-4 text-slate-600" />
@@ -6841,10 +6841,10 @@ export default function FiscalView({
             return null;
           })()}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 w-full min-w-0">
             
             {/* Reconciliation Forms: Finished Products (PA) & Active Assets (AG) */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-7 xl:col-span-8 space-y-6 min-w-0">
               
               {/* Finished Products Reconciliation */}
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -7373,7 +7373,7 @@ export default function FiscalView({
             </div>
 
             {/* RIGHT SIDEBAR: Actions & Impact Summary */}
-            <div className="space-y-6">
+            <div className="lg:col-span-5 xl:col-span-4 space-y-6 min-w-0">
               
               {/* Financial Balance Summary */}
               <div className="bg-slate-900 text-white rounded-xl shadow-md border border-slate-800 p-6">

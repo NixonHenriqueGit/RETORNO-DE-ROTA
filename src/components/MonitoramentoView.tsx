@@ -482,10 +482,10 @@ export default function MonitoramentoView({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 w-full min-w-0">
         
         {/* LEFT 2 COLUMNS: MAPAS IMPORTADOS LIST */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-7 xl:col-span-8 space-y-6 min-w-0">
           <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6">
             <h3 className="font-sans font-bold text-slate-900 text-base mb-4 uppercase tracking-wider flex items-center space-x-2">
               <FileSpreadsheet className="h-5 w-5 text-amber-500" />
@@ -831,7 +831,7 @@ export default function MonitoramentoView({
         </div>
 
         {/* RIGHT COLUMN: VEÍCULOS EM ABERTO & OVERNIGHT SUMMARY */}
-        <div className="space-y-6">
+        <div className="lg:col-span-5 xl:col-span-4 space-y-6 min-w-0">
           
           {/* Section: Veículos com Mapa em Aberto */}
           <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 space-y-4">
