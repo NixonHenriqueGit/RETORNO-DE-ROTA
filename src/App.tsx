@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Driver, Vehicle, Product, ActiveAsset, AuditSession, ReturnForecast, FiscalAlert, ImportedRoute, Vale } from './types';
-import { DEFAULT_PRODUCTS } from './data';
+import { DEFAULT_PRODUCTS, DEFAULT_USERS } from './data';
 import { ImageDB } from './imageDb';
 import { isClientFirebaseActive, fetchDirectlyFromFirestore, saveDirectlyToFirestore, subscribeToFirestore, getClientAuthError, getIsFirestoreQuotaExceeded, setFirestoreQuotaExceeded } from './clientFirebase';
 import Header from './components/Header';
@@ -19,7 +19,7 @@ export default function App() {
   const pushTimeoutRef = useRef<any>(null);
   const lastSyncAlertTime = useRef<number>(0);
   // Database states loaded from AppStore
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[]>(DEFAULT_USERS);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,7 +35,10 @@ export default function App() {
   const [importedRoutes, setImportedRoutes] = useState<ImportedRoute[]>([]);
 
   // Session & UI Navigation states
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const savedUserId = localStorage.getItem('logiroute_authenticated_user_id');
+    return DEFAULT_USERS.find(u => u.id === savedUserId) || DEFAULT_USERS.find(u => u.role === 'gestor') || DEFAULT_USERS[0] || null;
+  });
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return localStorage.getItem('logiroute_is_authenticated') === 'true';
   });
@@ -364,13 +367,16 @@ export default function App() {
     }
 
     if (db.users !== undefined && Array.isArray(db.users)) {
-      if (db.users.length > 0) {
-        setUsers(db.users);
-        const savedUserId = localStorage.getItem('logiroute_authenticated_user_id');
-        if (savedUserId) {
-          const matchedUser = db.users.find((u: User) => u.id === savedUserId);
-          if (matchedUser) setCurrentUser(matchedUser);
-        }
+      const activeUsers = db.users.length > 0 ? db.users : DEFAULT_USERS;
+      setUsers(activeUsers);
+      const savedUserId = localStorage.getItem('logiroute_authenticated_user_id');
+      let matchedUser = activeUsers.find((u: User) => u.id === savedUserId);
+      if (!matchedUser) {
+        matchedUser = activeUsers.find((u: User) => u.role === 'gestor') || activeUsers[0];
+      }
+      if (matchedUser) {
+        setCurrentUser(matchedUser);
+        localStorage.setItem('logiroute_authenticated_user_id', matchedUser.id);
       }
     }
 
@@ -738,9 +744,20 @@ export default function App() {
   }
 
   if (!currentUser) {
+    const availableUsers = users.length > 0 ? users : DEFAULT_USERS;
+    const savedUserId = localStorage.getItem('logiroute_authenticated_user_id');
+    const fallbackUser = availableUsers.find(u => u.id === savedUserId) 
+      || availableUsers.find(u => u.role === 'gestor') 
+      || availableUsers[0];
+
+    if (fallbackUser) {
+      setTimeout(() => setCurrentUser(fallbackUser), 0);
+    }
+
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
         <div className="text-white text-center">
+          <div className="w-10 h-10 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="font-semibold text-lg">Carregando plataforma de retornos...</p>
         </div>
       </div>

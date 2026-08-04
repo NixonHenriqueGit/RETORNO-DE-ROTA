@@ -58,7 +58,7 @@ export default function ExportDataView({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const activeConfig = getActiveFirebaseConfig();
-  const activeProjectId = activeConfig?.projectId || 'armazemfacil-b2292';
+  const activeProjectId = activeConfig?.projectId || 'banco-02';
 
   // Import / Restore 100% JSON Backup File into Active Firebase + Local Memory
   const handleImportFullDatabaseJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {

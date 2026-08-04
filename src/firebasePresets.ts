@@ -37,24 +37,6 @@ export const FIREBASE_PRESETS: FirebasePreset[] = [
     }
   },
   {
-    id: "armazemfacil-b2292",
-    name: "Armazém Fácil",
-    badge: "Anterior",
-    badgeColor: "bg-amber-500/15 text-amber-600 border-amber-500/30",
-    description: "armazemfacil-b2292 (Banco de Dados Anterior)",
-    config: {
-      projectId: "armazemfacil-b2292",
-      appId: "1:688234941301:web:afd418d38c7d7750e3213c",
-      apiKey: "AIzaSyA_ykhJGRklDbPuDNYooMlVvB2DeVzp2VE",
-      authDomain: "armazemfacil-b2292.firebaseapp.com",
-      firestoreDatabaseId: "(default)",
-      storageBucket: "armazemfacil-b2292.firebasestorage.app",
-      messagingSenderId: "688234941301",
-      measurementId: "",
-      oAuthClientId: ""
-    }
-  },
-  {
     id: "abastecimento-78ae9",
     name: "Banco Abastecimento",
     badge: "Abastecimento",
@@ -68,24 +50,6 @@ export const FIREBASE_PRESETS: FirebasePreset[] = [
       firestoreDatabaseId: "(default)",
       storageBucket: "abastecimento-78ae9.firebasestorage.app",
       messagingSenderId: "527386679510",
-      measurementId: "",
-      oAuthClientId: ""
-    }
-  },
-  {
-    id: "sstr-7dd45",
-    name: "Banco SSTR",
-    badge: "SSTR",
-    badgeColor: "bg-blue-500/15 text-blue-600 border-blue-500/30",
-    description: "sstr-7dd45 (Banco de Suporte e Integração SSTR)",
-    config: {
-      projectId: "sstr-7dd45",
-      appId: "1:997661072530:web:338293e8fa584a934eda4b",
-      apiKey: "AIzaSyCFpHeTCT9pxryljNDps2IVEA3l89cTpLk",
-      authDomain: "sstr-7dd45.firebaseapp.com",
-      firestoreDatabaseId: "(default)",
-      storageBucket: "sstr-7dd45.firebasestorage.app",
-      messagingSenderId: "997661072530",
       measurementId: "",
       oAuthClientId: ""
     }

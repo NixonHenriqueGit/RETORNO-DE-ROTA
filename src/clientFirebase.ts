@@ -259,6 +259,9 @@ export function getActiveFirebaseConfig(): any {
 
 export async function switchActiveFirebaseConfig(newConfig: any): Promise<boolean> {
   try {
+    hasClientPermissionError = false;
+    isFirestoreQuotaExceeded = false;
+    clientAuthError = null;
     if (typeof window !== "undefined") {
       localStorage.setItem("active_firebase_config", JSON.stringify(newConfig));
       localStorage.setItem("logiroute_firebase_client_config", JSON.stringify(newConfig));
