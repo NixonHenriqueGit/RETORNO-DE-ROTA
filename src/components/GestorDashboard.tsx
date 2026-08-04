@@ -6,6 +6,7 @@ import { DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_DRIVERS, DEFAULT_VEHICLES } fr
 import { DEFAULT_MANUAL_HTML } from './DefaultManualContent';
 import { isClientFirebaseActive, getGeminiKeyFromFirestore, saveGeminiKeyToFirestore } from '../clientFirebase';
 import { DatabaseSwitcher } from './DatabaseSwitcher';
+import ExportDataView from './ExportDataView';
 // @ts-ignore
 import mammoth from 'mammoth';
 
@@ -293,7 +294,7 @@ export default function GestorDashboard({
     }
   }, [forceTab]);
 
-  const [cadastroSubTab, setCadastroSubTab] = useState<'usuarios' | 'produtos' | 'veiculos' | 'motoristas' | 'manutencao' | 'firebase' | 'manual_diretrizes'>('usuarios');
+  const [cadastroSubTab, setCadastroSubTab] = useState<'usuarios' | 'produtos' | 'veiculos' | 'motoristas' | 'manutencao' | 'firebase' | 'exportar' | 'manual_diretrizes'>('usuarios');
 
   // Firebase Firestore Connection Status States
   const [firebaseStatus, setFirebaseStatus] = useState<{
@@ -3679,19 +3680,35 @@ export default function GestorDashboard({
             </button>
 
             {currentUser.role === 'gestor' && (
-              <button
-                id="subtab_firebase"
-                onClick={() => { setCadastroSubTab('firebase'); setSearchQuery(''); }}
-                className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center space-x-2.5 transition ${
-                  cadastroSubTab === 'firebase' 
-                    ? 'bg-slate-900 text-white shadow-sm' 
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <Database className="h-4 w-4 text-emerald-600" />
-                <span className="flex-1">Conexão Firebase Store</span>
-                <span className="text-[8px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-sans uppercase">Online</span>
-              </button>
+              <>
+                <button
+                  id="subtab_firebase"
+                  onClick={() => { setCadastroSubTab('firebase'); setSearchQuery(''); }}
+                  className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center space-x-2.5 transition ${
+                    cadastroSubTab === 'firebase' 
+                      ? 'bg-slate-900 text-white shadow-sm' 
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Database className="h-4 w-4 text-emerald-600" />
+                  <span className="flex-1">Conexão Firebase Store</span>
+                  <span className="text-[8px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full font-sans uppercase">Online</span>
+                </button>
+
+                <button
+                  id="subtab_exportar"
+                  onClick={() => { setCadastroSubTab('exportar'); setSearchQuery(''); }}
+                  className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center space-x-2.5 transition ${
+                    cadastroSubTab === 'exportar' 
+                      ? 'bg-slate-900 text-white shadow-sm' 
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Download className="h-4 w-4 text-blue-500" />
+                  <span className="flex-1">Exportar Dados da Plataforma</span>
+                  <span className="text-[8px] font-bold bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full font-sans uppercase">Backup 100%</span>
+                </button>
+              </>
             )}
           </div>
 
@@ -5003,6 +5020,22 @@ export default function GestorDashboard({
                   </div>
                 )}
               </div>
+            )}
+
+            {cadastroSubTab === 'exportar' && currentUser.role === 'gestor' && (
+              <ExportDataView
+                currentUser={currentUser}
+                drivers={drivers}
+                vehicles={vehicles}
+                products={products}
+                activeAssets={activeAssets}
+                audits={audits}
+                users={users}
+                importedRoutes={importedRoutes}
+                vales={vales}
+                auditLogs={auditLogs}
+                customManualHTML={customManualHTML}
+              />
             )}
 
             {cadastroSubTab === 'manual_diretrizes' && (
