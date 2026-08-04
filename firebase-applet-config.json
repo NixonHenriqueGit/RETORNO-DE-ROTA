@@ -1,11 +1,11 @@
 {
-  "projectId": "armazemfacil-b2292",
-  "appId": "1:688234941301:web:afd418d38c7d7750e3213c",
-  "apiKey": "AIzaSyA_ykhJGRklDbPuDNYooMlVvB2DeVzp2VE",
-  "authDomain": "armazemfacil-b2292.firebaseapp.com",
+  "projectId": "banco-02",
+  "appId": "1:371160154801:web:d0ace42812cae638789890",
+  "apiKey": "AIzaSyDRhTutIot6LBtNqMb5G2ES4Oe_--bQV9w",
+  "authDomain": "banco-02.firebaseapp.com",
   "firestoreDatabaseId": "(default)",
-  "storageBucket": "armazemfacil-b2292.firebasestorage.app",
-  "messagingSenderId": "688234941301",
+  "storageBucket": "banco-02.firebasestorage.app",
+  "messagingSenderId": "371160154801",
   "measurementId": "",
   "oAuthClientId": ""
 }
