@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Database, CheckCircle2, RefreshCw, Server, AlertCircle, ArrowRight, Sparkles, CopyCheck, ArrowLeftRight, Download, FileJson, Clock, Calendar, Bell } from 'lucide-react';
+import { Database, CheckCircle2, RefreshCw, Server, AlertCircle, ArrowRight, Sparkles, CopyCheck, ArrowLeftRight, Download, FileJson, Clock, Calendar, Bell, Edit3, Save, RotateCcw, X, Sliders } from 'lucide-react';
 import { FIREBASE_PRESETS, getActivePresetId, FirebasePreset } from '../firebasePresets';
 import { getActiveFirebaseConfig, switchActiveFirebaseConfig, syncFirebaseData } from '../clientFirebase';
-import { DEFAULT_SCHEDULE_RULES, getUpcomingDatabaseSwitchInfo, isAutoScheduleEnabled, setAutoScheduleEnabled, triggerGlobalDatabaseSwitch } from '../utils/databaseScheduler';
+import { DEFAULT_SCHEDULE_RULES, getScheduleRules, saveScheduleRules, resetScheduleRulesToDefault, ScheduleRule, getUpcomingDatabaseSwitchInfo, isAutoScheduleEnabled, setAutoScheduleEnabled, triggerGlobalDatabaseSwitch, getCurrentScheduledPresetId } from '../utils/databaseScheduler';
 
 interface DatabaseSwitcherProps {
   onSwitchComplete?: () => void;
@@ -27,6 +27,18 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
   const [isSyncing, setIsSyncing] = useState(false);
   const [autoScheduleActive, setAutoScheduleActive] = useState<boolean>(isAutoScheduleEnabled());
   const [scheduleInfo, setScheduleInfo] = useState(() => getUpcomingDatabaseSwitchInfo());
+  const [rulesList, setRulesList] = useState<ScheduleRule[]>(() => getScheduleRules());
+  const [isEditingSchedule, setIsEditingSchedule] = useState(false);
+  const [scheduleTimes, setScheduleTimes] = useState<{ [id: string]: string }>(() => {
+    const initialRules = getScheduleRules();
+    const timesMap: { [id: string]: string } = {};
+    initialRules.forEach(r => {
+      const h = r.triggerHour.toString().padStart(2, '0');
+      const m = r.triggerMinute.toString().padStart(2, '0');
+      timesMap[r.id] = `${h}:${m}`;
+    });
+    return timesMap;
+  });
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -34,6 +46,84 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
     }, 2000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const handleRulesChanged = () => {
+      const freshRules = getScheduleRules();
+      setRulesList(freshRules);
+      setScheduleInfo(getUpcomingDatabaseSwitchInfo());
+      const timesMap: { [id: string]: string } = {};
+      freshRules.forEach(r => {
+        const h = r.triggerHour.toString().padStart(2, '0');
+        const m = r.triggerMinute.toString().padStart(2, '0');
+        timesMap[r.id] = `${h}:${m}`;
+      });
+      setScheduleTimes(timesMap);
+    };
+
+    window.addEventListener('db_schedule_rules_changed', handleRulesChanged);
+    return () => window.removeEventListener('db_schedule_rules_changed', handleRulesChanged);
+  }, []);
+
+  const handleSaveCustomTimes = async (andSwitchNow = false) => {
+    const currentRules = [...rulesList];
+    const updatedRules = currentRules.map(rule => {
+      const timeVal = scheduleTimes[rule.id] || `${rule.triggerHour.toString().padStart(2, '0')}:${rule.triggerMinute.toString().padStart(2, '0')}`;
+      const [hStr, mStr] = timeVal.split(':');
+      const triggerHour = parseInt(hStr, 10) || 0;
+      const triggerMinute = parseInt(mStr, 10) || 0;
+      return {
+        ...rule,
+        triggerHour,
+        triggerMinute,
+        timeLabel: `${hStr.padStart(2, '0')}:${mStr.padStart(2, '0')}`
+      };
+    });
+
+    await saveScheduleRules(updatedRules);
+    setRulesList(getScheduleRules());
+    setScheduleInfo(getUpcomingDatabaseSwitchInfo());
+    setIsEditingSchedule(false);
+
+    if (andSwitchNow) {
+      const requesterText = currentUser 
+        ? `${currentUser.name || 'Gestor'} (${currentUser.username || 'g1009'})` 
+        : 'Gestor Administrador G1009 (g1009)';
+      const targetScheduledPresetId = getCurrentScheduledPresetId();
+      const targetPreset = FIREBASE_PRESETS.find(p => p.id === targetScheduledPresetId || p.config.projectId === targetScheduledPresetId) || FIREBASE_PRESETS[0];
+
+      setStatusMessage({
+        type: 'success',
+        text: `Horários salvos com sucesso! Alternando imediatamente para o banco do turno atual (${targetPreset.name})...`
+      });
+      await triggerGlobalDatabaseSwitch(5, targetPreset.id, requesterText, 'manual');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      setStatusMessage({
+        type: 'success',
+        text: 'Horários dos turnos atualizados e salvos com sucesso!'
+      });
+    }
+  };
+
+  const handleResetScheduleTimes = async () => {
+    await resetScheduleRulesToDefault();
+    const freshRules = getScheduleRules();
+    setRulesList(freshRules);
+    setScheduleInfo(getUpcomingDatabaseSwitchInfo());
+    const timesMap: { [id: string]: string } = {};
+    freshRules.forEach(r => {
+      const h = r.triggerHour.toString().padStart(2, '0');
+      const m = r.triggerMinute.toString().padStart(2, '0');
+      timesMap[r.id] = `${h}:${m}`;
+    });
+    setScheduleTimes(timesMap);
+    setIsEditingSchedule(false);
+    setStatusMessage({
+      type: 'success',
+      text: 'Horários restaurados para o padrão da plataforma (07:00, 17:00, 20:00).'
+    });
+  };
 
   const handleToggleAutoSchedule = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.checked;
@@ -417,86 +507,159 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
         })}
       </div>
 
-      {/* Programação Automática de Troca de Banco (Padrão da Plataforma) */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/80 rounded-xl p-4 sm:p-5 shadow-lg space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-700/80 pb-3">
+      {/* Programação Automática de Troca de Banco */}
+      <div className="bg-slate-950 text-white border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl space-y-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-400 shrink-0">
-              <Clock className="h-5 w-5" />
+            <div className="p-2.5 bg-amber-500/20 border border-amber-500/50 rounded-xl text-amber-400 shrink-0 shadow-inner">
+              <Clock className="h-6 w-6 text-amber-400" />
             </div>
             <div>
-              <h4 className="font-bold text-sm text-white flex items-center gap-2">
+              <h4 className="font-extrabold text-base text-white flex items-center gap-2 flex-wrap">
                 Programação Automática de Troca de Banco
-                <span className="text-[10px] bg-amber-500/20 text-amber-300 font-mono px-2 py-0.5 rounded-full border border-amber-500/30">
-                  Padrão da Plataforma
+                <span className="text-xs bg-amber-400 text-slate-950 font-black px-2.5 py-0.5 rounded-md uppercase tracking-wider shadow-sm">
+                  {isEditingSchedule ? 'Modo Edição' : 'Horários Editáveis'}
                 </span>
               </h4>
-              <p className="text-xs text-slate-300 mt-0.5">
-                Trocas automáticas programadas de banco com avisos de <span className="text-amber-300 font-semibold">10min</span>, <span className="text-orange-300 font-semibold">5min</span> e <span className="text-red-300 font-semibold">1min</span> para todos os usuários.
+              <p className="text-xs text-slate-300 mt-1 font-medium">
+                Defina e altere os horários dos turnos manualmente. O sistema alterna o banco automaticamente no horário salvo.
               </p>
             </div>
           </div>
 
-          <label className="flex items-center gap-2.5 bg-slate-800/90 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-600 text-xs text-slate-200 cursor-pointer shrink-0 transition">
-            <input
-              type="checkbox"
-              checked={autoScheduleActive}
-              onChange={handleToggleAutoSchedule}
-              className="rounded border-slate-500 text-amber-500 focus:ring-amber-500 h-4 w-4 cursor-pointer"
-            />
-            <span className="font-semibold">Troca Programada Ativa</span>
-          </label>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsEditingSchedule(!isEditingSchedule)}
+              className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2 rounded-xl border border-amber-300 text-xs font-black shadow-md transition cursor-pointer active:scale-95"
+            >
+              <Edit3 className="h-4 w-4" />
+              <span>{isEditingSchedule ? 'Fechar Edição' : '✏️ Alterar Horários'}</span>
+            </button>
+
+            <label className="flex items-center gap-2.5 bg-slate-900 hover:bg-slate-800 px-3.5 py-2 rounded-xl border border-slate-700 text-xs text-white cursor-pointer shrink-0 transition shadow-sm">
+              <input
+                type="checkbox"
+                checked={autoScheduleActive}
+                onChange={handleToggleAutoSchedule}
+                className="rounded border-slate-600 text-amber-500 focus:ring-amber-500 h-4 w-4 cursor-pointer"
+              />
+              <span className="font-bold">Troca Programada Ativa</span>
+            </label>
+          </div>
         </div>
 
-        {/* Schedule Rules Table */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {DEFAULT_SCHEDULE_RULES.map((rule) => {
+        {/* Schedule Rules Table / Editor */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {rulesList.map((rule) => {
             const isTargetNext = scheduleInfo.nextRule.id === rule.id;
             const isCurrentlyActiveSchedule = scheduleInfo.currentPresetId === rule.presetId;
 
             return (
               <div
                 key={rule.id}
-                className={`p-3.5 rounded-xl border transition-all ${
+                className={`p-4 rounded-xl border transition-all ${
                   isCurrentlyActiveSchedule
-                    ? 'bg-amber-500/10 border-amber-500/50 text-white ring-1 ring-amber-500/30'
-                    : 'bg-slate-800/60 border-slate-700/70 text-slate-300'
+                    ? 'bg-amber-500/15 border-amber-400 text-white ring-2 ring-amber-400/40 shadow-md'
+                    : 'bg-slate-900 border-slate-800 text-slate-200'
                 }`}
               >
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="font-mono text-xs font-bold text-amber-400 flex items-center gap-1">
-                    <Clock className="h-3.5 w-3.5 text-amber-400" />
-                    {rule.timeLabel}
-                  </span>
+                <div className="flex items-center justify-between mb-2">
+                  <h5 className="font-bold text-sm text-white">{rule.name}</h5>
                   {isCurrentlyActiveSchedule ? (
-                    <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-black bg-amber-400 text-slate-950 px-2 py-0.5 rounded-md uppercase tracking-wide">
                       TURNO ATUAL
                     </span>
                   ) : isTargetNext ? (
-                    <span className="text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-bold bg-blue-500/30 text-blue-300 border border-blue-400/50 px-2 py-0.5 rounded-md uppercase tracking-wide">
                       PRÓXIMO
                     </span>
                   ) : null}
                 </div>
-                <h5 className="font-bold text-xs text-white">{rule.name}</h5>
-                <p className="text-[11px] text-slate-400 mt-0.5 font-mono">{rule.description}</p>
+
+                {isEditingSchedule ? (
+                  <div className="space-y-2 mt-3 pt-3 border-t border-slate-800">
+                    <label className="block text-xs font-extrabold text-amber-400 uppercase tracking-wider">
+                      Horário do Turno (HH:MM)
+                    </label>
+                    <input
+                      type="time"
+                      value={scheduleTimes[rule.id] || `${rule.triggerHour.toString().padStart(2, '0')}:${rule.triggerMinute.toString().padStart(2, '0')}`}
+                      onChange={(e) => setScheduleTimes(prev => ({ ...prev, [rule.id]: e.target.value }))}
+                      className="w-full bg-slate-950 border-2 border-amber-400 text-amber-300 font-mono font-black text-base rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-300 shadow-inner"
+                    />
+                    <p className="text-[11px] text-slate-400 font-medium">Troca automática para <strong className="text-white">{rule.presetId}</strong></p>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center gap-2 text-amber-400 font-mono text-base font-black my-1.5">
+                      <Clock className="h-4 w-4 text-amber-400" />
+                      <span>{rule.timeLabel}</span>
+                    </div>
+                    <p className="text-xs text-slate-400 font-mono leading-relaxed">{rule.description}</p>
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
+        {/* Edit Action Buttons */}
+        {isEditingSchedule && (
+          <div className="bg-slate-900 p-4 rounded-xl border border-amber-400/50 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => handleSaveCustomTimes(false)}
+                className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-md transition cursor-pointer active:scale-95"
+              >
+                <Save className="h-4 w-4" />
+                <span>Salvar Novos Horários</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSaveCustomTimes(true)}
+                className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-md transition cursor-pointer active:scale-95"
+              >
+                <Sparkles className="h-4 w-4" />
+                <span>Salvar e Alternar Banco Agora</span>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleResetScheduleTimes}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 border border-slate-700 transition cursor-pointer"
+              >
+                <RotateCcw className="h-3.5 w-3.5 text-slate-400" />
+                <span>Restaurar Padrão (07h, 17h, 20h)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsEditingSchedule(false)}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Countdown to Next Switch */}
         {autoScheduleActive && (
-          <div className="bg-slate-800/90 border border-slate-700 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex items-center space-x-2 text-slate-200">
-              <Bell className="h-4 w-4 text-amber-400 shrink-0" />
+          <div className="bg-slate-900 border border-amber-500/30 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs shadow-inner">
+            <div className="flex items-center space-x-2 text-white font-medium">
+              <Bell className="h-4 w-4 text-amber-400 shrink-0 animate-pulse" />
               <span>
-                Próxima troca automática: <strong className="text-white">{scheduleInfo.nextRule.name}</strong> às <strong className="text-amber-400 font-mono">{scheduleInfo.nextRule.timeLabel}</strong>
+                Próxima troca automática: <strong className="text-amber-300 font-extrabold">{scheduleInfo.nextRule.name}</strong> às <strong className="text-amber-400 font-mono font-black">{scheduleInfo.nextRule.timeLabel}</strong>
               </span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-slate-400 text-[11px]">Tempo restante:</span>
-              <span className="font-mono font-bold text-amber-400 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-700">
+              <span className="text-slate-300 text-xs font-semibold">Tempo restante:</span>
+              <span className="font-mono font-black text-amber-300 bg-slate-950 px-3 py-1 rounded-lg border border-amber-500/40 shadow-sm text-xs">
                 {scheduleInfo.remainingFormatted}
               </span>
             </div>

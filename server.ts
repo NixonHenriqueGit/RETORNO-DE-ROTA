@@ -109,6 +109,23 @@ async function startServer() {
     requestedType?: string;
   } | null = null;
 
+  let customScheduleRules: any = null;
+
+  app.get('/api/firebase/schedule-rules', (req, res) => {
+    return res.json({ success: true, rules: customScheduleRules });
+  });
+
+  app.post('/api/firebase/schedule-rules', (req, res) => {
+    try {
+      const { rules } = req.body || {};
+      customScheduleRules = rules;
+      broadcastSSEUpdate({ scheduleRules: customScheduleRules, db: currentDb });
+      return res.json({ success: true, rules: customScheduleRules });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err?.message || 'Erro ao salvar horários de troca' });
+    }
+  });
+
   app.get('/api/firebase/pending-switch', (req, res) => {
     return res.json({ success: true, pendingSwitch: pendingDbSwitch });
   });

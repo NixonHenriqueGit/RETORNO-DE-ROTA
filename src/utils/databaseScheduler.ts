@@ -61,20 +61,89 @@ export function setAutoScheduleEnabled(enabled: boolean): void {
   }
 }
 
+export function getScheduleRules(): ScheduleRule[] {
+  if (typeof window === 'undefined') return DEFAULT_SCHEDULE_RULES;
+  try {
+    const stored = localStorage.getItem('db_custom_schedule_rules');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return DEFAULT_SCHEDULE_RULES;
+}
+
+export async function saveScheduleRules(rules: ScheduleRule[]): Promise<void> {
+  const formattedRules = rules.map((r, idx) => {
+    const nextIdx = (idx + 1) % rules.length;
+    const nextRule = rules[nextIdx];
+    const hourStr = r.triggerHour.toString().padStart(2, '0');
+    const minStr = r.triggerMinute.toString().padStart(2, '0');
+    const timeLabel = `${hourStr}:${minStr}`;
+    const nextTimeLabel = `${nextRule.triggerHour.toString().padStart(2, '0')}:${nextRule.triggerMinute.toString().padStart(2, '0')}`;
+    
+    return {
+      ...r,
+      timeLabel,
+      badge: `${timeLabel} - ${r.presetId.toUpperCase()}`,
+      description: `${r.name} (${timeLabel} às ${nextTimeLabel}) ➔ ${r.presetId}`
+    };
+  });
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('db_custom_schedule_rules', JSON.stringify(formattedRules));
+    window.dispatchEvent(new CustomEvent('db_schedule_rules_changed', { detail: formattedRules }));
+  }
+
+  try {
+    await fetch('/api/firebase/schedule-rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rules: formattedRules })
+    });
+  } catch (e) {}
+}
+
+export async function resetScheduleRulesToDefault(): Promise<void> {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('db_custom_schedule_rules');
+    window.dispatchEvent(new CustomEvent('db_schedule_rules_changed', { detail: DEFAULT_SCHEDULE_RULES }));
+  }
+  try {
+    await fetch('/api/firebase/schedule-rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rules: DEFAULT_SCHEDULE_RULES })
+    });
+  } catch (e) {}
+}
+
 /**
  * Returns which preset SHOULD be active right now according to schedule
  */
 export function getCurrentScheduledPresetId(now = new Date()): string {
+  const rules = getScheduleRules();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  // 07:00 = 420 mins, 17:00 = 1020 mins, 20:00 = 1200 mins
-  if (currentMinutes >= 420 && currentMinutes < 1020) {
-    return "banco-01"; // 07:00 - 16:59 -> Banco 01
-  } else if (currentMinutes >= 1020 && currentMinutes < 1200) {
-    return "banco-02"; // 17:00 - 19:59 -> Banco 02
-  } else {
-    return "banco-03"; // 20:00 - 06:59 -> Banco 03
+  const ruleMinutes = rules.map(r => ({
+    presetId: r.presetId,
+    mins: r.triggerHour * 60 + r.triggerMinute
+  })).sort((a, b) => a.mins - b.mins);
+
+  if (ruleMinutes.length === 0) return "banco-01";
+
+  let activePreset = ruleMinutes[ruleMinutes.length - 1].presetId;
+  for (let i = 0; i < ruleMinutes.length; i++) {
+    if (currentMinutes >= ruleMinutes[i].mins) {
+      activePreset = ruleMinutes[i].presetId;
+    } else {
+      break;
+    }
   }
+
+  return activePreset;
 }
 
 export interface UpcomingSwitchInfo {
@@ -89,31 +158,27 @@ export interface UpcomingSwitchInfo {
 }
 
 export function getUpcomingDatabaseSwitchInfo(now = new Date()): UpcomingSwitchInfo {
+  const rules = getScheduleRules();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   
-  // Sort rules by time in day
-  // 07:00 (420), 17:00 (1020), 20:00 (1200)
-  let nextRule: ScheduleRule;
+  const sortedRules = [...rules].map(r => ({
+    rule: r,
+    mins: r.triggerHour * 60 + r.triggerMinute
+  })).sort((a, b) => a.mins - b.mins);
+
+  let nextItem = sortedRules.find(item => item.mins > currentMinutes);
   let nextSwitchDate = new Date(now);
 
-  if (currentMinutes < 420) {
-    // Before 07:00 -> Next is 07:00 today (banco-01)
-    nextRule = DEFAULT_SCHEDULE_RULES[0]; // 07:00
-    nextSwitchDate.setHours(7, 0, 0, 0);
-  } else if (currentMinutes < 1020) {
-    // 07:00 to 16:59 -> Next is 17:00 today (banco-02)
-    nextRule = DEFAULT_SCHEDULE_RULES[1]; // 17:00
-    nextSwitchDate.setHours(17, 0, 0, 0);
-  } else if (currentMinutes < 1200) {
-    // 17:00 to 19:59 -> Next is 20:00 today (banco-03)
-    nextRule = DEFAULT_SCHEDULE_RULES[2]; // 20:00
-    nextSwitchDate.setHours(20, 0, 0, 0);
+  if (nextItem) {
+    nextSwitchDate.setHours(nextItem.rule.triggerHour, nextItem.rule.triggerMinute, 0, 0);
   } else {
-    // After 20:00 -> Next is 07:00 tomorrow (banco-01)
-    nextRule = DEFAULT_SCHEDULE_RULES[0]; // 07:00
+    nextItem = sortedRules[0] || { rule: DEFAULT_SCHEDULE_RULES[0], mins: 420 };
     nextSwitchDate.setDate(nextSwitchDate.getDate() + 1);
-    nextSwitchDate.setHours(7, 0, 0, 0);
+    nextSwitchDate.setHours(nextItem.rule.triggerHour, nextItem.rule.triggerMinute, 0, 0);
   }
+
+  const nextRule = nextItem.rule;
+  const nextPreset = FIREBASE_PRESETS.find(p => p.id === nextRule.presetId || p.config.projectId === nextRule.presetId) || FIREBASE_PRESETS[0];
 
   const diffMs = nextSwitchDate.getTime() - now.getTime();
   const remainingSeconds = Math.max(0, Math.floor(diffMs / 1000));
@@ -138,7 +203,7 @@ export function getUpcomingDatabaseSwitchInfo(now = new Date()): UpcomingSwitchI
   }
 
   const currentPresetId = getCurrentScheduledPresetId(now);
-  const nextPreset = FIREBASE_PRESETS.find(p => p.id === nextRule.presetId || p.config.projectId === nextRule.presetId) || FIREBASE_PRESETS[0];
+  const shouldTriggerNow = remainingSeconds === 0;
 
   return {
     currentPresetId,
