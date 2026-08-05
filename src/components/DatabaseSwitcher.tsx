@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Database, CheckCircle2, RefreshCw, Server, AlertCircle, ArrowRight, Sparkles, CopyCheck, ArrowLeftRight, Download, FileJson, Clock, Calendar, Bell } from 'lucide-react';
 import { FIREBASE_PRESETS, getActivePresetId, FirebasePreset } from '../firebasePresets';
 import { getActiveFirebaseConfig, switchActiveFirebaseConfig, syncFirebaseData } from '../clientFirebase';
-import { DEFAULT_SCHEDULE_RULES, getUpcomingDatabaseSwitchInfo, isAutoScheduleEnabled, setAutoScheduleEnabled } from '../utils/databaseScheduler';
+import { DEFAULT_SCHEDULE_RULES, getUpcomingDatabaseSwitchInfo, isAutoScheduleEnabled, setAutoScheduleEnabled, triggerGlobalDatabaseSwitch } from '../utils/databaseScheduler';
 
 interface DatabaseSwitcherProps {
   onSwitchComplete?: () => void;
@@ -277,18 +277,18 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
         </div>
       </div>
 
-      {/* QUICK SIMULATION BANNER */}
+      {/* QUICK GLOBAL SWITCH BANNER */}
       <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 text-white rounded-xl p-4 shadow-md border border-indigo-500/30 flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
               <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
               <span className="font-extrabold text-xs uppercase tracking-wider text-amber-300">
-                ⚡ SIMULAÇÃO EM TEMPO REAL PARA TODOS OS DISPOSITIVOS
+                🚨 TROCA GLOBAL DE BANCO DE DADOS (TODOS OS USUÁRIOS)
               </span>
             </div>
             <p className="text-xs text-indigo-100 leading-relaxed max-w-xl">
-              Simule a troca instantânea ou inicie a contagem regressiva da última etapa (1 minuto) para visualizar os alertas sincronizados no PC e no Celular.
+              Inicie a troca de banco de dados em tempo real para todos os dispositivos conectados (PC e Celular) com contagem regressiva de 1 minuto e alerta no topo.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -309,14 +309,14 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
 
             <button
               type="button"
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('trigger_db_simulated_countdown', { detail: { seconds: 60 } }));
+              onClick={async () => {
+                await triggerGlobalDatabaseSwitch(60);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="bg-red-600 hover:bg-red-500 text-white font-extrabold px-4 py-2 rounded-lg text-xs flex items-center space-x-2 shadow-lg hover:shadow-red-500/30 transition-all cursor-pointer shrink-0 active:scale-95 border border-red-400"
             >
               <Clock className="h-4 w-4 animate-spin text-amber-300" />
-              <span>🚨 Simular Última Etapa (1 Minuto com Regressão)</span>
+              <span>🚨 Trocar Banco de Dados (1 Minuto com Regressão)</span>
             </button>
           </div>
         </div>

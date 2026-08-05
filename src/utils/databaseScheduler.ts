@@ -151,3 +151,42 @@ export function getUpcomingDatabaseSwitchInfo(now = new Date()): UpcomingSwitchI
     shouldTriggerNow: remainingSeconds <= 0
   };
 }
+
+export async function triggerGlobalDatabaseSwitch(seconds = 60, targetPresetId?: string) {
+  try {
+    const activeConfig = localStorage.getItem('active_firebase_config');
+    let activeProjectId = 'banco-01-34be4';
+    if (activeConfig) {
+      try {
+        const parsed = JSON.parse(activeConfig);
+        if (parsed.projectId) activeProjectId = parsed.projectId;
+      } catch (e) {}
+    }
+
+    const currentIndex = FIREBASE_PRESETS.findIndex(p => p.config.projectId === activeProjectId);
+    const nextIndex = (currentIndex + 1) % FIREBASE_PRESETS.length;
+    const nextPreset = FIREBASE_PRESETS.find(p => p.id === targetPresetId || p.config.projectId === targetPresetId) || FIREBASE_PRESETS[nextIndex] || FIREBASE_PRESETS[0];
+
+    // Trigger on server so all PCs and Mobiles receive it via SSE/polling
+    await fetch('/api/firebase/trigger-switch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        targetPresetId: nextPreset.id,
+        targetConfig: nextPreset.config,
+        targetName: nextPreset.name,
+        countdownSeconds: seconds
+      })
+    });
+
+    // Also dispatch local event for instant UI reaction
+    window.dispatchEvent(new CustomEvent('trigger_db_simulated_countdown', {
+      detail: {
+        seconds,
+        targetPreset: nextPreset
+      }
+    }));
+  } catch (err) {
+    console.error('Error triggering global db switch:', err);
+  }
+}

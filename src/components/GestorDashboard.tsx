@@ -6,6 +6,7 @@ import { DEFAULT_USERS, DEFAULT_PRODUCTS, DEFAULT_DRIVERS, DEFAULT_VEHICLES } fr
 import { DEFAULT_MANUAL_HTML } from './DefaultManualContent';
 import { isClientFirebaseActive, getGeminiKeyFromFirestore, saveGeminiKeyToFirestore } from '../clientFirebase';
 import { DatabaseSwitcher } from './DatabaseSwitcher';
+import { triggerGlobalDatabaseSwitch } from '../utils/databaseScheduler';
 import ExportDataView from './ExportDataView';
 // @ts-ignore
 import mammoth from 'mammoth';
@@ -3684,22 +3685,21 @@ export default function GestorDashboard({
               <span className="text-[8px] font-bold bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded-full font-sans uppercase">Baixar/Importar</span>
             </button>
 
-            <button
-              id="subtab_simular_troca"
-              onClick={() => { setCadastroSubTab('simular_troca'); setSearchQuery(''); }}
-              className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold flex items-center space-x-2.5 transition cursor-pointer ${
-                cadastroSubTab === 'simular_troca' 
-                  ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold' 
-                  : 'text-amber-800 bg-amber-50/80 hover:bg-amber-100 border border-amber-200/80'
-              }`}
-            >
-              <RefreshCw className={`h-4 w-4 ${cadastroSubTab === 'simular_troca' ? 'animate-spin' : 'text-amber-600'}`} />
-              <span className="flex-1">Simular Troca de Banco</span>
-              <span className="text-[8px] font-black bg-slate-950 text-amber-400 px-1.5 py-0.5 rounded-full font-sans uppercase">Multi-Dev</span>
-            </button>
-
             {currentUser.role === 'gestor' && (
               <>
+                <button
+                  id="subtab_simular_troca"
+                  onClick={() => { setCadastroSubTab('simular_troca'); setSearchQuery(''); }}
+                  className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold flex items-center space-x-2.5 transition cursor-pointer ${
+                    cadastroSubTab === 'simular_troca' 
+                      ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold' 
+                      : 'text-amber-800 bg-amber-50/80 hover:bg-amber-100 border border-amber-200/80'
+                  }`}
+                >
+                  <RefreshCw className={`h-4 w-4 ${cadastroSubTab === 'simular_troca' ? 'animate-spin' : 'text-amber-600'}`} />
+                  <span className="flex-1">Trocar Banco de Dados</span>
+                  <span className="text-[8px] font-black bg-slate-950 text-amber-400 px-1.5 py-0.5 rounded-full font-sans uppercase">Gestor</span>
+                </button>
 
                 <button
                   id="subtab_firebase"
@@ -4600,7 +4600,7 @@ export default function GestorDashboard({
               </div>
             )}
 
-            {cadastroSubTab === 'simular_troca' && (
+            {cadastroSubTab === 'simular_troca' && currentUser.role === 'gestor' && (
               <div className="space-y-6">
                 <div className="border-b border-slate-100 pb-4 flex justify-between items-center">
                   <div>
@@ -5241,7 +5241,7 @@ export default function GestorDashboard({
                   )}
                 </div>
 
-                {/* Simulation Card for Database Switch 1-Minute Final Countdown */}
+                {/* Global Card for Real Database Switch 1-Minute Final Countdown */}
                 <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-xl p-5 border border-amber-400/40 shadow-md space-y-3">
                   <div className="flex items-center space-x-3">
                     <div className="p-2.5 bg-amber-400 text-slate-950 rounded-xl font-bold">
@@ -5249,10 +5249,10 @@ export default function GestorDashboard({
                     </div>
                     <div>
                       <h4 className="font-extrabold text-sm text-amber-300 uppercase tracking-wide">
-                        🚨 Simulação de Troca de Banco (Última Etapa - 1 Minuto)
+                        🚨 Troca de Banco de Dados para Todos os Usuários (1 Minuto com Regressão)
                       </h4>
                       <p className="text-xs text-indigo-100 leading-relaxed mt-0.5">
-                        Inicie a contagem regressiva em tempo real dos últimos 60 segundos com alertas e banners de atenção no topo para todos os usuários.
+                        Acione a troca real de banco de dados para todos os usuários conectados. O sistema exibirá o alerta no topo com contagem regressiva de 60 segundos antes de efetuar a comutação automática.
                       </p>
                     </div>
                   </div>
@@ -5260,14 +5260,14 @@ export default function GestorDashboard({
                   <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-indigo-900/60">
                     <button
                       type="button"
-                      onClick={() => {
-                        window.dispatchEvent(new CustomEvent('trigger_db_simulated_countdown', { detail: { seconds: 60 } }));
+                      onClick={async () => {
+                        await triggerGlobalDatabaseSwitch(60);
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                       className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-4 py-2.5 rounded-lg text-xs flex items-center space-x-2 shadow-lg transition-all cursor-pointer active:scale-95 border border-amber-500"
                     >
                       <Clock className="h-4 w-4 text-slate-950 animate-spin" />
-                      <span>🚨 Simular Etapa Final de 1 Minuto (Com Regressão)</span>
+                      <span>🚨 Iniciar Troca de Banco (1 Minuto com Regressão)</span>
                     </button>
 
                     <button

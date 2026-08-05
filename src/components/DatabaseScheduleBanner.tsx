@@ -58,11 +58,16 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
     }
   };
 
-  // Event listener for simulation requests
+  const [pendingTarget, setPendingTarget] = useState<{ config: any; name: string } | null>(null);
+
+  // Event listener for switch requests
   useEffect(() => {
     const handleSimulateEvent = (e: any) => {
       const seconds = e.detail?.seconds || 60;
       setSimulationSeconds(seconds);
+      if (e.detail?.targetPreset) {
+        setPendingTarget({ config: e.detail.targetPreset.config, name: e.detail.targetPreset.name });
+      }
     };
 
     window.addEventListener('trigger_db_simulated_countdown', handleSimulateEvent);
@@ -71,13 +76,15 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
     };
   }, []);
 
-  // Countdown timer for simulation
+  // Countdown timer for switch
   useEffect(() => {
     if (simulationSeconds === null) return;
 
     if (simulationSeconds <= 0) {
       setSimulationSeconds(null);
-      performSwitch(simulatedNextPreset.config, simulatedNextPreset.name);
+      const targetConfig = pendingTarget?.config || simulatedNextPreset.config;
+      const targetName = pendingTarget?.name || simulatedNextPreset.name;
+      performSwitch(targetConfig, targetName);
       return;
     }
 
@@ -86,18 +93,39 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
     }, 1000);
 
     return () => clearInterval(simTimer);
-  }, [simulationSeconds]);
+  }, [simulationSeconds, pendingTarget, simulatedNextPreset]);
 
   useEffect(() => {
-    // Poll server active config every 3 seconds to keep multi-devices (PC & Mobile) synchronized
+    // Poll server active config and pending switch every 2 seconds to keep multi-devices (PC & Mobile) synchronized
     const pollServerConfig = async () => {
       try {
         const res = await fetch('/api/firebase/config');
         if (res.ok) {
           const data = await res.json();
+
+          // Check if server has a pending switch countdown triggered by Gestor
+          if (data.pendingSwitch && data.pendingSwitch.switchAtTimestamp) {
+            const remMs = data.pendingSwitch.switchAtTimestamp - Date.now();
+            if (remMs > 0) {
+              const remSecs = Math.max(1, Math.ceil(remMs / 1000));
+              setSimulationSeconds(remSecs);
+              if (data.pendingSwitch.targetConfig) {
+                setPendingTarget({
+                  config: data.pendingSwitch.targetConfig,
+                  name: data.pendingSwitch.targetName || 'Novo Banco'
+                });
+              }
+            } else if (!isSwitchingRef.current) {
+              setSimulationSeconds(null);
+              const targetConfig = data.pendingSwitch.targetConfig || simulatedNextPreset.config;
+              const targetName = data.pendingSwitch.targetName || simulatedNextPreset.name;
+              performSwitch(targetConfig, targetName);
+            }
+          }
+
           if (data.success && data.config && data.config.projectId) {
             const currentLocalConfig = getActiveFirebaseConfig();
-            if (currentLocalConfig?.projectId !== data.config.projectId) {
+            if (currentLocalConfig?.projectId !== data.config.projectId && !isSwitchingRef.current) {
               console.log(`[DatabaseScheduler] Servidor trocou para ${data.config.projectId}. Atualizando dispositivo...`);
               await switchActiveFirebaseConfig(data.config);
               window.location.reload();
@@ -107,7 +135,7 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
       } catch (e) {}
     };
 
-    const pollTimer = setInterval(pollServerConfig, 3000);
+    const pollTimer = setInterval(pollServerConfig, 2000);
 
     const checkSchedule = () => {
       const enabled = isAutoScheduleEnabled();

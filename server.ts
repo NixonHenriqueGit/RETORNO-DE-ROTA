@@ -99,17 +99,53 @@ async function startServer() {
   // --- FIREBASE CONFIGURATION ENDPOINTS ---
   const FIREBASE_CONFIG_FILE = path.join(process.cwd(), 'firebase-applet-config.json');
 
+  let pendingDbSwitch: {
+    targetPresetId?: string;
+    targetConfig?: any;
+    targetName?: string;
+    switchAtTimestamp: number;
+    startedAt: number;
+  } | null = null;
+
+  app.get('/api/firebase/pending-switch', (req, res) => {
+    return res.json({ success: true, pendingSwitch: pendingDbSwitch });
+  });
+
+  app.post('/api/firebase/trigger-switch', (req, res) => {
+    try {
+      const { targetPresetId, targetConfig, targetName, countdownSeconds = 60 } = req.body || {};
+      const now = Date.now();
+      pendingDbSwitch = {
+        targetPresetId,
+        targetConfig,
+        targetName,
+        switchAtTimestamp: now + (countdownSeconds * 1000),
+        startedAt: now
+      };
+      broadcastSSEUpdate({ pendingDbSwitch, db: currentDb });
+      return res.json({ success: true, pendingSwitch: pendingDbSwitch });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err?.message || 'Erro ao iniciar troca de banco' });
+    }
+  });
+
+  app.post('/api/firebase/cancel-switch', (req, res) => {
+    pendingDbSwitch = null;
+    broadcastSSEUpdate({ pendingDbSwitch: null, db: currentDb });
+    return res.json({ success: true, message: 'Troca de banco de dados cancelada' });
+  });
+
   app.get('/api/firebase/config', (req, res) => {
     try {
       if (fs.existsSync(FIREBASE_CONFIG_FILE)) {
         const raw = fs.readFileSync(FIREBASE_CONFIG_FILE, 'utf-8');
         const config = JSON.parse(raw);
-        return res.json({ success: true, config });
+        return res.json({ success: true, config, pendingSwitch: pendingDbSwitch });
       }
     } catch (err) {
       console.error('[Firebase] Failed to read config file:', err);
     }
-    return res.json({ success: false, error: 'No configuration file found' });
+    return res.json({ success: false, error: 'No configuration file found', pendingSwitch: pendingDbSwitch });
   });
 
   app.post('/api/firebase/config', (req, res) => {
@@ -119,6 +155,8 @@ async function startServer() {
         return res.status(400).json({ success: false, error: 'API Key e Project ID são obrigatórios' });
       }
       fs.writeFileSync(FIREBASE_CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
+      pendingDbSwitch = null;
+      broadcastSSEUpdate({ pendingDbSwitch: null, config });
       return res.json({ success: true, message: 'Configuração salva com sucesso', config });
     } catch (err: any) {
       console.error('[Firebase] Failed to save config file:', err);
