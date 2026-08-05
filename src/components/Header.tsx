@@ -1315,7 +1315,7 @@ export default function Header({
 
               {/* Instant Database Switcher Widget */}
               <div className="pt-1">
-                <DatabaseSwitcher compact={true} onSwitchComplete={() => setShowConnectionModal(false)} />
+                <DatabaseSwitcher compact={true} currentUser={currentUser} onSwitchComplete={() => setShowConnectionModal(false)} />
               </div>
 
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">

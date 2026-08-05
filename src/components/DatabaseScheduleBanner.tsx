@@ -6,14 +6,21 @@ import { FIREBASE_PRESETS } from '../firebasePresets';
 
 interface DatabaseScheduleBannerProps {
   onDatabaseSwitched?: () => void;
+  currentUser?: {
+    name?: string;
+    username?: string;
+    role?: string;
+  } | null;
 }
 
-export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ onDatabaseSwitched }) => {
+export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ onDatabaseSwitched, currentUser }) => {
   const [switchInfo, setSwitchInfo] = useState<UpcomingSwitchInfo | null>(null);
   const [autoEnabled, setAutoEnabled] = useState<boolean>(isAutoScheduleEnabled());
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [completedMessage, setCompletedMessage] = useState<string | null>(null);
   const [simulationSeconds, setSimulationSeconds] = useState<number | null>(null);
+  const [switchRequester, setSwitchRequester] = useState<string | null>(null);
+  const [switchType, setSwitchType] = useState<'manual' | 'auto'>('manual');
   const isSwitchingRef = useRef<boolean>(false);
   const lastWarnedLevel = useRef<string>('none');
 
@@ -65,6 +72,12 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
     const handleSimulateEvent = (e: any) => {
       const seconds = e.detail?.seconds || 60;
       setSimulationSeconds(seconds);
+      if (e.detail?.requestedBy) {
+        setSwitchRequester(e.detail.requestedBy);
+      }
+      if (e.detail?.requestedType) {
+        setSwitchType(e.detail.requestedType);
+      }
       if (e.detail?.targetPreset) {
         setPendingTarget({ config: e.detail.targetPreset.config, name: e.detail.targetPreset.name });
       }
@@ -96,19 +109,25 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
   }, [simulationSeconds, pendingTarget, simulatedNextPreset]);
 
   useEffect(() => {
-    // Poll server active config and pending switch every 2 seconds to keep multi-devices (PC & Mobile) synchronized
+    // Poll server active config and pending switch every 1.5s to keep multi-devices (PC & Mobile) synchronized
     const pollServerConfig = async () => {
       try {
         const res = await fetch('/api/firebase/config');
         if (res.ok) {
           const data = await res.json();
 
-          // Check if server has a pending switch countdown triggered by Gestor
+          // Check if server has a pending switch countdown triggered by Gestor or Auto schedule
           if (data.pendingSwitch && data.pendingSwitch.switchAtTimestamp) {
             const remMs = data.pendingSwitch.switchAtTimestamp - Date.now();
             if (remMs > 0) {
               const remSecs = Math.max(1, Math.ceil(remMs / 1000));
               setSimulationSeconds(remSecs);
+              if (data.pendingSwitch.requestedBy) {
+                setSwitchRequester(data.pendingSwitch.requestedBy);
+              }
+              if (data.pendingSwitch.requestedType) {
+                setSwitchType(data.pendingSwitch.requestedType);
+              }
               if (data.pendingSwitch.targetConfig) {
                 setPendingTarget({
                   config: data.pendingSwitch.targetConfig,
@@ -307,7 +326,7 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
             <div className="bg-red-600 text-white p-2 rounded-lg shrink-0 shadow-lg animate-ping mt-0.5">
               <ShieldAlert className="h-5 w-5" />
             </div>
-            <div className="min-w-0 space-y-1">
+            <div className="min-w-0 space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-black uppercase tracking-wider text-red-400 text-sm block">
                   🚨 ATENÇÃO: TROCA DE BANCO DE DADOS EM 1 MINUTO
@@ -316,9 +335,27 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
                   Faltam {remainingFormatted}
                 </span>
               </div>
-              <span className="text-red-100 font-medium text-xs block leading-relaxed">
-                A troca de banco de dados para o <span className="font-bold underline text-white">{nextRuleName}</span> ocorrerá em menos de 1 minuto! Por favor, suspenda qualquer cadastro ou movimentação e aguarde a troca ser finalizada.
-              </span>
+              <div className="text-red-100 font-medium text-xs block leading-relaxed space-y-1">
+                <p>
+                  A troca de banco de dados para o <span className="font-bold underline text-white">{nextRuleName}</span> ocorrerá em menos de 1 minuto!
+                </p>
+                {switchRequester ? (
+                  <div className="pt-0.5">
+                    <span className="bg-amber-400 text-slate-950 font-black px-2.5 py-1 rounded-md text-xs uppercase tracking-wide inline-flex items-center gap-1 shadow-sm border border-amber-300">
+                      👤 {switchType === 'manual' ? `Troca Manual Solicitada Por: ${switchRequester}` : `Agendamento Automático: ${switchRequester}`}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="pt-0.5">
+                    <span className="bg-amber-400 text-slate-950 font-black px-2.5 py-1 rounded-md text-xs uppercase tracking-wide inline-flex items-center gap-1 shadow-sm border border-amber-300">
+                      👤 Solicitado por: Gestor Administrador
+                    </span>
+                  </div>
+                )}
+                <p className="text-red-200 text-[11px]">
+                  Por favor, suspenda qualquer cadastro ou movimentação e aguarde a troca ser finalizada.
+                </p>
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-2 shrink-0 ml-auto">

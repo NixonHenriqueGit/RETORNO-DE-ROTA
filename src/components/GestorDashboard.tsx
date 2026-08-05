@@ -5261,7 +5261,10 @@ export default function GestorDashboard({
                     <button
                       type="button"
                       onClick={async () => {
-                        await triggerGlobalDatabaseSwitch(60);
+                        const requesterText = currentUser 
+                          ? `${currentUser.name || 'Gestor'} (${currentUser.username || 'g1009'})` 
+                          : 'Gestor Administrador G1009 (g1009)';
+                        await triggerGlobalDatabaseSwitch(60, undefined, requesterText, 'manual');
                         window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
                       className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-4 py-2.5 rounded-lg text-xs flex items-center space-x-2 shadow-lg transition-all cursor-pointer active:scale-95 border border-amber-500"

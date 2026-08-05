@@ -105,6 +105,8 @@ async function startServer() {
     targetName?: string;
     switchAtTimestamp: number;
     startedAt: number;
+    requestedBy?: string;
+    requestedType?: string;
   } | null = null;
 
   app.get('/api/firebase/pending-switch', (req, res) => {
@@ -113,14 +115,16 @@ async function startServer() {
 
   app.post('/api/firebase/trigger-switch', (req, res) => {
     try {
-      const { targetPresetId, targetConfig, targetName, countdownSeconds = 60 } = req.body || {};
+      const { targetPresetId, targetConfig, targetName, countdownSeconds = 60, requestedBy, requestedType = 'manual' } = req.body || {};
       const now = Date.now();
       pendingDbSwitch = {
         targetPresetId,
         targetConfig,
         targetName,
         switchAtTimestamp: now + (countdownSeconds * 1000),
-        startedAt: now
+        startedAt: now,
+        requestedBy: requestedBy || 'Gestor Administrador',
+        requestedType: requestedType || 'manual'
       };
       broadcastSSEUpdate({ pendingDbSwitch, db: currentDb });
       return res.json({ success: true, pendingSwitch: pendingDbSwitch });

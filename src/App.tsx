@@ -858,7 +858,7 @@ export default function App() {
       />
 
       {/* Database Schedule Countdown Warning Banner */}
-      <DatabaseScheduleBanner />
+      <DatabaseScheduleBanner currentUser={currentUser} />
 
       {/* Quota Exceeded Warning Banner */}
       {isQuotaExceeded && (

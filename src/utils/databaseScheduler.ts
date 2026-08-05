@@ -152,7 +152,12 @@ export function getUpcomingDatabaseSwitchInfo(now = new Date()): UpcomingSwitchI
   };
 }
 
-export async function triggerGlobalDatabaseSwitch(seconds = 60, targetPresetId?: string) {
+export async function triggerGlobalDatabaseSwitch(
+  seconds = 60,
+  targetPresetId?: string,
+  requestedBy?: string,
+  requestedType: 'manual' | 'auto' = 'manual'
+) {
   try {
     const activeConfig = localStorage.getItem('active_firebase_config');
     let activeProjectId = 'banco-01-34be4';
@@ -167,6 +172,8 @@ export async function triggerGlobalDatabaseSwitch(seconds = 60, targetPresetId?:
     const nextIndex = (currentIndex + 1) % FIREBASE_PRESETS.length;
     const nextPreset = FIREBASE_PRESETS.find(p => p.id === targetPresetId || p.config.projectId === targetPresetId) || FIREBASE_PRESETS[nextIndex] || FIREBASE_PRESETS[0];
 
+    const requesterText = requestedBy || 'Gestor Administrador';
+
     // Trigger on server so all PCs and Mobiles receive it via SSE/polling
     await fetch('/api/firebase/trigger-switch', {
       method: 'POST',
@@ -175,7 +182,9 @@ export async function triggerGlobalDatabaseSwitch(seconds = 60, targetPresetId?:
         targetPresetId: nextPreset.id,
         targetConfig: nextPreset.config,
         targetName: nextPreset.name,
-        countdownSeconds: seconds
+        countdownSeconds: seconds,
+        requestedBy: requesterText,
+        requestedType
       })
     });
 
@@ -183,7 +192,9 @@ export async function triggerGlobalDatabaseSwitch(seconds = 60, targetPresetId?:
     window.dispatchEvent(new CustomEvent('trigger_db_simulated_countdown', {
       detail: {
         seconds,
-        targetPreset: nextPreset
+        targetPreset: nextPreset,
+        requestedBy: requesterText,
+        requestedType
       }
     }));
   } catch (err) {

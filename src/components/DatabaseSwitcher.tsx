@@ -7,9 +7,14 @@ import { DEFAULT_SCHEDULE_RULES, getUpcomingDatabaseSwitchInfo, isAutoScheduleEn
 interface DatabaseSwitcherProps {
   onSwitchComplete?: () => void;
   compact?: boolean;
+  currentUser?: {
+    name?: string;
+    username?: string;
+    role?: string;
+  } | null;
 }
 
-export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComplete, compact = false }) => {
+export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComplete, compact = false, currentUser }) => {
   const [currentConfig, setCurrentConfig] = useState<any>(null);
   const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
   const [showCustomForm, setShowCustomForm] = useState(false);
@@ -295,10 +300,14 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
             <button
               type="button"
               onClick={async () => {
+                const requesterText = currentUser 
+                  ? `${currentUser.name || 'Gestor'} (${currentUser.username || 'g1009'})` 
+                  : 'Gestor Administrador G1009 (g1009)';
                 const currentIndex = FIREBASE_PRESETS.findIndex(p => p.config.projectId === activeProjectId);
                 const nextIndex = (currentIndex + 1) % FIREBASE_PRESETS.length;
                 const nextPreset = FIREBASE_PRESETS[nextIndex] || FIREBASE_PRESETS[0];
-                await handleSelectPreset(nextPreset);
+                await triggerGlobalDatabaseSwitch(5, nextPreset.id, requesterText, 'manual');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               disabled={isSyncing || !!loadingProjectId}
               className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-3.5 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow-md hover:shadow-lg transition-all cursor-pointer shrink-0 active:scale-95 disabled:opacity-50"
@@ -310,7 +319,10 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
             <button
               type="button"
               onClick={async () => {
-                await triggerGlobalDatabaseSwitch(60);
+                const requesterText = currentUser 
+                  ? `${currentUser.name || 'Gestor'} (${currentUser.username || 'g1009'})` 
+                  : 'Gestor Administrador G1009 (g1009)';
+                await triggerGlobalDatabaseSwitch(60, undefined, requesterText, 'manual');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="bg-red-600 hover:bg-red-500 text-white font-extrabold px-4 py-2 rounded-lg text-xs flex items-center space-x-2 shadow-lg hover:shadow-red-500/30 transition-all cursor-pointer shrink-0 active:scale-95 border border-red-400"
