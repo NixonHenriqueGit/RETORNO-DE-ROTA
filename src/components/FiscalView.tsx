@@ -3309,7 +3309,7 @@ export default function FiscalView({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8" id="fiscal_view">
+    <div className="w-full px-2 sm:px-6 lg:px-8 py-4 sm:py-8" id="fiscal_view">
       {/* ALERTA DE MAPAS BAIXADOS PARA O FINANCEIRO (FECHAMENTO NO PROMAX) */}
       {currentUser.role === 'financeiro' && unacknowledgedBaixas.length > 0 && (
         <div className="mb-6 bg-gradient-to-r from-indigo-50 to-blue-50 border-2 border-indigo-200 rounded-2xl p-5 shadow-lg animate-fade-in">

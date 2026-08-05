@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { User, Driver, Vehicle, Product, ActiveAsset, AuditSession, ReturnForecast, FiscalAlert, ImportedRoute, Vale } from './types';
 import { DEFAULT_PRODUCTS, DEFAULT_USERS } from './data';
 import { ImageDB } from './imageDb';
-import { isClientFirebaseActive, fetchDirectlyFromFirestore, saveDirectlyToFirestore, subscribeToFirestore, getClientAuthError, getIsFirestoreQuotaExceeded, setFirestoreQuotaExceeded } from './clientFirebase';
+import { isClientFirebaseActive, fetchDirectlyFromFirestore, saveDirectlyToFirestore, subscribeToFirestore, getClientAuthError, getIsFirestoreQuotaExceeded, setFirestoreQuotaExceeded, getActiveFirebaseConfig, switchActiveFirebaseConfig } from './clientFirebase';
 import Header from './components/Header';
 import ConferenteView from './components/ConferenteView';
 import FiscalView from './components/FiscalView';
@@ -533,19 +533,44 @@ export default function App() {
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          if (data && data.db) {
-            const db = data.db;
-            
-            if (db.photos) {
-              ImageDB.syncPhotos(db.photos).catch(e => console.error("Error syncing photos from SSE:", e));
+          
+          if (data) {
+            // Handle pending DB switch broadcast
+            if (data.pendingDbSwitch !== undefined) {
+              window.dispatchEvent(new CustomEvent('server_pending_switch_updated', { detail: data.pendingDbSwitch }));
             }
 
-            // Skip applying updates if there was a recent local write on this client to avoid race conditions
-            if (Date.now() - lastWriteTime.current < 1500) {
-              return;
+            // Handle config update broadcast across all connected devices
+            if (data.config && data.config.projectId) {
+              window.dispatchEvent(new CustomEvent('server_config_updated', { detail: data.config }));
+              const currentLocalConfig = getActiveFirebaseConfig();
+              if (currentLocalConfig?.projectId !== data.config.projectId) {
+                console.log(`[SSE] Servidor informou troca de banco para ${data.config.projectId}. Atualizando localmente...`);
+                switchActiveFirebaseConfig(data.config).then(() => {
+                  window.location.reload();
+                });
+              }
             }
 
-            applyDirectDb(db);
+            // Handle custom schedule rules broadcast
+            if (data.scheduleRules) {
+              window.dispatchEvent(new CustomEvent('server_schedule_rules_updated', { detail: data.scheduleRules }));
+            }
+
+            if (data.db) {
+              const db = data.db;
+              
+              if (db.photos) {
+                ImageDB.syncPhotos(db.photos).catch(e => console.error("Error syncing photos from SSE:", e));
+              }
+
+              // Skip applying updates if there was a recent local write on this client to avoid race conditions
+              if (Date.now() - lastWriteTime.current < 1500) {
+                return;
+              }
+
+              applyDirectDb(db);
+            }
           }
         } catch (err) {
           console.error("Error parsing real-time database event:", err);
@@ -863,7 +888,7 @@ export default function App() {
       {/* Quota Exceeded Warning Banner */}
       {isQuotaExceeded && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 text-amber-800 dark:text-amber-200 py-3.5 px-4" id="firestore_quota_warning_banner">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <div className="w-full px-2 sm:px-6 lg:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
             <div className="flex items-start gap-2.5">
               <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
               <div>
@@ -1051,7 +1076,7 @@ export default function App() {
 
       {/* Sticky footer indicating production-ready definitive system */}
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-xxs text-slate-400 font-medium font-sans">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2">
           <span>RETORNO DE ROTA PAU BRASIL GUARABIRA © 2026 • Sistema de Monitoramento e Máxima Eficiência de Retornos de Rota</span>
           <div className="flex items-center space-x-2">
             <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full border border-emerald-200 uppercase font-extrabold font-mono flex items-center gap-1">

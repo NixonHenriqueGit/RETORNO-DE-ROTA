@@ -98,6 +98,7 @@ async function startServer() {
 
   // --- FIREBASE CONFIGURATION ENDPOINTS ---
   const FIREBASE_CONFIG_FILE = path.join(process.cwd(), 'firebase-applet-config.json');
+  const SCHEDULE_RULES_FILE = path.join(process.cwd(), 'schedule-rules.json');
 
   let pendingDbSwitch: {
     targetPresetId?: string;
@@ -111,6 +112,37 @@ async function startServer() {
 
   let customScheduleRules: any = null;
 
+  try {
+    if (fs.existsSync(SCHEDULE_RULES_FILE)) {
+      const raw = fs.readFileSync(SCHEDULE_RULES_FILE, 'utf-8');
+      customScheduleRules = JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn('[Firebase] Failed to load schedule-rules.json:', e);
+  }
+
+  // Server background loop to process pending DB switches when timer expires
+  setInterval(() => {
+    if (pendingDbSwitch && pendingDbSwitch.switchAtTimestamp) {
+      if (Date.now() >= pendingDbSwitch.switchAtTimestamp) {
+        console.log(`[ServerDB] Timer de troca expirou. Alternando banco no servidor para: ${pendingDbSwitch.targetName || 'Novo Banco'}`);
+        if (pendingDbSwitch.targetConfig) {
+          try {
+            fs.writeFileSync(FIREBASE_CONFIG_FILE, JSON.stringify(pendingDbSwitch.targetConfig, null, 2), 'utf-8');
+            const newConfig = pendingDbSwitch.targetConfig;
+            pendingDbSwitch = null;
+            broadcastSSEUpdate({ pendingDbSwitch: null, config: newConfig });
+          } catch (err) {
+            console.error('[ServerDB] Erro ao gravar novo banco no disco:', err);
+          }
+        } else {
+          pendingDbSwitch = null;
+          broadcastSSEUpdate({ pendingDbSwitch: null });
+        }
+      }
+    }
+  }, 1000);
+
   app.get('/api/firebase/schedule-rules', (req, res) => {
     return res.json({ success: true, rules: customScheduleRules });
   });
@@ -119,6 +151,9 @@ async function startServer() {
     try {
       const { rules } = req.body || {};
       customScheduleRules = rules;
+      try {
+        fs.writeFileSync(SCHEDULE_RULES_FILE, JSON.stringify(rules, null, 2), 'utf-8');
+      } catch (e) {}
       broadcastSSEUpdate({ scheduleRules: customScheduleRules, db: currentDb });
       return res.json({ success: true, rules: customScheduleRules });
     } catch (err: any) {

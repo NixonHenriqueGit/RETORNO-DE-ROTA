@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Clock, AlertTriangle, ArrowRight, RefreshCw, CheckCircle2, ShieldAlert, Sparkles, Volume2 } from 'lucide-react';
-import { getUpcomingDatabaseSwitchInfo, isAutoScheduleEnabled, UpcomingSwitchInfo } from '../utils/databaseScheduler';
+import { getUpcomingDatabaseSwitchInfo, isAutoScheduleEnabled, UpcomingSwitchInfo, triggerGlobalDatabaseSwitch } from '../utils/databaseScheduler';
 import { getActiveFirebaseConfig, switchActiveFirebaseConfig, syncFirebaseData } from '../clientFirebase';
 import { FIREBASE_PRESETS } from '../firebasePresets';
 
@@ -40,13 +40,6 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
     try {
       console.log(`[DatabaseScheduler] Executando troca para ${targetName} (${targetPresetConfig.projectId})...`);
       
-      // Sync current data to target
-      try {
-        await syncFirebaseData(activeConfig, targetPresetConfig);
-      } catch (syncErr) {
-        console.warn("[DatabaseScheduler] Erro na pré-sincronização:", syncErr);
-      }
-
       const success = await switchActiveFirebaseConfig(targetPresetConfig);
       if (success) {
         setCompletedMessage(`Troca de Banco de Dados Concluída! Conectado ao ${targetName} (${targetPresetConfig.projectId}).`);
@@ -55,7 +48,7 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
         setTimeout(() => {
           setCompletedMessage(null);
           window.location.reload();
-        }, 1500);
+        }, 1200);
       }
     } catch (err) {
       console.error("[DatabaseScheduler] Falha na troca de banco:", err);
@@ -67,7 +60,7 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
 
   const [pendingTarget, setPendingTarget] = useState<{ config: any; name: string } | null>(null);
 
-  // Event listener for switch requests
+  // SSE & Custom Event listeners for instant switch updates across all devices
   useEffect(() => {
     const handleSimulateEvent = (e: any) => {
       const seconds = e.detail?.seconds || 60;
@@ -83,9 +76,36 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
       }
     };
 
+    const handleServerPendingSwitch = (e: any) => {
+      const pending = e.detail;
+      if (pending && pending.switchAtTimestamp) {
+        const remMs = pending.switchAtTimestamp - Date.now();
+        if (remMs > 0) {
+          const remSecs = Math.max(1, Math.ceil(remMs / 1000));
+          setSimulationSeconds(remSecs);
+          if (pending.requestedBy) setSwitchRequester(pending.requestedBy);
+          if (pending.requestedType) setSwitchType(pending.requestedType);
+          if (pending.targetConfig) {
+            setPendingTarget({
+              config: pending.targetConfig,
+              name: pending.targetName || 'Novo Banco'
+            });
+          }
+        } else {
+          setSimulationSeconds(null);
+        }
+      } else {
+        setSimulationSeconds(null);
+        setPendingTarget(null);
+      }
+    };
+
     window.addEventListener('trigger_db_simulated_countdown', handleSimulateEvent);
+    window.addEventListener('server_pending_switch_updated', handleServerPendingSwitch);
+
     return () => {
       window.removeEventListener('trigger_db_simulated_countdown', handleSimulateEvent);
+      window.removeEventListener('server_pending_switch_updated', handleServerPendingSwitch);
     };
   }, []);
 
@@ -109,14 +129,13 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
   }, [simulationSeconds, pendingTarget, simulatedNextPreset]);
 
   useEffect(() => {
-    // Poll server active config and pending switch every 1.5s to keep multi-devices (PC & Mobile) synchronized
+    // Poll server active config and pending switch every 1.5s as fallback
     const pollServerConfig = async () => {
       try {
         const res = await fetch('/api/firebase/config');
         if (res.ok) {
           const data = await res.json();
 
-          // Check if server has a pending switch countdown triggered by Gestor or Auto schedule
           if (data.pendingSwitch && data.pendingSwitch.switchAtTimestamp) {
             const remMs = data.pendingSwitch.switchAtTimestamp - Date.now();
             if (remMs > 0) {
@@ -159,11 +178,6 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
     const checkSchedule = () => {
       const enabled = isAutoScheduleEnabled();
       setAutoEnabled(enabled);
-      if (!enabled) {
-        setSwitchInfo(null);
-        return;
-      }
-
       const info = getUpcomingDatabaseSwitchInfo(new Date());
       setSwitchInfo(info);
 
@@ -176,7 +190,7 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
       }
 
       // Check if trigger time reached
-      if (info.shouldTriggerNow && !isSwitchingRef.current) {
+      if (info.shouldTriggerNow && !isSwitchingRef.current && enabled) {
         if (info.nextPreset && activeProjectId !== info.nextPreset.config.projectId) {
           performSwitch(info.nextPreset.config, info.nextRule.name);
         }
@@ -200,51 +214,51 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
     };
   }, [activeProjectId]);
 
-  if ((!autoEnabled || !switchInfo) && simulationSeconds === null) {
-    if (completedMessage) {
-      return (
-        <div className="bg-emerald-600 text-white px-4 py-2 text-xs font-bold font-mono flex items-center justify-between shadow-md animate-fade-in">
-          <div className="flex items-center space-x-2 mx-auto">
-            <CheckCircle2 className="h-4 w-4 text-emerald-200 animate-bounce" />
-            <span>{completedMessage}</span>
-          </div>
+  if (completedMessage) {
+    return (
+      <div className="bg-emerald-600 text-white px-4 py-2 text-xs font-bold font-mono flex items-center justify-between shadow-md animate-fade-in">
+        <div className="flex items-center space-x-2 mx-auto">
+          <CheckCircle2 className="h-4 w-4 text-emerald-200 animate-bounce" />
+          <span>{completedMessage}</span>
         </div>
-      );
-    }
-    return null;
+      </div>
+    );
   }
+
+  const hasActiveServerCountdown = simulationSeconds !== null && simulationSeconds > 0;
 
   let warningLevel = switchInfo?.warningLevel || 'none';
   let remainingFormatted = switchInfo?.remainingFormatted || '00m 00s';
-  let nextRuleName = switchInfo?.nextRule.name || simulatedNextPreset.name;
+  let nextRuleName = pendingTarget?.name || switchInfo?.nextRule.name || simulatedNextPreset.name;
   let nextTimeLabel = switchInfo?.nextRule.timeLabel || 'Instantes';
-  let nextPresetConfig = switchInfo?.nextPreset || simulatedNextPreset;
+  let nextPresetConfig = pendingTarget?.config || switchInfo?.nextPreset?.config || simulatedNextPreset.config;
 
-  if (simulationSeconds !== null) {
-    if (simulationSeconds <= 60) {
+  if (hasActiveServerCountdown) {
+    if (simulationSeconds! <= 60) {
       warningLevel = '1m';
-    } else if (simulationSeconds <= 300) {
+    } else if (simulationSeconds! <= 300) {
       warningLevel = '5m';
     } else {
       warningLevel = '10m';
     }
-    const mins = Math.floor(simulationSeconds / 60);
-    const secs = simulationSeconds % 60;
+    const mins = Math.floor(simulationSeconds! / 60);
+    const secs = simulationSeconds! % 60;
     remainingFormatted = `${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
-    nextRuleName = simulatedNextPreset.name;
-    nextTimeLabel = 'Simulação';
-    nextPresetConfig = simulatedNextPreset;
+    nextTimeLabel = 'Agendamento em Andamento';
   }
 
-  // Don't render banner if warning level is 'none' and countdown > 10m
-  if (warningLevel === 'none' && simulationSeconds === null) {
+  // Don't render banner if no active server countdown and warning level is 'none'
+  if (!hasActiveServerCountdown && warningLevel === 'none') {
     return null;
   }
 
-  const handleManualTriggerNow = () => {
-    if (nextPresetConfig) {
-      performSwitch(nextPresetConfig.config || nextPresetConfig, nextRuleName);
-    }
+  const handleManualTriggerNow = async () => {
+    const requesterText = currentUser 
+      ? `${currentUser.name || 'Usuário'} (${currentUser.username || 'g1009'})` 
+      : 'Gestor Administrador';
+    const targetPreset = pendingTarget?.config || nextPresetConfig;
+    const targetPresetId = targetPreset?.projectId || 'banco-02';
+    await triggerGlobalDatabaseSwitch(2, targetPresetId, requesterText, 'manual');
   };
 
   return (

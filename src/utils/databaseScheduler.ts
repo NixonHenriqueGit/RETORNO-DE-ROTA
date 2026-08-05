@@ -106,6 +106,30 @@ export async function saveScheduleRules(rules: ScheduleRule[]): Promise<void> {
   } catch (e) {}
 }
 
+export async function syncScheduleRulesWithServer(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    const res = await fetch('/api/firebase/schedule-rules');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.rules) && data.rules.length > 0) {
+        localStorage.setItem('db_custom_schedule_rules', JSON.stringify(data.rules));
+        window.dispatchEvent(new CustomEvent('db_schedule_rules_changed', { detail: data.rules }));
+      }
+    }
+  } catch (e) {}
+}
+
+if (typeof window !== 'undefined') {
+  syncScheduleRulesWithServer();
+  window.addEventListener('server_schedule_rules_updated', (e: any) => {
+    if (e.detail && Array.isArray(e.detail)) {
+      localStorage.setItem('db_custom_schedule_rules', JSON.stringify(e.detail));
+      window.dispatchEvent(new CustomEvent('db_schedule_rules_changed', { detail: e.detail }));
+    }
+  });
+}
+
 export async function resetScheduleRulesToDefault(): Promise<void> {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('db_custom_schedule_rules');

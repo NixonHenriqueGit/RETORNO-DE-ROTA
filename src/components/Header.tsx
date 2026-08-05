@@ -72,9 +72,22 @@ export default function Header({
   const [showConnectionModal, setShowConnectionModal] = useState(false);
   const [lastSyncTimestamp, setLastSyncTimestamp] = useState<number>(getLastSuccessfulSyncTime());
   const [isManualSyncing, setIsManualSyncing] = useState(false);
+  const [activeDbProjectId, setActiveDbProjectId] = useState<string>(() => {
+    return getActiveFirebaseConfig()?.projectId || 'banco-01-34be4';
+  });
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    const refreshDbConfig = () => {
+      const current = getActiveFirebaseConfig();
+      if (current?.projectId) {
+        setActiveDbProjectId(current.projectId);
+      }
+    };
+
+    window.addEventListener('firebase_config_changed', refreshDbConfig);
+    window.addEventListener('server_config_updated', refreshDbConfig);
 
     const checkFirebaseActive = () => {
       try {
@@ -320,7 +333,7 @@ export default function Header({
     <header className="bg-slate-900 text-white shadow-md border-b border-slate-800" id="main_header">
       {/* Top tier bar: Logo and actions */}
       <div className="border-b border-slate-800/60 bg-slate-950/20">
-        <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+        <div className="w-full px-2 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center gap-1">
             {/* Logo */}
             <div 
@@ -373,10 +386,10 @@ export default function Header({
                   }`}></span>
                 </span>
                 <span className="uppercase tracking-wider text-[9px] hidden sm:inline whitespace-nowrap">
-                  {isQuotaExceeded ? 'Cota Excedida / Servidor Local' : `DB: ${getActiveFirebaseConfig()?.projectId || 'banco-01-34be4'}`}
+                  {isQuotaExceeded ? 'Cota Excedida / Servidor Local' : `DB: ${activeDbProjectId}`}
                 </span>
                 <span className="uppercase tracking-wider text-[9px] inline sm:hidden whitespace-nowrap">
-                  {isQuotaExceeded ? 'Local' : (getActiveFirebaseConfig()?.projectId?.split('-')[0] || 'Firebase')}
+                  {isQuotaExceeded ? 'Local' : (activeDbProjectId.split('-')[0] || 'Firebase')}
                 </span>
               </button>
 
@@ -569,7 +582,7 @@ export default function Header({
 
       {/* Secondary Bar: Symmetrical and Spacious Navigation Options */}
       <div className="hidden md:block bg-slate-900 py-3.5 border-b border-slate-800/80 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center w-full">
             <nav className="flex flex-wrap items-center justify-center gap-2 bg-slate-950/60 p-2 rounded-2xl border border-slate-800/80 max-w-full shadow-inner">
               {currentUser.role === 'conferente' && (
@@ -835,7 +848,7 @@ export default function Header({
       </div>
 
       {/* Mobile menu navigation */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex md:hidden justify-start items-center gap-2 py-2.5 border-t border-slate-800 overflow-x-auto whitespace-nowrap scrollbar-none px-2">
           {currentUser.role === 'conferente' && (
             <button

@@ -2147,7 +2147,7 @@ export default function GestorDashboard({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4 sm:py-8" id="gestor_view">
+    <div className="w-full px-2 sm:px-6 lg:px-8 py-4 sm:py-8" id="gestor_view">
       
       {/* Tab Switcher upper bar */}
       {forceTab !== 'cadastros' && (
