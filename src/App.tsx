@@ -506,7 +506,7 @@ export default function App() {
     fetchLatestServerData();
   }, []);
 
-  // 4. Setup real-time database updates via Server-Sent Events (SSE) or Firestore Live Sync
+     // 4a. Setup real-time database updates via Firestore Live Sync if active
   useEffect(() => {
     if (!clientPermissionDenied && isClientFirebaseActive()) {
       console.log("[ClientFirebase] Inicializando sincronização em tempo real nativa com Firestore...");
@@ -522,12 +522,15 @@ export default function App() {
         unsubscribe();
       };
     }
+  }, [clientPermissionDenied]);
 
+  // 4b. Setup global server events (DB switch countdowns, config changes, schedule rules) via SSE
+  useEffect(() => {
     let eventSource: EventSource | null = null;
     let reconnectTimeout: any = null;
 
     const connectSSE = () => {
-      console.log("Conectando ao canal de sincronização em tempo real (SSE)...");
+      console.log("Conectando ao canal de sincronização de eventos do servidor (SSE)...");
       eventSource = new EventSource('/api/db/events');
 
       eventSource.onmessage = (event) => {
@@ -557,7 +560,8 @@ export default function App() {
               window.dispatchEvent(new CustomEvent('server_schedule_rules_updated', { detail: data.scheduleRules }));
             }
 
-            if (data.db) {
+            // Only apply direct JSON DB updates from SSE if client Firebase is NOT active
+            if (data.db && (!isClientFirebaseActive() || clientPermissionDenied)) {
               const db = data.db;
               
               if (db.photos) {
@@ -578,13 +582,13 @@ export default function App() {
       };
 
       eventSource.onerror = (err) => {
-        console.log("Canal de sincronização em tempo real (SSE) em modo de espera ou reconectando. Tentando reconexão automática em 5s...");
+        console.log("Canal de sincronização SSE em modo de espera ou reconectando. Tentando reconexão automática em 3s...");
         if (eventSource) {
           eventSource.close();
         }
         reconnectTimeout = setTimeout(() => {
           connectSSE();
-        }, 5000);
+        }, 3000);
       };
     };
 

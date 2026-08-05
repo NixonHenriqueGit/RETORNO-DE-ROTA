@@ -129,7 +129,7 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
   }, [simulationSeconds, pendingTarget, simulatedNextPreset]);
 
   useEffect(() => {
-    // Poll server active config and pending switch every 1.5s as fallback
+    // Poll server active config and pending switch every 1.0s as fallback
     const pollServerConfig = async () => {
       try {
         const res = await fetch('/api/firebase/config');
@@ -159,6 +159,10 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
               const targetName = data.pendingSwitch.targetName || simulatedNextPreset.name;
               performSwitch(targetConfig, targetName);
             }
+          } else {
+            // No pending switch active on server
+            setSimulationSeconds(null);
+            setPendingTarget(null);
           }
 
           if (data.success && data.config && data.config.projectId) {
@@ -173,7 +177,8 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
       } catch (e) {}
     };
 
-    const pollTimer = setInterval(pollServerConfig, 2000);
+    pollServerConfig();
+    const pollTimer = setInterval(pollServerConfig, 1000);
 
     const checkSchedule = () => {
       const enabled = isAutoScheduleEnabled();
@@ -205,12 +210,20 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
       checkSchedule();
     };
 
+    const handleRulesChange = () => {
+      checkSchedule();
+    };
+
     window.addEventListener('db_schedule_setting_changed', handleSettingChange);
+    window.addEventListener('db_schedule_rules_changed', handleRulesChange);
+    window.addEventListener('server_schedule_rules_updated', handleRulesChange);
 
     return () => {
       clearInterval(timer);
       clearInterval(pollTimer);
       window.removeEventListener('db_schedule_setting_changed', handleSettingChange);
+      window.removeEventListener('db_schedule_rules_changed', handleRulesChange);
+      window.removeEventListener('server_schedule_rules_updated', handleRulesChange);
     };
   }, [activeProjectId]);
 
