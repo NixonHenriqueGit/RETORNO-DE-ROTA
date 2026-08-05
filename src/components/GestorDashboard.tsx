@@ -294,7 +294,7 @@ export default function GestorDashboard({
     }
   }, [forceTab]);
 
-  const [cadastroSubTab, setCadastroSubTab] = useState<'usuarios' | 'produtos' | 'veiculos' | 'motoristas' | 'manutencao' | 'firebase' | 'exportar' | 'manual_diretrizes'>('usuarios');
+  const [cadastroSubTab, setCadastroSubTab] = useState<'usuarios' | 'produtos' | 'veiculos' | 'motoristas' | 'manutencao' | 'firebase' | 'exportar' | 'manual_diretrizes' | 'simular_troca'>('usuarios');
 
   // Firebase Firestore Connection Status States
   const [firebaseStatus, setFirebaseStatus] = useState<{
@@ -650,8 +650,13 @@ export default function GestorDashboard({
   const [correctiveNotesMap, setCorrectiveNotesMap] = useState<Record<string, string>>({});
   const [actionStatusMap, setActionStatusMap] = useState<Record<string, string>>({});
   const [importDateFilter, setImportDateFilter] = useState(() => {
-    // default to date of first imported route or today
-    return importedRoutes[0]?.routeDate || new Date().toISOString().split('T')[0];
+    if (importedRoutes && importedRoutes.length > 0) {
+      const dates = Array.from(new Set(importedRoutes.map(r => r.routeDate).filter(Boolean))).sort().reverse();
+      const today = new Date().toISOString().split('T')[0];
+      if (dates.includes(today)) return today;
+      if (dates.length > 0) return dates[0];
+    }
+    return new Date().toISOString().split('T')[0];
   });
 
   const handleUpdateAuditDiscrepancyAction = (
@@ -3679,8 +3684,23 @@ export default function GestorDashboard({
               <span className="text-[8px] font-bold bg-indigo-100 text-indigo-800 px-1.5 py-0.5 rounded-full font-sans uppercase">Baixar/Importar</span>
             </button>
 
+            <button
+              id="subtab_simular_troca"
+              onClick={() => { setCadastroSubTab('simular_troca'); setSearchQuery(''); }}
+              className={`w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold flex items-center space-x-2.5 transition cursor-pointer ${
+                cadastroSubTab === 'simular_troca' 
+                  ? 'bg-amber-500 text-slate-950 shadow-md font-extrabold' 
+                  : 'text-amber-800 bg-amber-50/80 hover:bg-amber-100 border border-amber-200/80'
+              }`}
+            >
+              <RefreshCw className={`h-4 w-4 ${cadastroSubTab === 'simular_troca' ? 'animate-spin' : 'text-amber-600'}`} />
+              <span className="flex-1">Simular Troca de Banco</span>
+              <span className="text-[8px] font-black bg-slate-950 text-amber-400 px-1.5 py-0.5 rounded-full font-sans uppercase">Multi-Dev</span>
+            </button>
+
             {currentUser.role === 'gestor' && (
               <>
+
                 <button
                   id="subtab_firebase"
                   onClick={() => { setCadastroSubTab('firebase'); setSearchQuery(''); }}
@@ -4580,6 +4600,24 @@ export default function GestorDashboard({
               </div>
             )}
 
+            {cadastroSubTab === 'simular_troca' && (
+              <div className="space-y-6">
+                <div className="border-b border-slate-100 pb-4 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-sans font-bold text-base text-slate-900 flex items-center space-x-2">
+                      <RefreshCw className="h-5 w-5 text-amber-500 animate-spin" />
+                      <span>Simulação e Automação de Banco de Dados</span>
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Teste a troca de banco de dados em tempo real e veja refletir simultaneamente no PC e Celular.
+                    </p>
+                  </div>
+                </div>
+
+                <DatabaseSwitcher compact={false} onSwitchComplete={fetchFirebaseStatus} />
+              </div>
+            )}
+
             {cadastroSubTab === 'firebase' && currentUser.role === 'gestor' && (
               <div className="space-y-6">
                 <div className="border-b border-slate-100 pb-4 flex justify-between items-center">
@@ -5201,6 +5239,47 @@ export default function GestorDashboard({
                       </div>
                     </div>
                   )}
+                </div>
+
+                {/* Simulation Card for Database Switch 1-Minute Final Countdown */}
+                <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-xl p-5 border border-amber-400/40 shadow-md space-y-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2.5 bg-amber-400 text-slate-950 rounded-xl font-bold">
+                      <Clock className="h-6 w-6 animate-pulse" />
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-sm text-amber-300 uppercase tracking-wide">
+                        🚨 Simulação de Troca de Banco (Última Etapa - 1 Minuto)
+                      </h4>
+                      <p className="text-xs text-indigo-100 leading-relaxed mt-0.5">
+                        Inicie a contagem regressiva em tempo real dos últimos 60 segundos com alertas e banners de atenção no topo para todos os usuários.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-indigo-900/60">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('trigger_db_simulated_countdown', { detail: { seconds: 60 } }));
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-4 py-2.5 rounded-lg text-xs flex items-center space-x-2 shadow-lg transition-all cursor-pointer active:scale-95 border border-amber-500"
+                    >
+                      <Clock className="h-4 w-4 text-slate-950 animate-spin" />
+                      <span>🚨 Simular Etapa Final de 1 Minuto (Com Regressão)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCadastroSubTab('simular_troca');
+                      }}
+                      className="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2.5 rounded-lg text-xs font-bold transition cursor-pointer"
+                    >
+                      <span>Gerenciar Alternador e Agendamento Completo</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

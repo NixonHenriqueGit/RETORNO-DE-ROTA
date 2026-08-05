@@ -271,7 +271,7 @@ export default function MonitoramentoView({
   // Group imported routes by date
   const uniqueDates = Array.from(new Set(importedRoutes.map(r => r.routeDate))).sort();
   const [selectedDate, setSelectedDate] = useState(() => {
-    return uniqueDates[uniqueDates.length - 1] || new Date().toISOString().split('T')[0];
+    return new Date().toISOString().split('T')[0];
   });
 
   const routesForSelectedDate = importedRoutes.filter(r => r.routeDate === selectedDate && r.status !== 'fechado' && !isRouteClosedInAudits(r.routeMap));

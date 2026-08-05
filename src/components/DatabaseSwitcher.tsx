@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Database, CheckCircle2, RefreshCw, Server, AlertCircle, ArrowRight, Sparkles, CopyCheck, ArrowLeftRight, Download, FileJson } from 'lucide-react';
+import { Database, CheckCircle2, RefreshCw, Server, AlertCircle, ArrowRight, Sparkles, CopyCheck, ArrowLeftRight, Download, FileJson, Clock, Calendar, Bell } from 'lucide-react';
 import { FIREBASE_PRESETS, getActivePresetId, FirebasePreset } from '../firebasePresets';
 import { getActiveFirebaseConfig, switchActiveFirebaseConfig, syncFirebaseData } from '../clientFirebase';
+import { DEFAULT_SCHEDULE_RULES, getUpcomingDatabaseSwitchInfo, isAutoScheduleEnabled, setAutoScheduleEnabled } from '../utils/databaseScheduler';
 
 interface DatabaseSwitcherProps {
   onSwitchComplete?: () => void;
@@ -19,6 +20,21 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [syncBeforeSwitch, setSyncBeforeSwitch] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [autoScheduleActive, setAutoScheduleActive] = useState<boolean>(isAutoScheduleEnabled());
+  const [scheduleInfo, setScheduleInfo] = useState(() => getUpcomingDatabaseSwitchInfo());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setScheduleInfo(getUpcomingDatabaseSwitchInfo());
+    }, 2000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const handleToggleAutoSchedule = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.checked;
+    setAutoScheduleActive(val);
+    setAutoScheduleEnabled(val);
+  };
 
   const loadConfig = () => {
     const cfg = getActiveFirebaseConfig();
@@ -44,21 +60,25 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
   const handleManualSyncAll = async () => {
     if (!currentConfig || !currentConfig.projectId) return;
 
-    // Find target preset
-    const otherPreset = FIREBASE_PRESETS.find(p => p.config.projectId !== activeProjectId);
-    if (!otherPreset) return;
+    // Find all other target presets
+    const targetPresets = FIREBASE_PRESETS.filter(p => p.config.projectId !== activeProjectId);
+    if (targetPresets.length === 0) return;
 
     setIsSyncing(true);
     setStatusMessage({
       type: 'success',
-      text: `Iniciando sincronização completa de rotas, auditorias e alertas de '${activeProjectId}' para '${otherPreset.config.projectId}'...`
+      text: `Iniciando sincronização de '${activeProjectId}' para todos os outros bancos (${targetPresets.map(p => p.name).join(', ')})...`
     });
 
     try {
-      const res = await syncFirebaseData(currentConfig, otherPreset.config);
+      let totalCount = 0;
+      for (const targetPreset of targetPresets) {
+        const res = await syncFirebaseData(currentConfig, targetPreset.config);
+        totalCount += res.count;
+      }
       setStatusMessage({
         type: 'success',
-        text: `Sincronização concluída com sucesso! ${res.count} registros copiados/sincronizados para '${otherPreset.name}' (${otherPreset.config.projectId}).`
+        text: `Sincronização concluída com sucesso! Todos os dados de '${activeProjectId}' foram sincronizados para os 3 bancos (${targetPresets.map(p => p.name).join(', ')}).`
       });
     } catch (err: any) {
       setStatusMessage({
@@ -230,29 +250,75 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
 
   return (
     <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
-      <div className="flex items-start justify-between border-b border-slate-200 pb-3">
+      {/* Header Info */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 pb-3 gap-3">
         <div className="flex items-center gap-2.5">
           <div className="p-2 bg-blue-600/10 text-blue-600 rounded-xl border border-blue-600/20">
             <Database className="h-5 w-5" />
           </div>
           <div>
             <h3 className="font-bold text-sm sm:text-base text-slate-900 flex items-center gap-2">
-              Alternador Rápido de Banco de Dados
+              Alternador Rápido & Agendador de Banco de Dados
               <span className="text-[10px] bg-amber-100 text-amber-800 font-mono px-2 py-0.5 rounded-full border border-amber-300">
-                1-Clique
+                Auto / Manual
               </span>
             </h3>
             <p className="text-xs text-slate-500">
-              Alterne instantaneamente entre os bancos sem precisar redigitar credenciais.
+              Alterne e simule a troca entre os bancos ativos. As trocas ocorrem automaticamente nos horários ou via simulação.
             </p>
           </div>
         </div>
 
         <div className="text-right font-mono text-xs">
-          <span className="text-[10px] uppercase font-sans text-slate-400 block font-bold">Banco Conectado</span>
+          <span className="text-[10px] uppercase font-sans text-slate-400 block font-bold">Banco Conectado Atual</span>
           <span className="font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg inline-block">
             {activeProjectId || 'Carregando...'}
           </span>
+        </div>
+      </div>
+
+      {/* QUICK SIMULATION BANNER */}
+      <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 text-white rounded-xl p-4 shadow-md border border-indigo-500/30 flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2">
+              <Sparkles className="h-4 w-4 text-amber-400 animate-pulse" />
+              <span className="font-extrabold text-xs uppercase tracking-wider text-amber-300">
+                ⚡ SIMULAÇÃO EM TEMPO REAL PARA TODOS OS DISPOSITIVOS
+              </span>
+            </div>
+            <p className="text-xs text-indigo-100 leading-relaxed max-w-xl">
+              Simule a troca instantânea ou inicie a contagem regressiva da última etapa (1 minuto) para visualizar os alertas sincronizados no PC e no Celular.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={async () => {
+                const currentIndex = FIREBASE_PRESETS.findIndex(p => p.config.projectId === activeProjectId);
+                const nextIndex = (currentIndex + 1) % FIREBASE_PRESETS.length;
+                const nextPreset = FIREBASE_PRESETS[nextIndex] || FIREBASE_PRESETS[0];
+                await handleSelectPreset(nextPreset);
+              }}
+              disabled={isSyncing || !!loadingProjectId}
+              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-3.5 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow-md hover:shadow-lg transition-all cursor-pointer shrink-0 active:scale-95 disabled:opacity-50"
+            >
+              {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin text-slate-950" /> : <ArrowLeftRight className="h-4 w-4" />}
+              <span>Troca Instantânea</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('trigger_db_simulated_countdown', { detail: { seconds: 60 } }));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="bg-red-600 hover:bg-red-500 text-white font-extrabold px-4 py-2 rounded-lg text-xs flex items-center space-x-2 shadow-lg hover:shadow-red-500/30 transition-all cursor-pointer shrink-0 active:scale-95 border border-red-400"
+            >
+              <Clock className="h-4 w-4 animate-spin text-amber-300" />
+              <span>🚨 Simular Última Etapa (1 Minuto com Regressão)</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -337,6 +403,93 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
             </div>
           );
         })}
+      </div>
+
+      {/* Programação Automática de Troca de Banco (Padrão da Plataforma) */}
+      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border border-slate-700/80 rounded-xl p-4 sm:p-5 shadow-lg space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-700/80 pb-3">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-400 shrink-0">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <h4 className="font-bold text-sm text-white flex items-center gap-2">
+                Programação Automática de Troca de Banco
+                <span className="text-[10px] bg-amber-500/20 text-amber-300 font-mono px-2 py-0.5 rounded-full border border-amber-500/30">
+                  Padrão da Plataforma
+                </span>
+              </h4>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Trocas automáticas programadas de banco com avisos de <span className="text-amber-300 font-semibold">10min</span>, <span className="text-orange-300 font-semibold">5min</span> e <span className="text-red-300 font-semibold">1min</span> para todos os usuários.
+              </p>
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2.5 bg-slate-800/90 hover:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-600 text-xs text-slate-200 cursor-pointer shrink-0 transition">
+            <input
+              type="checkbox"
+              checked={autoScheduleActive}
+              onChange={handleToggleAutoSchedule}
+              className="rounded border-slate-500 text-amber-500 focus:ring-amber-500 h-4 w-4 cursor-pointer"
+            />
+            <span className="font-semibold">Troca Programada Ativa</span>
+          </label>
+        </div>
+
+        {/* Schedule Rules Table */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {DEFAULT_SCHEDULE_RULES.map((rule) => {
+            const isTargetNext = scheduleInfo.nextRule.id === rule.id;
+            const isCurrentlyActiveSchedule = scheduleInfo.currentPresetId === rule.presetId;
+
+            return (
+              <div
+                key={rule.id}
+                className={`p-3.5 rounded-xl border transition-all ${
+                  isCurrentlyActiveSchedule
+                    ? 'bg-amber-500/10 border-amber-500/50 text-white ring-1 ring-amber-500/30'
+                    : 'bg-slate-800/60 border-slate-700/70 text-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-mono text-xs font-bold text-amber-400 flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5 text-amber-400" />
+                    {rule.timeLabel}
+                  </span>
+                  {isCurrentlyActiveSchedule ? (
+                    <span className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full">
+                      TURNO ATUAL
+                    </span>
+                  ) : isTargetNext ? (
+                    <span className="text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40 px-2 py-0.5 rounded-full">
+                      PRÓXIMO
+                    </span>
+                  ) : null}
+                </div>
+                <h5 className="font-bold text-xs text-white">{rule.name}</h5>
+                <p className="text-[11px] text-slate-400 mt-0.5 font-mono">{rule.description}</p>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Countdown to Next Switch */}
+        {autoScheduleActive && (
+          <div className="bg-slate-800/90 border border-slate-700 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center space-x-2 text-slate-200">
+              <Bell className="h-4 w-4 text-amber-400 shrink-0" />
+              <span>
+                Próxima troca automática: <strong className="text-white">{scheduleInfo.nextRule.name}</strong> às <strong className="text-amber-400 font-mono">{scheduleInfo.nextRule.timeLabel}</strong>
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-slate-400 text-[11px]">Tempo restante:</span>
+              <span className="font-mono font-bold text-amber-400 bg-slate-950 px-2.5 py-1 rounded-md border border-slate-700">
+                {scheduleInfo.remainingFormatted}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Sync Control Banner */}

@@ -982,7 +982,7 @@ export default function FiscalView({
     return new Date().toISOString().split('T')[0];
   });
 
-  // Automatically update routeImportDate if selected date has 0 maps but importedRoutes has maps for another date
+  // Automatically adjust routeImportDate when importedRoutes loads or changes if active date has 0 maps
   React.useEffect(() => {
     if (importedRoutes && importedRoutes.length > 0) {
       const activeCount = importedRoutes.filter(r => r.routeDate === routeImportDate).length;
@@ -996,7 +996,7 @@ export default function FiscalView({
         }
       }
     }
-  }, [importedRoutes]);
+  }, [importedRoutes, routeImportDate]);
 
   // Auto-assign and balance circular blitz routes (exactly 2 per day, swapping out pernoite vehicles)
   React.useEffect(() => {
@@ -4049,8 +4049,8 @@ export default function FiscalView({
 
             {/* Process Progress Chart */}
             {(() => {
-              const totalWorking = importedRoutes.filter(r => r.status === 'conferindo' || r.status === 'reconferir').length;
-              const totalPending = importedRoutes.filter(r => r.status === 'pendente' || !r.status).length;
+              const totalWorking = importedRoutes.filter(r => (r.status === 'conferindo' || r.status === 'reconferir') && !isRouteClosed(r.routeMap)).length;
+              const totalPending = importedRoutes.filter(r => (r.status === 'pendente' || !r.status) && (r.status as string) !== 'fechado' && !isRouteClosed(r.routeMap)).length;
               const totalWaiting = pendingAudits.length;
               const totalReconciled = audits.filter(a => a.status === 'finalizado_ok' || a.status === 'finalizado_divergente').length;
 

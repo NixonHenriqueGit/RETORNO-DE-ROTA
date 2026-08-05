@@ -3,6 +3,7 @@ import { getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc, collection, onSn
 import { getAuth, signInAnonymously } from "firebase/auth";
 import firebaseConfig from "../firebase-applet-config.json";
 import { DEFAULT_USERS, DEFAULT_DRIVERS, DEFAULT_VEHICLES, DEFAULT_PRODUCTS, DEFAULT_ACTIVE_ASSETS } from "./data";
+import { FIREBASE_PRESETS } from "./firebasePresets";
 
 // Silence verbose or harmless Firestore warnings/info logs in browser
 try {
@@ -40,7 +41,8 @@ const TRACKED_COLLECTIONS = [
   "fiscalAlerts",
   "importedRoutes",
   "auditLogs",
-  "customManual"
+  "customManual",
+  "photos"
 ];
 
 /**
@@ -250,7 +252,22 @@ export function getActiveFirebaseConfig(): any {
       const stored = localStorage.getItem("active_firebase_config") || localStorage.getItem("logiroute_firebase_client_config");
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (parsed && parsed.projectId) return parsed;
+        if (parsed && parsed.projectId) {
+          if (parsed.projectId === 'abastecimento-78ae9') {
+            localStorage.removeItem("active_firebase_config");
+            localStorage.removeItem("logiroute_firebase_client_config");
+            return firebaseConfig;
+          }
+          if (parsed.projectId === 'banco-02') {
+            const b2 = FIREBASE_PRESETS.find(p => p.id === 'banco-02');
+            if (b2) return b2.config;
+          }
+          if (parsed.projectId === 'banco-03') {
+            const b3 = FIREBASE_PRESETS.find(p => p.id === 'banco-03');
+            if (b3) return b3.config;
+          }
+          return parsed;
+        }
       }
     } catch (e) {}
   }
@@ -299,40 +316,91 @@ export async function syncFirebaseData(sourceConfig: any, targetConfig: any): Pr
   let sourceApp: any = null;
   let targetApp: any = null;
 
-  try {
-    sourceApp = initializeApp(sourceConfig, appNameSource);
-    targetApp = initializeApp(targetConfig, appNameTarget);
+  const syncWorker = async () => {
+    try {
+      console.log(`[syncFirebaseData] Iniciando sincronização completa de '${sourceConfig.projectId}' para '${targetConfig.projectId}'...`);
+      sourceApp = initializeApp(sourceConfig, appNameSource);
+      targetApp = initializeApp(targetConfig, appNameTarget);
 
-    const sourceDb = getFirestore(sourceApp);
-    const targetDb = getFirestore(targetApp);
-
-    for (const colName of TRACKED_COLLECTIONS) {
       try {
-        const snap = await getDocs(collection(sourceDb, colName));
-        if (snap.empty) continue;
-
-        const docs = snap.docs;
-        for (let i = 0; i < docs.length; i += 300) {
-          const chunk = docs.slice(i, i + 300);
-          const batch = writeBatch(targetDb);
-          chunk.forEach((d) => {
-            batch.set(doc(targetDb, colName, d.id), d.data());
-          });
-          await batch.commit();
-        }
-        totalDocs += docs.length;
+        await Promise.all([
+          signInAnonymously(getAuth(sourceApp)).catch(() => null),
+          signInAnonymously(getAuth(targetApp)).catch(() => null)
+        ]);
       } catch (e) {
-        console.warn(`[syncFirebaseData] Aviso ao copiar coleção ${colName}:`, e);
+        // ignore auth error
       }
+
+      const sourceDb = getFirestore(sourceApp);
+      const targetDb = getFirestore(targetApp);
+
+      for (const colName of TRACKED_COLLECTIONS) {
+        try {
+          const sourceSnap = await getDocs(collection(sourceDb, colName));
+          const sourceDocs = sourceSnap.docs;
+          const sourceDocIds = new Set(sourceDocs.map(d => d.id));
+
+          // Obtain target docs to identify stale items to purge
+          let idsToDelete: string[] = [];
+          try {
+            const targetSnap = await getDocs(collection(targetDb, colName));
+            for (const tDoc of targetSnap.docs) {
+              if (!sourceDocIds.has(tDoc.id)) {
+                idsToDelete.push(tDoc.id);
+              }
+            }
+          } catch (e) {
+            console.warn(`[syncFirebaseData] Não foi possível listar target para ${colName}:`, e);
+          }
+
+          if (sourceDocs.length === 0 && idsToDelete.length === 0) continue;
+
+          // Prepare operations: delete stale target docs first, then set current source docs
+          const ops: Array<{ type: 'set' | 'delete'; id: string; data?: any }> = [
+            ...idsToDelete.map(id => ({ type: 'delete' as const, id })),
+            ...sourceDocs.map(d => ({ type: 'set' as const, id: d.id, data: d.data() }))
+          ];
+
+          const batchSize = 300;
+          for (let i = 0; i < ops.length; i += batchSize) {
+            const chunk = ops.slice(i, i + batchSize);
+            const batch = writeBatch(targetDb);
+            chunk.forEach(op => {
+              const docRef = doc(targetDb, colName, op.id);
+              if (op.type === 'delete') {
+                batch.delete(docRef);
+              } else {
+                batch.set(docRef, op.data, { merge: true });
+              }
+            });
+            await batch.commit();
+          }
+
+          console.log(`[syncFirebaseData] Coleção '${colName}': ${sourceDocs.length} atualizados, ${idsToDelete.length} obsoletos removidos.`);
+          totalDocs += sourceDocs.length;
+        } catch (e) {
+          console.warn(`[syncFirebaseData] Aviso ao sincronizar coleção '${colName}':`, e);
+        }
+      }
+      console.log(`[syncFirebaseData] Sincronização concluída! Total de ${totalDocs} documentos transferidos.`);
+      return { success: true, count: totalDocs };
+    } catch (err) {
+      console.error("[syncFirebaseData] Erro de sincronização entre bancos:", err);
+      return { success: false, count: 0 };
+    } finally {
+      if (sourceApp) { try { await deleteApp(sourceApp); } catch (e) {} }
+      if (targetApp) { try { await deleteApp(targetApp); } catch (e) {} }
     }
-    return { success: true, count: totalDocs };
-  } catch (err) {
-    console.error("[syncFirebaseData] Erro de sincronização entre bancos:", err);
-    throw err;
-  } finally {
-    if (sourceApp) { try { await deleteApp(sourceApp); } catch (e) {} }
-    if (targetApp) { try { await deleteApp(targetApp); } catch (e) {} }
-  }
+  };
+
+  const timeoutPromise = new Promise<{ success: boolean; count: number }>((resolve) => {
+    setTimeout(() => {
+      console.warn("[syncFirebaseData] Timeout de 25s atingido. Prosseguindo com troca de banco...");
+      resolve({ success: false, count: totalDocs });
+    }, 25000);
+  });
+
+  return Promise.race([syncWorker(), timeoutPromise]);
 }
 
 export function getClientFirestore() {

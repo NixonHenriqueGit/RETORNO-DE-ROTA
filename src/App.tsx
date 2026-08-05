@@ -11,6 +11,7 @@ import LoginView from './components/LoginView';
 import MonitoramentoView from './components/MonitoramentoView';
 import PlatformManual from './components/PlatformManual';
 import AIAgentChat from './components/AIAgentChat';
+import { DatabaseScheduleBanner } from './components/DatabaseScheduleBanner';
 import { ClipboardCheck, ShieldCheck, BarChart3, AlertCircle, Bell, CheckCircle2, Settings, RefreshCw } from 'lucide-react';
 
 export default function App() {
@@ -855,6 +856,9 @@ export default function App() {
         theme={theme}
         onToggleTheme={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
       />
+
+      {/* Database Schedule Countdown Warning Banner */}
+      <DatabaseScheduleBanner />
 
       {/* Quota Exceeded Warning Banner */}
       {isQuotaExceeded && (
