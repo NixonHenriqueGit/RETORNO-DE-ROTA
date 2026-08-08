@@ -58,6 +58,11 @@ export function setAutoScheduleEnabled(enabled: boolean): void {
   if (typeof window !== 'undefined') {
     localStorage.setItem('db_schedule_auto_enabled', enabled ? 'true' : 'false');
     window.dispatchEvent(new CustomEvent('db_schedule_setting_changed', { detail: enabled }));
+    fetch('/api/firebase/auto-schedule', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled })
+    }).catch(() => {});
   }
 }
 

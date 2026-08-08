@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Clock, AlertTriangle, ArrowRight, RefreshCw, CheckCircle2, ShieldAlert, Sparkles, Volume2 } from 'lucide-react';
-import { getUpcomingDatabaseSwitchInfo, isAutoScheduleEnabled, UpcomingSwitchInfo, triggerGlobalDatabaseSwitch } from '../utils/databaseScheduler';
+import { getUpcomingDatabaseSwitchInfo, isAutoScheduleEnabled, UpcomingSwitchInfo, triggerGlobalDatabaseSwitch, getCurrentScheduledPresetId } from '../utils/databaseScheduler';
 import { getActiveFirebaseConfig, switchActiveFirebaseConfig, syncFirebaseData } from '../clientFirebase';
 import { FIREBASE_PRESETS } from '../firebasePresets';
 
@@ -203,10 +203,20 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
         }
       }
 
-      // Check if trigger time reached
-      if (info.shouldTriggerNow && !isSwitchingRef.current && enabled) {
-        if (info.nextPreset && activeProjectId !== info.nextPreset.config.projectId) {
-          performSwitch(info.nextPreset.config, info.nextRule.name);
+      // Check if trigger time reached or if database does not match current scheduled shift
+      if (enabled && !isSwitchingRef.current && simulationSeconds === null) {
+        if (info.shouldTriggerNow) {
+          if (info.nextPreset && activeProjectId !== info.nextPreset.config.projectId) {
+            performSwitch(info.nextPreset.config, info.nextRule.name);
+          }
+        } else {
+          // Verify if active database matches what SHOULD be active right now for the shift
+          const currentScheduledId = getCurrentScheduledPresetId(new Date());
+          const scheduledPreset = FIREBASE_PRESETS.find(p => p.id === currentScheduledId || p.config.projectId === currentScheduledId);
+          if (scheduledPreset && activeProjectId && activeProjectId !== scheduledPreset.config.projectId) {
+            console.warn(`[DatabaseScheduleBanner] Banco fora do turno (${activeProjectId}). O horário atual exige ${scheduledPreset.name} (${scheduledPreset.config.projectId}). Corrigindo conexão...`);
+            performSwitch(scheduledPreset.config, `Turno Atual (${scheduledPreset.name})`);
+          }
         }
       }
     };

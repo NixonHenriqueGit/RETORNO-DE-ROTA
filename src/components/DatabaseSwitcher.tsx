@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Database, CheckCircle2, RefreshCw, Server, AlertCircle, ArrowRight, Sparkles, CopyCheck, ArrowLeftRight, Download, FileJson, Clock, Calendar, Bell, Edit3, Save, RotateCcw, X, Sliders } from 'lucide-react';
+import { Database, CheckCircle2, RefreshCw, Server, AlertCircle, ArrowRight, Sparkles, CopyCheck, ArrowLeftRight, Download, FileJson, Clock, Calendar, Bell, Edit3, Save, RotateCcw, X, Sliders, Lock, ShieldAlert } from 'lucide-react';
 import { FIREBASE_PRESETS, getActivePresetId, FirebasePreset } from '../firebasePresets';
 import { getActiveFirebaseConfig, switchActiveFirebaseConfig, syncFirebaseData } from '../clientFirebase';
 import { DEFAULT_SCHEDULE_RULES, getScheduleRules, saveScheduleRules, resetScheduleRulesToDefault, ScheduleRule, getUpcomingDatabaseSwitchInfo, isAutoScheduleEnabled, setAutoScheduleEnabled, triggerGlobalDatabaseSwitch, getCurrentScheduledPresetId } from '../utils/databaseScheduler';
@@ -65,7 +65,17 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
     return () => window.removeEventListener('db_schedule_rules_changed', handleRulesChanged);
   }, []);
 
+  const isGestor = !currentUser || currentUser.role === 'gestor';
+
   const handleSaveCustomTimes = async (andSwitchNow = false) => {
+    if (!isGestor) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Acesso Restrito: Apenas Gestores Administradores podem alterar os horários dos turnos.'
+      });
+      return;
+    }
+
     const currentRules = [...rulesList];
     const updatedRules = currentRules.map(rule => {
       const timeVal = scheduleTimes[rule.id] || `${rule.triggerHour.toString().padStart(2, '0')}:${rule.triggerMinute.toString().padStart(2, '0')}`;
@@ -107,6 +117,14 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
   };
 
   const handleResetScheduleTimes = async () => {
+    if (!isGestor) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Acesso Restrito: Apenas Gestores Administradores podem restaurar horários.'
+      });
+      return;
+    }
+
     await resetScheduleRulesToDefault();
     const freshRules = getScheduleRules();
     setRulesList(freshRules);
@@ -126,6 +144,13 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
   };
 
   const handleToggleAutoSchedule = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isGestor) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Acesso Restrito: Apenas Gestores Administradores podem ativar ou desativar a Troca Programada.'
+      });
+      return;
+    }
     const val = e.target.checked;
     setAutoScheduleActive(val);
     setAutoScheduleEnabled(val);
@@ -186,12 +211,31 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
   };
 
   const handleSelectPreset = async (preset: FirebasePreset) => {
+    if (!isGestor) {
+      setStatusMessage({
+        type: 'error',
+        text: 'Acesso Restrito: Apenas Gestores Administradores têm permissão para alternar o banco manualmente. O sistema mantém a conexão sincronizada ao turno atual.'
+      });
+      return;
+    }
+
     if (activeProjectId === preset.config.projectId) {
       setStatusMessage({
         type: 'success',
         text: `O banco '${preset.name}' (${preset.config.projectId}) já está ativo.`
       });
       return;
+    }
+
+    // Check if target preset matches the scheduled preset for current time
+    const currentScheduledId = getCurrentScheduledPresetId(new Date());
+    const isShiftPreset = (preset.id === currentScheduledId || preset.config.projectId === currentScheduledId);
+
+    // If autoSchedule is active and user is connecting to a database outside the shift schedule, pause autoSchedule
+    if (autoScheduleActive && !isShiftPreset) {
+      console.warn(`[DatabaseSwitcher] Conectando ao banco (${preset.name}) fora do turno. Pausando 'Troca Programada' para evitar reversão...`);
+      setAutoScheduleActive(false);
+      setAutoScheduleEnabled(false);
     }
 
     setLoadingProjectId(preset.config.projectId);
@@ -372,6 +416,18 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
         </div>
       </div>
 
+      {!isGestor && (
+        <div className="p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-900 flex items-start space-x-2.5">
+          <Lock className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-amber-950">Modo Operacional Ativo (Sincronia de Turno Automática)</p>
+            <p className="text-amber-800 text-[11px] mt-0.5 leading-relaxed">
+              O banco de dados do seu dispositivo é mantido estritamente em sincronia com o turno atual (Diurno 07h-17h ➔ Banco 01 | Vespertino 17h-20h ➔ Banco 02 | Noturno 20h-07h ➔ Banco 03). Trocas manuais são exclusivas do perfil Gestor Administrador.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* QUICK GLOBAL SWITCH BANNER */}
       <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 text-white rounded-xl p-4 shadow-md border border-indigo-500/30 flex flex-col gap-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -390,6 +446,13 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
             <button
               type="button"
               onClick={async () => {
+                if (!isGestor) {
+                  setStatusMessage({
+                    type: 'error',
+                    text: 'Acesso Restrito: Apenas Gestores Administradores podem disparar a Troca Instantânea.'
+                  });
+                  return;
+                }
                 const requesterText = currentUser 
                   ? `${currentUser.name || 'Gestor'} (${currentUser.username || 'g1009'})` 
                   : 'Gestor Administrador G1009 (g1009)';
@@ -399,7 +462,7 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
                 await triggerGlobalDatabaseSwitch(5, nextPreset.id, requesterText, 'manual');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              disabled={isSyncing || !!loadingProjectId}
+              disabled={isSyncing || !!loadingProjectId || !isGestor}
               className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-3.5 py-2 rounded-lg text-xs flex items-center space-x-1.5 shadow-md hover:shadow-lg transition-all cursor-pointer shrink-0 active:scale-95 disabled:opacity-50"
             >
               {isSyncing ? <RefreshCw className="h-4 w-4 animate-spin text-slate-950" /> : <ArrowLeftRight className="h-4 w-4" />}
@@ -409,13 +472,21 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
             <button
               type="button"
               onClick={async () => {
+                if (!isGestor) {
+                  setStatusMessage({
+                    type: 'error',
+                    text: 'Acesso Restrito: Apenas Gestores Administradores podem disparar a Troca Global de Banco.'
+                  });
+                  return;
+                }
                 const requesterText = currentUser 
                   ? `${currentUser.name || 'Gestor'} (${currentUser.username || 'g1009'})` 
                   : 'Gestor Administrador G1009 (g1009)';
                 await triggerGlobalDatabaseSwitch(60, undefined, requesterText, 'manual');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="bg-red-600 hover:bg-red-500 text-white font-extrabold px-4 py-2 rounded-lg text-xs flex items-center space-x-2 shadow-lg hover:shadow-red-500/30 transition-all cursor-pointer shrink-0 active:scale-95 border border-red-400"
+              disabled={!isGestor}
+              className="bg-red-600 hover:bg-red-500 text-white font-extrabold px-4 py-2 rounded-lg text-xs flex items-center space-x-2 shadow-lg hover:shadow-red-500/30 transition-all cursor-pointer shrink-0 active:scale-95 border border-red-400 disabled:opacity-50"
             >
               <Clock className="h-4 w-4 animate-spin text-amber-300" />
               <span>🚨 Trocar Banco de Dados (1 Minuto com Regressão)</span>
@@ -477,10 +548,12 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
                 <button
                   type="button"
                   onClick={() => handleSelectPreset(preset)}
-                  disabled={isActive || isLoading || isSyncing}
+                  disabled={isActive || isLoading || isSyncing || !isGestor}
                   className={`w-full py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
                     isActive
                       ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-default'
+                      : !isGestor
+                      ? 'bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs active:scale-98'
                   }`}
                 >
@@ -493,6 +566,11 @@ export const DatabaseSwitcher: React.FC<DatabaseSwitcherProps> = ({ onSwitchComp
                     <>
                       <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
                       <span>Banco Atualmente Conectado</span>
+                    </>
+                  ) : !isGestor ? (
+                    <>
+                      <Lock className="h-3.5 w-3.5 text-slate-400" />
+                      <span>Sincronizado p/ Turno (Apenas Gestor)</span>
                     </>
                   ) : (
                     <>

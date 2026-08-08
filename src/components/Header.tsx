@@ -399,7 +399,7 @@ export default function Header({
                 <span className="font-mono uppercase text-[9px] text-amber-500 font-bold">
                   [{currentUser.role === 'auxiliar_logistica' ? 'AUX LOGÍSTICA' : currentUser.role.toUpperCase()}]
                 </span>
-                <span className="font-sans font-bold text-slate-200 max-w-[100px] sm:max-w-[120px] truncate" title={currentUser.name}>
+                <span className="font-sans font-bold text-slate-200 max-w-[140px] sm:max-w-[220px] truncate" title={currentUser.name}>
                   {currentUser.name}
                 </span>
               </div>

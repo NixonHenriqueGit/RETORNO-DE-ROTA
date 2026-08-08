@@ -99,6 +99,55 @@ async function startServer() {
   // --- FIREBASE CONFIGURATION ENDPOINTS ---
   const FIREBASE_CONFIG_FILE = path.join(process.cwd(), 'firebase-applet-config.json');
   const SCHEDULE_RULES_FILE = path.join(process.cwd(), 'schedule-rules.json');
+  const AUTO_SCHEDULE_FILE = path.join(process.cwd(), 'auto-schedule-setting.json');
+
+  const SERVER_FIREBASE_PRESETS = [
+    {
+      id: "banco-01",
+      name: "Banco 01 (Turno Diurno 07h-17h)",
+      config: {
+        projectId: "banco-01-34be4",
+        appId: "1:769319279792:web:0b1f64349b2a2b482aaf75",
+        apiKey: "AIzaSyAxVFlljdf_QXhVgqoYbTjPJXnzLIhHCTw",
+        authDomain: "banco-01-34be4.firebaseapp.com",
+        firestoreDatabaseId: "(default)",
+        storageBucket: "banco-01-34be4.firebasestorage.app",
+        messagingSenderId: "769319279792",
+        measurementId: "",
+        oAuthClientId: ""
+      }
+    },
+    {
+      id: "banco-02",
+      name: "Banco 02 (Turno Vespertino 17h-22h)",
+      config: {
+        projectId: "banco-02-2fb6b",
+        appId: "1:364866790920:web:6f43aa475321a4a3f853bd",
+        apiKey: "AIzaSyAd9ouXvKudfi4fOXQ34FZ9hWNkfOW8BvI",
+        authDomain: "banco-02-2fb6b.firebaseapp.com",
+        firestoreDatabaseId: "(default)",
+        storageBucket: "banco-02-2fb6b.firebasestorage.app",
+        messagingSenderId: "364866790920",
+        measurementId: "",
+        oAuthClientId: ""
+      }
+    },
+    {
+      id: "banco-03",
+      name: "Banco 03 (Turno Noturno 22h-07h)",
+      config: {
+        projectId: "banco-03-6b1ea",
+        appId: "1:645365828863:web:beb28f8f10226a02e210ca",
+        apiKey: "AIzaSyCNeRWfV7L-i3X1GBegzETsEbpGkmK_s4g",
+        authDomain: "banco-03-6b1ea.firebaseapp.com",
+        firestoreDatabaseId: "(default)",
+        storageBucket: "banco-03-6b1ea.firebasestorage.app",
+        messagingSenderId: "645365828863",
+        measurementId: "",
+        oAuthClientId: ""
+      }
+    }
+  ];
 
   let pendingDbSwitch: {
     targetPresetId?: string;
@@ -111,6 +160,7 @@ async function startServer() {
   } | null = null;
 
   let customScheduleRules: any = null;
+  let isAutoScheduleServerEnabled = true;
 
   try {
     if (fs.existsSync(SCHEDULE_RULES_FILE)) {
@@ -121,8 +171,51 @@ async function startServer() {
     console.warn('[Firebase] Failed to load schedule-rules.json:', e);
   }
 
-  // Server background loop to process pending DB switches when timer expires
+  try {
+    if (fs.existsSync(AUTO_SCHEDULE_FILE)) {
+      const raw = fs.readFileSync(AUTO_SCHEDULE_FILE, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (typeof parsed.enabled === 'boolean') {
+        isAutoScheduleServerEnabled = parsed.enabled;
+      }
+    }
+  } catch (e) {}
+
+  function getServerScheduledPreset(): typeof SERVER_FIREBASE_PRESETS[0] {
+    const rules = (Array.isArray(customScheduleRules) && customScheduleRules.length > 0)
+      ? customScheduleRules
+      : [
+          { id: "diurno", name: "Turno Diurno", triggerHour: 7, triggerMinute: 0, presetId: "banco-01" },
+          { id: "vespertino", name: "Turno Vespertino", triggerHour: 17, triggerMinute: 0, presetId: "banco-02" },
+          { id: "noturno", name: "Turno Noturno", triggerHour: 20, triggerMinute: 0, presetId: "banco-03" }
+        ];
+
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const ruleMinutes = rules.map((r: any) => ({
+      presetId: r.presetId,
+      mins: (r.triggerHour || 0) * 60 + (r.triggerMinute || 0)
+    })).sort((a: any, b: any) => a.mins - b.mins);
+
+    if (ruleMinutes.length === 0) return SERVER_FIREBASE_PRESETS[0];
+
+    let activePresetId = ruleMinutes[ruleMinutes.length - 1].presetId;
+    for (let i = 0; i < ruleMinutes.length; i++) {
+      if (currentMinutes >= ruleMinutes[i].mins) {
+        activePresetId = ruleMinutes[i].presetId;
+      } else {
+        break;
+      }
+    }
+
+    const found = SERVER_FIREBASE_PRESETS.find(p => p.id === activePresetId || p.config.projectId === activePresetId);
+    return found || SERVER_FIREBASE_PRESETS[0];
+  }
+
+  // Server background loop to process pending DB switches and enforce shift schedule
   setInterval(() => {
+    // 1. Check countdown switch expiration
     if (pendingDbSwitch && pendingDbSwitch.switchAtTimestamp) {
       if (Date.now() >= pendingDbSwitch.switchAtTimestamp) {
         console.log(`[ServerDB] Timer de troca expirou. Alternando banco no servidor para: ${pendingDbSwitch.targetName || 'Novo Banco'}`);
@@ -140,8 +233,50 @@ async function startServer() {
           broadcastSSEUpdate({ pendingDbSwitch: null });
         }
       }
+      return;
     }
-  }, 1000);
+
+    // 2. Enforce schedule verification if auto schedule is active and no manual switch countdown is pending
+    if (isAutoScheduleServerEnabled && !pendingDbSwitch) {
+      const scheduledPreset = getServerScheduledPreset();
+      let currentProjectId = '';
+      if (fs.existsSync(FIREBASE_CONFIG_FILE)) {
+        try {
+          const raw = fs.readFileSync(FIREBASE_CONFIG_FILE, 'utf-8');
+          const parsed = JSON.parse(raw);
+          currentProjectId = parsed.projectId || '';
+        } catch (e) {}
+      }
+
+      if (currentProjectId && currentProjectId !== scheduledPreset.config.projectId) {
+        console.log(`[ServerDB] Incompatibilidade de turno detectada (${currentProjectId}). O horário atual exige (${scheduledPreset.config.projectId}). Corrigindo banco no servidor...`);
+        try {
+          fs.writeFileSync(FIREBASE_CONFIG_FILE, JSON.stringify(scheduledPreset.config, null, 2), 'utf-8');
+          broadcastSSEUpdate({ pendingDbSwitch: null, config: scheduledPreset.config });
+        } catch (e) {
+          console.error('[ServerDB] Erro ao corrigir banco agendado:', e);
+        }
+      }
+    }
+  }, 2000);
+
+  app.get('/api/firebase/auto-schedule', (req, res) => {
+    return res.json({ success: true, enabled: isAutoScheduleServerEnabled });
+  });
+
+  app.post('/api/firebase/auto-schedule', (req, res) => {
+    try {
+      const { enabled } = req.body || {};
+      isAutoScheduleServerEnabled = !!enabled;
+      try {
+        fs.writeFileSync(AUTO_SCHEDULE_FILE, JSON.stringify({ enabled: isAutoScheduleServerEnabled }), 'utf-8');
+      } catch (e) {}
+      broadcastSSEUpdate({ autoScheduleEnabled: isAutoScheduleServerEnabled, db: currentDb });
+      return res.json({ success: true, enabled: isAutoScheduleServerEnabled });
+    } catch (err: any) {
+      return res.status(500).json({ success: false, error: err?.message || 'Erro ao alterar agendamento automático' });
+    }
+  });
 
   app.get('/api/firebase/schedule-rules', (req, res) => {
     return res.json({ success: true, rules: customScheduleRules });

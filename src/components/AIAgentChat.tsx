@@ -378,7 +378,7 @@ ${activeDatabaseContext}
   };
 
   return (
-    <div className="fixed bottom-3 right-3 sm:bottom-6 sm:right-6 z-40 font-sans max-w-[calc(100vw-1.5rem)]" id="ai_agent_chat_wrapper">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] font-sans max-w-[calc(100vw-1.5rem)]" id="ai_agent_chat_wrapper">
       {/* Floating Action Button (FAB) */}
       {!isOpen && (
         <button
