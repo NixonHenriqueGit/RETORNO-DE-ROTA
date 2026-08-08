@@ -40,6 +40,15 @@ export const DatabaseScheduleBanner: React.FC<DatabaseScheduleBannerProps> = ({ 
     try {
       console.log(`[DatabaseScheduler] Executando troca para ${targetName} (${targetPresetConfig.projectId})...`);
       
+      if (activeConfig && activeConfig.projectId && activeConfig.projectId !== targetPresetConfig.projectId) {
+        try {
+          console.log(`[DatabaseScheduler] Sincronizando dados operacionais de '${activeConfig.projectId}' para '${targetPresetConfig.projectId}'...`);
+          await syncFirebaseData(activeConfig, targetPresetConfig);
+        } catch (syncErr) {
+          console.warn("[DatabaseScheduler] Falha ou timeout ao sincronizar entre bancos:", syncErr);
+        }
+      }
+
       const success = await switchActiveFirebaseConfig(targetPresetConfig);
       if (success) {
         setCompletedMessage(`Troca de Banco de Dados Concluída! Conectado ao ${targetName} (${targetPresetConfig.projectId}).`);
